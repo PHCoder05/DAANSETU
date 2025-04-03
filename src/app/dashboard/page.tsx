@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/ui/Navbar';
 import DonorDashboard from '@/components/dashboard/DonorDashboard';
-import NGODashboard from '@/components/dashboard/NGODashboard';
+import NgoDashboard from '@/components/dashboard/NgoDashboard';
 import AdminDashboard from '@/components/dashboard/AdminDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import RouteGuard from '@/components/auth/RouteGuard';
@@ -25,7 +25,7 @@ export default function DashboardPage() {
       case 'donor':
         return <DonorDashboard />;
       case 'ngo':
-        return <NGODashboard />;
+        return <NgoDashboard />;
       case 'admin':
         return <AdminDashboard />;
       default:
