@@ -1,0 +1,27 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read access to anyone
+    match /public/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow authenticated users to upload to their user folder
+    match /users/{userId}/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Donation images - allow authenticated users to upload, read for all
+    match /donations/{donationId}/{allPaths=**} {
+      allow read;
+      allow write: if request.auth != null;
+    }
+    
+    // Block all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 

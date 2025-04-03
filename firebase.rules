@@ -1,0 +1,67 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Check if the user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Check if user is accessing their own data
+    function isUser(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // Check if the user has the specified role
+    function hasRole(role) {
+      return request.auth.token.role == role || 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == role;
+    }
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Allow read for authenticated users, write only for own profile
+      allow read: if isAuthenticated();
+      allow write: if isUser(userId);
+    }
+    
+    // Donations collection rules
+    match /donations/{donationId} {
+      // Anyone can read donations
+      allow read: if isAuthenticated();
+      
+      // Donors can create donations and update/delete their own
+      allow create: if isAuthenticated() && (hasRole('donor') || hasRole('admin'));
+      allow update, delete: if isAuthenticated() && 
+                             ((hasRole('donor') && resource.data.donorId == request.auth.uid) || 
+                              hasRole('admin') || 
+                              (hasRole('ngo') && resource.data.status == 'available'));
+    }
+    
+    // Requests collection rules
+    match /requests/{requestId} {
+      // Anyone can read requests
+      allow read: if isAuthenticated();
+      
+      // NGOs can create requests and update/delete their own
+      allow create: if isAuthenticated() && (hasRole('ngo') || hasRole('admin'));
+      allow update, delete: if isAuthenticated() && 
+                             ((hasRole('ngo') && resource.data.ngoId == request.auth.uid) || 
+                              hasRole('admin') || 
+                              (hasRole('donor') && resource.data.status == 'open'));
+    }
+    
+    // Distribution collection rules (for tracking donation distribution by NGOs)
+    match /distributions/{distributionId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && (hasRole('ngo') || hasRole('admin'));
+      allow delete: if isAuthenticated() && hasRole('admin');
+    }
+    
+    // Settings and configurations
+    match /settings/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && hasRole('admin');
+    }
+  }
+} 

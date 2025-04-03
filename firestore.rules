@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read and write their own profile
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to read all donations
+    match /donations/{donationId} {
+      allow read: if request.auth != null;
+      // Only the donor can create their own donations
+      allow create: if request.auth != null && request.resource.data.donorId == request.auth.uid;
+      // Donors can update/delete their own donations, NGOs can claim donations
+      allow update: if request.auth != null && (
+        resource.data.donorId == request.auth.uid || 
+        (request.resource.data.claimedBy == request.auth.uid && 
+         resource.data.status == "available" && 
+         request.resource.data.status == "claimed")
+      );
+      allow delete: if request.auth != null && resource.data.donorId == request.auth.uid;
+    }
+    
+    // Allow authenticated users to read all requests
+    match /requests/{requestId} {
+      allow read: if request.auth != null;
+      // Only NGOs can create requests
+      allow create: if request.auth != null && request.resource.data.ngoId == request.auth.uid;
+      // NGOs can update/delete their own requests, donors can fulfill requests
+      allow update: if request.auth != null && (
+        resource.data.ngoId == request.auth.uid ||
+        request.resource.data.fulfilledBy == request.auth.uid
+      );
+      allow delete: if request.auth != null && resource.data.ngoId == request.auth.uid;
+    }
+    
+    // Allow users to read and write their own notifications
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+    
+    // Allow users to create reports, admins can read all reports
+    match /reports/{reportId} {
+      allow create: if request.auth != null;
+      allow read, update: if request.auth != null && (
+        resource.data.reportedBy == request.auth.uid || 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"
+      );
+    }
+  }
+} 
