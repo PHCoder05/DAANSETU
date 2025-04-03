@@ -1039,6 +1039,70 @@ export async function getPendingNgoVerifications(limitSize = 10): Promise<any[]>
   }
 }
 
+/**
+ * Subscribe to the NGO's claimed donations
+ * @param ngoId - The ID of the NGO
+ * @param callback - Function to call when data changes
+ * @returns A function to unsubscribe
+ */
+export function subscribeToNGOClaims(ngoId: string, callback: (donations: Donation[]) => void) {
+  const db = getFirestore();
+  const q = query(
+    collection(db, 'donations'),
+    where('claimedBy', '==', ngoId),
+    orderBy('claimedAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const donations = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    } as Donation));
+    callback(donations);
+  }, (error) => {
+    console.error('Error in subscribeToNGOClaims:', error);
+  });
+}
+
+/**
+ * Subscribe to the NGO's donation requests
+ * @param ngoId - The ID of the NGO
+ * @param callback - Function to call when data changes
+ * @returns A function to unsubscribe
+ */
+export function subscribeToNGORequests(ngoId: string, callback: (requests: DonationRequest[]) => void) {
+  const db = getFirestore();
+  const q = query(
+    collection(db, 'requests'),
+    where('ngoId', '==', ngoId),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const requests = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    } as DonationRequest));
+    callback(requests);
+  }, (error) => {
+    console.error('Error in subscribeToNGORequests:', error);
+  });
+}
+
+/**
+ * Delete a donation request
+ * @param requestId - The ID of the request to delete
+ */
+export async function deleteDonationRequest(requestId: string): Promise<void> {
+  try {
+    const db = getFirestore();
+    await deleteDoc(doc(db, 'requests', requestId));
+  } catch (error) {
+    console.error('Error deleting donation request:', error);
+    throw error;
+  }
+}
+
 // Contact form functions
 interface ContactFormData {
   name: string;
