@@ -59,8 +59,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // Only initialize router on client side
-  const router = typeof window !== 'undefined' ? useRouter() : null;
+  // Initialize router but don't use it on server side
+  const router = useRouter();
+  const isClient = typeof window !== 'undefined';
 
   // Helper to get user custom claims
   const getUserClaims = async (user: User) => {
