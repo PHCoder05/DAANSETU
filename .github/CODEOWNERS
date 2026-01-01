@@ -1,0 +1,16 @@
+# Define who owns what parts of the codebase
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners
+*       @phcoder05
+
+# Backend
+/backend/     @phcoder05
+/backend/models/ @phcoder05
+
+# Mobile
+/mobile/      @phcoder05
+/mobile/lib/  @phcoder05
+
+# Documentation
+/docs/        @your-username

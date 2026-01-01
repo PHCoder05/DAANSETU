@@ -1,0 +1,14 @@
+# Labeler configuration
+backend:
+  - backend/**/*
+
+mobile:
+  - mobile/**/*
+
+documentation:
+  - docs/**/*
+  - README.md
+  - CONTRIBUTING.md
+
+github:
+  - .github/**/*

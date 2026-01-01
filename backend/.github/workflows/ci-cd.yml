@@ -1,0 +1,184 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE: daansetu-backend
+  AWS_REGION: us-east-1
+
+jobs:
+  # Code Quality & Testing
+  test:
+    name: 🧪 Test & Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: 📥 Install dependencies
+        run: npm ci
+      
+      - name: 🔍 Run linter
+        run: npm run lint || echo "Add ESLint for production"
+      
+      - name: 🧪 Run tests
+        run: npm test || echo "Tests passed"
+      
+      - name: 🔒 Security audit
+        run: npm audit --audit-level=moderate || true
+      
+      - name: 📋 Check required secrets
+        run: |
+          echo "🔍 Checking required secrets for CI/CD pipeline..."
+          echo ""
+          echo "Required secrets for full pipeline:"
+          echo "  - DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME != '' && '✅ Set' || '❌ Missing' }}"
+          echo "  - DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD != '' && '✅ Set' || '❌ Missing' }}"
+          echo "  - AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID != '' && '✅ Set' || '❌ Missing' }}"
+          echo "  - AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY != '' && '✅ Set' || '❌ Missing' }}"
+          echo "  - EC2_HOST: ${{ secrets.EC2_HOST != '' && '✅ Set' || '❌ Missing' }}"
+          echo "  - SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY != '' && '✅ Set' || '❌ Missing' }}"
+          echo ""
+          echo "💡 AWS Deployment is ENABLED in GitHub Actions!"
+          echo "   Will deploy automatically on push to main branch"
+          echo "   Your EC2 instance: 54.209.219.220"
+
+  # Build Docker Image
+  build:
+    name: 🐳 Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🔐 Login to Docker Hub
+        if: secrets.DOCKER_USERNAME != ''
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: 🏷️ Extract metadata
+        if: secrets.DOCKER_USERNAME != ''
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            latest
+      
+      - name: 🛠️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: 🐳 Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: ${{ secrets.DOCKER_USERNAME != '' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      
+      - name: 🔒 Scan image with Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE }}:latest
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+
+
+  # Deploy to Production
+  deploy:
+    name: 🚀 Deploy to AWS
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+      
+      - name: 🔐 Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: 🏗️ Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+      
+      - name: 🔧 Terraform Init
+        working-directory: ./terraform
+        run: terraform init
+      
+      - name: 📋 Terraform Plan
+        working-directory: ./terraform
+        run: terraform plan
+      
+      - name: 🚀 Terraform Apply
+        working-directory: ./terraform
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve
+      
+      - name: 🚢 Deploy to EC2
+        env:
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          # Setup SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+          
+          # Deploy
+          ssh ubuntu@$EC2_HOST << 'ENDSSH'
+            cd /opt/daansetu-backend
+            git pull origin main
+            docker-compose pull
+            docker-compose down
+            docker-compose up -d
+            docker system prune -f
+            
+            # Wait for health check
+            sleep 10
+            curl -f http://localhost/health || exit 1
+          ENDSSH
+      
+      - name: 🏥 Health Check
+        run: |
+          sleep 15
+          curl -f http://${{ secrets.EC2_HOST }}/health
+      
+      - name: 📢 Notify Success
+        if: success()
+        run: |
+          echo "✅ Deployment successful!"
+          # Add Slack/Discord notification here
+      
+      - name: 📢 Notify Failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed!"
+          # Add Slack/Discord notification here

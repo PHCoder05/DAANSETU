@@ -1,0 +1,27 @@
+# AWS Configuration
+aws_region    = "us-east-1"
+environment   = "production"
+project_name  = "daansetu-backend"
+
+# Network Configuration
+vpc_cidr = "10.0.0.0/16"
+
+# EC2 Configuration
+instance_type = "t3.small" # 2 vCPU, 2GB RAM - $0.0208/hour
+
+# Security - Update these!
+allowed_ssh_ips = ["YOUR_IP_HERE/32"] # Your IP address
+allowed_app_ips = ["0.0.0.0/0"]       # Allow all for app access
+
+# SSH Key - Generate with: ssh-keygen -t rsa -b 4096
+ssh_public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC... your-public-key-here"
+
+# Application Secrets - CHANGE THESE!
+mongodb_uri         = "mongodb+srv://prod_user:STRONG_PASSWORD@cluster.mongodb.net/"
+jwt_secret          = "GENERATE_SECURE_64_CHAR_STRING"
+jwt_refresh_secret  = "GENERATE_DIFFERENT_64_CHAR_STRING"
+admin_setup_key     = "GENERATE_STRONG_SETUP_KEY"
+
+# CORS
+cors_origin = "https://yourdomain.com"
+
