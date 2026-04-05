@@ -1,0 +1,94 @@
+- **GET** `/api/admin/users` - Get all users (Admin only)
+- **DELETE** `/api/admin/users/{userId}` - Delete user (Admin only)
+- **PUT** `/api/admin/users/{userId}/toggle-status` - Activate/deactivate user (Admin only)
+- **GET** `/api/admin/ngos/pending` - Get pending NGO verifications (Admin only)
+- **PUT** `/api/admin/ngos/{userId}/verify` - Verify or reject NGO (Admin only)
+- **GET** `/api/admin/stats` - Get platform statistics (Admin only)
+- **POST** `/api/admin/seed` - Seed test data (Development only)
+- **GET** `/api/v1/audit/my` - Get current user's activity log
+- **GET** `/api/v1/audit/summary` - Get activity summary for dashboard
+- **GET** `/api/v1/audit/donation/{donationId}` - Get audit trail for a specific donation
+- **GET** `/api/v1/audit/user/{userId}` - Admin - Get user's full activity history
+- **GET** `/api/auth/check-email` - Check if email exists (for unified auth flow)
+- **POST** `/api/auth/register` - Register a new user
+- **POST** `/api/auth/login` - Login user
+- **POST** `/api/auth/refresh` - Refresh access token
+- **POST** `/api/auth/logout` - Logout user
+- **GET** `/api/auth/profile` - Get user profile
+- **PUT** `/api/auth/profile` - Update user profile
+- **POST** `/api/auth/profile/image` - Upload profile image
+- **POST** `/api/auth/logout-all` - Logout from all devices
+- **PUT** `/api/auth/change-password` - Change password
+- **PUT** `/api/auth/ngo-details` - Update NGO details (NGO only)
+- **POST** `/api/auth/generate-token` - Generate JWT token for a user by email or userId
+- **GET** `/api/auth/leaderboard` - Get donor leaderboard
+- **POST** `/api/v1/auth/bookmark` - Toggle bookmark for a donation
+- **POST** `/api/v1/auth/send-verification` - Send email verification link
+- **POST** `/api/v1/auth/verify-email` - Verify email with token
+- **GET** `/api/v1/chat/history/{recipientId}` - Get chat history with a user
+- **GET** `/api/v1/chat/donation/{donationId}/{recipientId}` - Get chat history for a specific donation
+- **GET** `/api/v1/chat/conversations` - Get list of conversations (grouped by user)
+- **GET** `/api/v1/chat/conversations/by-donation` - Get list of conversations grouped by donation
+- **PUT** `/api/v1/chat/read/{recipientId}` - Mark messages from a user as read
+- **GET** `/api/dashboard` - Get user dashboard data (role-specific)
+- **GET** `/api/dashboard/activity` - Get user activity history
+- **GET** `/api/dashboard/leaderboard` - Get platform leaderboard
+- **GET** `/api/v1/delivery/{donationId}` - Get tracking status for a donation
+- **POST** `/api/v1/delivery/{donationId}/initialize` - Initialize tracking (NGO only)
+- **POST** `/api/v1/delivery/{donationId}/pickup` - Mark donation as picked up with QR, photo, signature
+- **POST** `/api/v1/delivery/{donationId}/location` - Update GPS location during transit
+- **POST** `/api/v1/delivery/{donationId}/deliver` - Mark donation as delivered with QR, photo, signature
+- **POST** `/api/v1/delivery/{donationId}/confirm` - Donor confirms delivery
+- **GET** `/api/v1/delivery/active` - Get NGO's active deliveries
+- **GET** `/api/v1/delivery/{donationId}/history` - Get location history for a delivery
+- **GET** `/api/donations` - Get all donations
+- **POST** `/api/donations` - Create a new donation (Donor only)
+- **GET** `/api/donations/nearby` - Find nearby donations
+- **GET** `/api/donations/{id}` - Get donation by ID
+- **PUT** `/api/donations/{id}` - Update donation
+- **DELETE** `/api/donations/{id}` - Delete donation
+- **POST** `/api/donations/{id}/claim` - Claim a donation (Verified NGO only)
+- **PUT** `/api/donations/{id}/status` - Update donation status
+- **GET** `/api/donations/stats/summary` - Get donation statistics
+- **GET** `/api/donations/my` - Get my donations (as donor or NGO)
+- **GET** `/api/donations/{id}/timeline` - Get donation timeline (status history)
+- **GET** `/api/ngos` - Get all verified NGOs
+- **GET** `/api/ngos/{id}` - Get NGO by ID
+- **POST** `/api/ngos/requests` - Create a donation request (Verified NGO only)
+- **GET** `/api/ngos/requests/list` - Get donation requests
+- **PUT** `/api/ngos/requests/{id}/status` - Approve or reject a request (Donor only)
+- **PUT** `/api/ngos/requests/{id}/cancel` - Cancel own request (NGO only)
+- **GET** `/api/notifications` - Get user notifications
+- **GET** `/api/notifications/unread-count` - Get unread notification count
+- **PUT** `/api/notifications/{id}/read` - Mark notification as read
+- **PUT** `/api/notifications/read-all` - Mark all notifications as read
+- **DELETE** `/api/notifications/{id}` - Delete notification
+- **POST** `/api/password-reset/request` - Request password reset
+- **GET** `/api/password-reset/verify` - Verify reset token validity
+- **POST** `/api/password-reset/reset` - Reset password with token
+- **POST** `/api/reviews` - Create review for NGO (Donor only)
+- **GET** `/api/reviews/ngo/{ngoId}` - Get reviews for an NGO
+- **PUT** `/api/reviews/{id}` - Update own review (Donor only)
+- **DELETE** `/api/reviews/{id}` - Delete review
+- **PUT** `/api/reviews/{id}/respond` - NGO respond to review
+- **GET** `/api/search/donations` - Advanced search for donations
+- **GET** `/api/search/ngos` - Search for NGOs
+- **GET** `/api/search/categories` - Get all donation categories with counts
+- **GET** `/api/setup/check` - Check if first-time setup is required
+- **POST** `/api/setup/admin` - Create first admin account (one-time setup)
+- **POST** `/api/v1/verification/request` - Request verification (auto-verifies NGO via govt APIs)
+- **POST** `/api/v1/verification/ngo/auto-verify` - Auto-verify NGO using government databases (Darpan, 80G, MCA)
+- **POST** `/api/v1/verification/ngo/darpan` - Verify NGO using Darpan ID only
+- **POST** `/api/v1/verification/ngo/80g` - Verify 80G certificate using PAN
+- **GET** `/api/v1/verification/status` - Get my verification status
+- **GET** `/api/v1/verification/pending` - Admin - Get pending verifications
+- **POST** `/api/v1/verification/{id}/approve` - Admin - Approve verification
+- **POST** `/api/v1/verification/{id}/reject` - Admin - Reject verification
+- **POST** `/api/v1/verification/{id}/bypass` - Admin - Bypass government API verification and approve directly
+- **POST** `/api/v1/verification/{id}/rerun-api` - Admin - Force re-run government API verification
+- **POST** `/api/v1/verification/support/request` - NGO - Request support / contact admin for verification issues
+- **GET** `/api/v1/verification/support/my` - NGO - Get my support requests
+- **GET** `/api/v1/verification/support/all` - Admin - Get all support requests
+- **POST** `/api/v1/verification/support/{id}/respond` - Admin - Respond to support request
+- **GET** `/api/v1/verification/fraud-alerts` - Admin - Get fraud alerts
+- **POST** `/api/v1/verification/fraud-alerts/{id}/resolve` - Admin - Resolve fraud alert

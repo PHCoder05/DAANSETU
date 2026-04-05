@@ -71,7 +71,7 @@ router.post('/ngo/80g', authenticate, verificationController.verify80G);
  *         name: type
  *         schema:
  *           type: string
- *         description: Verification type (default: ngo_registration)
+ *         description: "Verification type (default: ngo_registration)"
  */
 router.get('/steps', authenticate, verificationController.getVerificationSteps);
 
@@ -238,10 +238,6 @@ router.get('/fraud-alerts', authenticate, verificationController.getFraudAlerts)
  *     security:
  *       - bearerAuth: []
  */
-router.post('/fraud-alerts/:id/resolve', authenticate, mongoIdValidation('id'), verificationController.resolveFraudAlert);
-
-module.exports = router;
-
 router.post('/fraud-alerts/:id/resolve', authenticate, mongoIdValidation('id'), verificationController.resolveFraudAlert);
 
 module.exports = router;
