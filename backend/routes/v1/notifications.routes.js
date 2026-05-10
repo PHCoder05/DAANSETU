@@ -102,5 +102,9 @@ router.put('/read-all', notificationController.markAllAsRead);
  */
 router.delete('/:id', mongoIdValidation('id'), notificationController.deleteNotification);
 
+// FCM Token Management
+router.post('/tokens', notificationController.registerToken);
+router.delete('/tokens', notificationController.unregisterToken);
+
 module.exports = router;
 

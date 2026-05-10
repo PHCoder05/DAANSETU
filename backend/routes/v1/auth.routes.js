@@ -405,15 +405,19 @@ router.put(
  *       404:
  *         description: User not found
  */
-router.post(
-  '/generate-token',
-  [
-    body('userId').optional().isMongoId().withMessage('Invalid user ID format'),
-    body('email').optional().isEmail().withMessage('Invalid email format'),
-    validate
-  ],
-  authController.generateUserToken
-);
+// Only allow token generation in development mode
+if (process.env.NODE_ENV === 'development') {
+  router.post(
+    '/generate-token',
+    [
+      body('userId').optional().isMongoId().withMessage('Invalid user ID format'),
+      body('email').optional().isEmail().withMessage('Invalid email format'),
+      validate
+    ],
+    authController.generateUserToken
+  );
+}
+
 
 /**
  * @swagger

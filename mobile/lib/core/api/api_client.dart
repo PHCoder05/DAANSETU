@@ -102,8 +102,12 @@ class ApiClient {
   Future<Response> resetPassword(String token, String password) async {
     return _dio.post('/password-reset/reset', data: {
       'token': token,
-      'password': password,
+      'newPassword': password,
     });
+  }
+
+  Future<Response> verifyResetToken(String token) async {
+    return _dio.get('/password-reset/verify', queryParameters: {'token': token});
   }
   
   // Donations endpoints
@@ -124,6 +128,18 @@ class ApiClient {
       if (search != null) 'search': search,
       if (myDonations) 'myDonations': 'true',
       if (saved) 'saved': 'true',
+    });
+  }
+  
+  Future<Response> getNearbyDonations({
+    required double lat,
+    required double lng,
+    double maxDistance = 50,
+  }) async {
+    return _dio.get('/donations/nearby', queryParameters: {
+      'lat': lat,
+      'lng': lng,
+      'maxDistance': maxDistance,
     });
   }
   
@@ -150,12 +166,25 @@ class ApiClient {
   Future<Response> updateDonationStatus(String id, String status) async {
     return _dio.put('/donations/$id/status', data: {'status': status});
   }
+
+  Future<Response> downloadDonationReceipt(String id, String savePath) async {
+    return _dio.download('/donations/$id/receipt', savePath);
+  }
   
   // Bookmark
   Future<Response> toggleBookmark(String donationId) async {
     return _dio.post('/auth/bookmark', data: {'donationId': donationId});
   }
   
+  // Notifications
+  Future<Response> registerFcmToken(String token) async {
+    return _dio.post('/notifications/tokens', data: {'token': token});
+  }
+
+  Future<Response> unregisterFcmToken(String token) async {
+    return _dio.delete('/notifications/tokens', data: {'token': token});
+  }
+
   // NGO endpoints
   Future<Response> getNgos({int page = 1, int limit = 10}) async {
     return _dio.get('/ngos', queryParameters: {
@@ -217,6 +246,21 @@ class ApiClient {
       'limit': limit,
     });
   }
+
+  Future<Response> respondToReview(String reviewId, String response) async {
+    return _dio.put('/reviews/$reviewId/respond', data: {'response': response});
+  }
+
+  Future<Response> createVolunteerReview(Map<String, dynamic> data) async {
+    return _dio.post('/reviews/volunteer', data: data);
+  }
+
+  Future<Response> getVolunteerReviews(String volunteerId, {int page = 1, int limit = 10}) async {
+    return _dio.get('/reviews/volunteer/$volunteerId', queryParameters: {
+      'page': page,
+      'limit': limit,
+    });
+  }
   
   // Dashboard endpoints
   Future<Response> getDashboard() async {
@@ -230,8 +274,8 @@ class ApiClient {
     });
   }
   
-  Future<Response> getLeaderboard() async {
-    return _dio.get('/auth/leaderboard');
+  Future<Response> getLeaderboard({String type = 'donors'}) async {
+    return _dio.get('/dashboard/leaderboard', queryParameters: {'type': type});
   }
   
   // Search endpoints
@@ -266,9 +310,35 @@ class ApiClient {
   Future<Response> verifyNgo(String userId, String status) async {
     return _dio.put('/admin/ngos/$userId/verify', data: {'status': status});
   }
+
+  Future<Response> getPendingVolunteers() async {
+    return _dio.get('/admin/volunteers/pending');
+  }
+  
+  Future<Response> verifyVolunteer(String userId, String status) async {
+    return _dio.put('/admin/volunteers/$userId/verify', data: {'status': status});
+  }
   
   Future<Response> toggleUserStatus(String userId) async {
     return _dio.put('/admin/users/$userId/toggle-status');
+  }
+
+  /// Get all support requests for admin
+  Future<Response> getAllSupportRequests() async {
+    return _dio.get('/admin/support/all');
+  }
+
+  /// Respond to support request as admin
+  Future<Response> respondToSupport(String id, String response, String status) async {
+    return _dio.put('/admin/support/$id/respond', data: {
+      'response': response,
+      'status': status,
+    });
+  }
+
+  /// Get active volunteers for admin map
+  Future<Response> getActiveVolunteers() async {
+    return _dio.get('/admin/volunteers/active');
   }
   
   // Chat endpoints
@@ -376,6 +446,14 @@ class ApiClient {
       if (signature != null) 'signature': signature,
       if (location != null) 'location': location,
       if (qrCode != null) 'qrCode': qrCode,
+    });
+  }
+
+  /// Report emergency (SOS)
+  Future<Response> reportSOS(String donationId, {Map<String, double>? location, String? message}) async {
+    return _dio.post('/delivery/$donationId/sos', data: {
+      if (location != null) 'location': location,
+      if (message != null) 'message': message,
     });
   }
   
@@ -509,6 +587,45 @@ class ApiClient {
   /// Verify email with token
   Future<Response> verifyEmail(String token) async {
     return _dio.post('/auth/verify-email', data: {'token': token});
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // NGO Inventory endpoints
+  // ═══════════════════════════════════════════════════════════════════
+
+  /// Get NGO's current inventory
+  Future<Response> getInventory() async {
+    return _dio.get('/ngo/inventory');
+  }
+
+  /// Distribute inventory item to beneficiaries
+  Future<Response> distributeItem(String id, Map<String, dynamic> data) async {
+    return _dio.post('/ngo/inventory/$id/distribute', data: data);
+  }
+
+  /// Update inventory item status
+  Future<Response> updateInventoryStatus(String id, String status) async {
+    return _dio.put('/ngo/inventory/$id/status', data: {'status': status});
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Fraud Alert endpoints (Admin only)
+  // ═══════════════════════════════════════════════════════════════════
+
+  /// Get all fraud alerts
+  Future<Response> getFraudAlerts({String? severity, String? status}) async {
+    return _dio.get('/verification/fraud-alerts', queryParameters: {
+      if (severity != null) 'severity': severity,
+      if (status != null) 'status': status,
+    });
+  }
+
+  /// Resolve a fraud alert
+  Future<Response> resolveFraudAlert(String id, {required String resolution, bool isFalsePositive = false}) async {
+    return _dio.post('/verification/fraud-alerts/$id/resolve', data: {
+      'resolution': resolution,
+      'isFalsePositive': isFalsePositive,
+    });
   }
 }
 

@@ -15,9 +15,11 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
+import '../../../../shared/models/donation.dart';
 
 class CreateDonationScreen extends ConsumerStatefulWidget {
-  const CreateDonationScreen({super.key});
+  final Donation? initialData;
+  const CreateDonationScreen({super.key, this.initialData});
 
   @override
   ConsumerState<CreateDonationScreen> createState() => _CreateDonationScreenState();
@@ -54,6 +56,20 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
+    
+    if (widget.initialData != null) {
+      _titleController.text = widget.initialData!.title;
+      _descriptionController.text = widget.initialData!.description;
+      _quantityController.text = widget.initialData!.quantity?.toString() ?? '';
+      _addressController.text = widget.initialData!.pickupLocation.address ?? '';
+      _instructionsController.text = widget.initialData!.pickupInstructions ?? '';
+      _selectedCategory = widget.initialData!.category;
+      _selectedCondition = widget.initialData!.condition;
+      _selectedPriority = widget.initialData!.priority;
+      _selectedUnit = widget.initialData!.unit ?? 'kg';
+      _selectedLat = widget.initialData!.pickupLocation.lat;
+      _selectedLng = widget.initialData!.pickupLocation.lng;
+    }
   }
 
   @override
@@ -141,7 +157,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
         }
 
         final apiClient = ref.read(apiClientProvider);
-        final response = await apiClient.createDonation({
+        final payload = {
           'title': _titleController.text.trim(),
           'description': _descriptionController.text.trim(),
           'category': _selectedCategory,
@@ -151,14 +167,18 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
           'unit': _selectedUnit,
           'images': base64Images.isNotEmpty 
               ? base64Images 
-              : [AppImages.getByCategory(_selectedCategory)], // Fallback to category image if none
+              : (widget.initialData != null && widget.initialData!.images.isNotEmpty ? widget.initialData!.images : [AppImages.getByCategory(_selectedCategory)]),
           'pickupLocation': {
             'address': _addressController.text.trim(),
             'lat': _selectedLat ?? 0.0,
             'lng': _selectedLng ?? 0.0,
           },
           'pickupInstructions': _instructionsController.text.trim(),
-        });
+        };
+        
+        final response = widget.initialData != null 
+            ? await apiClient.updateDonation(widget.initialData!.id, payload)
+            : await apiClient.createDonation(payload);
         
         if (response.statusCode == 201 || response.statusCode == 200) {
           // Show Success View instead of snackbar + pop
@@ -169,7 +189,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
           HapticFeedback.heavyImpact();
         }
       } catch (e) {
-        CustomSnackBar.error(context, 'Failed to create donation');
+        CustomSnackBar.error(context, widget.initialData != null ? 'Failed to update donation' : 'Failed to create donation');
         setState(() => _isSubmitting = false);
       }
     }
@@ -186,9 +206,9 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.white,
         elevation: 0,
-        title: const Text(
-          'Create Donation',
-          style: TextStyle(color: AppTheme.black, fontWeight: FontWeight.bold),
+        title: Text(
+          widget.initialData != null ? 'Edit Donation' : 'Create Donation',
+          style: const TextStyle(color: AppTheme.black, fontWeight: FontWeight.bold),
         ),
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: AppTheme.black),
@@ -512,7 +532,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(isLastStep ? 'Post Donation' : 'Next Step'),
+                            Text(isLastStep ? (widget.initialData != null ? 'Save Changes' : 'Post Donation') : 'Next Step'),
                             const SizedBox(width: 10),
                             Icon(isLastStep ? Icons.check_circle_outline : Icons.arrow_forward_rounded, color: AppTheme.white),
                           ],
@@ -556,10 +576,12 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
               
               const SizedBox(height: 16),
               
-              const Text(
-                'Your donation has been posted successfully.\nNGOs nearby will be notified properly.',
+              Text(
+                widget.initialData != null 
+                    ? 'Your donation has been updated successfully.' 
+                    : 'Your donation has been posted successfully.\nNGOs nearby will be notified properly.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: AppTheme.gray, height: 1.5),
+                style: const TextStyle(fontSize: 16, color: AppTheme.gray, height: 1.5),
               ).animate(delay: 400.ms).fadeIn(),
               
               const SizedBox(height: 48),

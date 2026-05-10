@@ -4,10 +4,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes.dart';
 import '../../../../config/theme.dart';
-import '../../../../core/api/api_client.dart';
 import '../../../../shared/models/donation.dart';
+import '../../../../core/api/api_client.dart';
 import '../../../../shared/providers/auth_provider.dart';
-import '../widgets/donation_card.dart';
+import '../../../../shared/widgets/impact_share_card.dart';
+import '../widgets/volunteer_review_modal.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
 
 final myDonationsProvider = FutureProvider.autoDispose<List<Donation>>((ref) async {
@@ -129,7 +130,61 @@ class MyDonationsScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
   
+  void _showImpactShareModal(BuildContext context, WidgetRef ref, Donation donation) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(32),
+            topRight: Radius.circular(32),
+          ),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            const Text('Your Impact', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: ImpactShareCard(
+                  donation: donation,
+                  donorName: ref.read(authStateProvider).user?.name ?? 'Community Hero',
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showVolunteerReviewModal(BuildContext context, Donation donation) {
+    if (donation.volunteerId == null) return;
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => VolunteerReviewModal(
+        donation: donation,
+        volunteerId: donation.volunteerId!,
+        volunteerName: donation.volunteer?.name ?? 'the volunteer',
+      ),
+    );
+  }
+
   void _showEditOptions(BuildContext context, WidgetRef ref, Donation donation) {
     showModalBottomSheet(
       context: context,
@@ -168,6 +223,46 @@ class MyDonationsScreen extends ConsumerWidget {
                 context.go('${AppRoutes.donations}/${donation.id}');
               },
             ),
+            
+            // Share Impact
+            if (donation.isDelivered) ...[
+              const SizedBox(height: 12),
+              _ActionTile(
+                icon: Icons.share_rounded,
+                title: 'Share Impact',
+                color: Colors.purple,
+                onTap: () {
+                  Navigator.pop(context);
+                  _showImpactShareModal(context, ref, donation);
+                },
+              ),
+              if (donation.volunteerId != null) ...[
+                const SizedBox(height: 12),
+                _ActionTile(
+                  icon: Icons.star_border_rounded,
+                  title: 'Rate Volunteer',
+                  color: Colors.amber[700]!,
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showVolunteerReviewModal(context, donation);
+                  },
+                ),
+              ],
+            ],
+            
+            // Edit Donation
+            if (donation.isAvailable) ...[
+              const SizedBox(height: 12),
+              _ActionTile(
+                icon: Icons.edit_rounded,
+                title: 'Edit Donation',
+                color: AppTheme.primaryRed,
+                onTap: () {
+                  Navigator.pop(context);
+                  context.go('${AppRoutes.donations}/create', extra: donation);
+                },
+              ),
+            ],
             
             // Update Status
             if (donation.isAvailable || donation.isClaimed) ...[
@@ -248,7 +343,7 @@ class MyDonationsScreen extends ConsumerWidget {
     try {
       final apiClient = ref.read(apiClientProvider);
       await apiClient.updateDonationStatus(id, status);
-      ref.refresh(myDonationsProvider);
+      ref.invalidate(myDonationsProvider);
       
       if (context.mounted) {
         CustomSnackBar.success(context, 'Status updated!');
@@ -289,7 +384,7 @@ class MyDonationsScreen extends ConsumerWidget {
     try {
       final apiClient = ref.read(apiClientProvider);
       await apiClient.deleteDonation(id);
-      ref.refresh(myDonationsProvider);
+      ref.invalidate(myDonationsProvider);
       
       if (context.mounted) {
         CustomSnackBar.success(context, 'Donation deleted');
@@ -300,7 +395,6 @@ class MyDonationsScreen extends ConsumerWidget {
       }
     }
   }
-}
 
 class _MyDonationCard extends StatelessWidget {
   final Donation donation;

@@ -1,4 +1,6 @@
 const { ObjectId } = require('mongodb');
+const { calculateDistance } = require('../utils/helpers');
+
 
 /**
  * DeliveryTracking Model
@@ -97,6 +99,26 @@ class DeliveryTracking {
             throw new Error('Invalid pickup QR code');
         }
 
+        // Location Verification
+        if (location && tracking.pickupLocation) {
+            const distance = calculateDistance(
+                location.lat, 
+                location.lng, 
+                tracking.pickupLocation.lat, 
+                tracking.pickupLocation.lng
+            );
+
+            if (distance > 0.5) { // 500 meters threshold
+                const FraudAlert = require('./FraudAlert');
+                await FraudAlert.createLocationMismatch(db, tracking.ngoId, donationId, {
+                    action: 'pickup',
+                    distance,
+                    expectedLocation: tracking.pickupLocation,
+                    actualLocation: location
+                });
+            }
+        }
+
         return this.update(db, donationId, {
             status: 'picked_up',
             actualPickupTime: new Date(),
@@ -131,6 +153,26 @@ class DeliveryTracking {
         // Verify QR code
         if (tracking?.deliveryQrCode !== qrCode) {
             throw new Error('Invalid delivery QR code');
+        }
+
+        // Location Verification
+        if (location && tracking.deliveryLocation) {
+            const distance = calculateDistance(
+                location.lat, 
+                location.lng, 
+                tracking.deliveryLocation.lat, 
+                tracking.deliveryLocation.lng
+            );
+
+            if (distance > 0.5) { // 500 meters threshold
+                const FraudAlert = require('./FraudAlert');
+                await FraudAlert.createLocationMismatch(db, tracking.ngoId, donationId, {
+                    action: 'delivery',
+                    distance,
+                    expectedLocation: tracking.deliveryLocation,
+                    actualLocation: location
+                });
+            }
         }
 
         return this.update(db, donationId, {

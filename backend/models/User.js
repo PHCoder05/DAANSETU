@@ -16,6 +16,7 @@ class User {
     this.createdAt = data.createdAt || new Date();
     this.updatedAt = data.updatedAt || new Date();
     this.bookmarks = data.bookmarks || []; // Array of Donation IDs
+    this.fcmTokens = data.fcmTokens || []; // Array of FCM tokens for push notifications
 
     // NGO-specific fields
     if (this.role === 'ngo') {
@@ -41,6 +42,18 @@ class User {
       // Gamification fields
       this.impactScore = data.impactScore || 0;
       this.badges = data.badges || []; // Array of { id, name, icon, awardedAt }
+    }
+
+    // Volunteer-specific fields
+    if (this.role === 'volunteer') {
+      this.volunteerStats = {
+        pickupsCompleted: data.volunteerStats?.pickupsCompleted || 0,
+        totalPoints: data.volunteerStats?.totalPoints || 0,
+        rating: data.volunteerStats?.rating || 0,
+        hoursContributed: data.volunteerStats?.hoursContributed || 0,
+        reliabilityScore: data.volunteerStats?.reliabilityScore || 100
+      };
+      this.isAvailable = data.isAvailable !== undefined ? data.isAvailable : true;
     }
   }
 

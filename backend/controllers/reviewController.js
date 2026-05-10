@@ -5,6 +5,8 @@ const Donation = require('../models/Donation');
 const Notification = require('../models/Notification');
 const { getPagination, buildPaginationResponse, successResponse, errorResponse } = require('../utils/helpers');
 const logger = require('../utils/logger');
+const VolunteerReview = require('../models/VolunteerReview');
+const User = require('../models/User');
 
 // Create review for NGO
 const createReview = async (req, res) => {
@@ -203,11 +205,147 @@ const respondToReview = async (req, res) => {
   }
 };
 
+// Create review for Volunteer (Donor or NGO)
+const createVolunteerReview = async (req, res) => {
+  try {
+    if (req.user.role === 'volunteer' || req.user.role === 'admin') {
+      return errorResponse(res, 403, 'Only donors and NGOs can review volunteers');
+    }
+
+    const { volunteerId, donationId, rating, comment } = req.body;
+    const db = getDB();
+
+    // Verify donation exists and was handled by this volunteer
+    const donation = await Donation.findById(db, donationId);
+    if (!donation) {
+      return errorResponse(res, 404, 'Donation not found');
+    }
+
+    // Security check: Only the involved donor or NGO can review
+    const isDonor = donation.donorId.toString() === req.user.userId;
+    const isNGO = donation.claimedBy && donation.claimedBy.toString() === req.user.userId;
+
+    if (!isDonor && !isNGO) {
+      return errorResponse(res, 403, 'You were not involved in this donation');
+    }
+
+    if (donation.status !== 'delivered' && donation.status !== 'confirmed') {
+      return errorResponse(res, 400, 'You can only review after successful delivery');
+    }
+
+    if (!donation.volunteerId || donation.volunteerId.toString() !== volunteerId) {
+      return errorResponse(res, 400, 'This volunteer did not handle this donation');
+    }
+
+    // Check if review already exists from this user for this donation
+    const existingReview = await VolunteerReview.checkExisting(db, req.user.userId, donationId);
+    if (existingReview) {
+      return errorResponse(res, 400, 'You have already reviewed this delivery');
+    }
+
+    const reviewData = {
+      volunteerId,
+      reviewerId: req.user.userId,
+      reviewerRole: req.user.role,
+      donationId,
+      rating,
+      comment
+    };
+
+    const review = await VolunteerReview.create(db, reviewData);
+
+    // Update volunteer stats
+    const stats = await VolunteerReview.getAverageRating(db, volunteerId);
+    
+    // Calculate new reliability score and points impact
+    let reliabilityImpact = 0;
+    let pointsImpact = 0;
+    
+    if (rating < 3) {
+      reliabilityImpact = -10;
+    } else if (rating >= 4) {
+      reliabilityImpact = 5;
+      pointsImpact = rating === 5 ? 10 : 5; // 10 points for 5-star, 5 points for 4-star
+    }
+
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(volunteerId) },
+      { 
+        $set: { 
+          'volunteerStats.rating': stats.avgRating,
+          'volunteerStats.totalReviews': stats.totalReviews 
+        },
+        $inc: { 
+          'volunteerStats.reliabilityScore': reliabilityImpact,
+          'volunteerStats.totalPoints': pointsImpact
+        }
+      }
+    );
+
+    // Clamp reliability score between 0 and 100
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(volunteerId), 'volunteerStats.reliabilityScore': { $gt: 100 } },
+      { $set: { 'volunteerStats.reliabilityScore': 100 } }
+    );
+    await db.collection('users').updateOne(
+      { _id: new ObjectId(volunteerId), 'volunteerStats.reliabilityScore': { $lt: 0 } },
+      { $set: { 'volunteerStats.reliabilityScore': 0 } }
+    );
+
+    // Create notification for Volunteer
+    await Notification.create(db, {
+      userId: new ObjectId(volunteerId),
+      title: 'New Feedback Received',
+      message: `A ${req.user.role} gave you a ${rating}-star rating for your delivery.`,
+      type: 'review',
+      relatedId: review._id,
+      relatedType: 'volunteer_review'
+    });
+
+    return successResponse(res, 201, 'Volunteer review submitted', { review });
+  } catch (error) {
+    logger.logError(error, { action: 'createVolunteerReview', userId: req.user.userId });
+    return errorResponse(res, 500, 'Error submitting review', error.message);
+  }
+};
+
+// Get Volunteer reviews
+const getVolunteerReviews = async (req, res) => {
+  try {
+    const { volunteerId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+    const { skip, limit: limitNum } = getPagination(page, limit);
+
+    const db = getDB();
+
+    const reviews = await VolunteerReview.findByVolunteer(db, volunteerId, {
+      skip,
+      limit: limitNum,
+      sort: { createdAt: -1 }
+    });
+
+    const total = await db.collection('volunteer_reviews').countDocuments({
+      volunteerId: new ObjectId(volunteerId)
+    });
+
+    const ratingData = await VolunteerReview.getAverageRating(db, volunteerId);
+
+    return successResponse(res, 200, 'Volunteer reviews retrieved', {
+      ...buildPaginationResponse(reviews, total, page, limitNum),
+      ...ratingData
+    });
+  } catch (error) {
+    logger.logError(error, { action: 'getVolunteerReviews', volunteerId: req.params.volunteerId });
+    return errorResponse(res, 500, 'Error fetching reviews', error.message);
+  }
+};
+
 module.exports = {
   createReview,
   getNGOReviews,
   updateReview,
   deleteReview,
-  respondToReview
+  respondToReview,
+  createVolunteerReview,
+  getVolunteerReviews
 };
-

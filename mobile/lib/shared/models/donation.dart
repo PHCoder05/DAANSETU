@@ -12,11 +12,13 @@ class Donation {
   final String condition;
   final DateTime? expiryDate;
   final Location pickupLocation;
+  final Location? currentLocation;
   final String? pickupInstructions;
   final String status;
   final String? claimedBy;
   final DateTime? claimedAt;
   final String? deliveryStatus;
+  final String? volunteerId;
   final DateTime? deliveryDate;
   final String? deliveryNotes;
   final List<String> deliveryImages;
@@ -26,10 +28,12 @@ class Donation {
   final int views;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final double? distance; // Distance in meters (if calculated)
   
   // Related data from aggregation
   final User? donor;
   final User? ngo;
+  final User? volunteer;
   
   Donation({
     required this.id,
@@ -43,6 +47,7 @@ class Donation {
     this.condition = 'good',
     this.expiryDate,
     required this.pickupLocation,
+    this.currentLocation,
     this.pickupInstructions,
     this.status = 'available',
     this.claimedBy,
@@ -57,8 +62,11 @@ class Donation {
     this.views = 0,
     required this.createdAt,
     required this.updatedAt,
+    this.distance,
     this.donor,
     this.ngo,
+    this.volunteerId,
+    this.volunteer,
   });
   
   bool get isAvailable => status == 'available';
@@ -125,11 +133,15 @@ class Donation {
       pickupLocation: json['pickupLocation'] != null 
           ? Location.fromJson(json['pickupLocation']) 
           : Location(lat: 0, lng: 0),
+      currentLocation: json['currentLocation'] != null 
+          ? Location.fromJson(json['currentLocation']) 
+          : null,
       pickupInstructions: json['pickupInstructions']?.toString(),
       status: json['status']?.toString() ?? 'available',
       claimedBy: json['claimedBy'] is Map ? json['claimedBy']['_id']?.toString() : json['claimedBy']?.toString(),
       claimedAt: json['claimedAt'] != null ? DateTime.tryParse(json['claimedAt'].toString()) : null,
       deliveryStatus: json['deliveryStatus']?.toString(),
+      volunteerId: json['volunteerId']?.toString() ?? json['volunteer']?['_id']?.toString(),
       deliveryDate: json['deliveryDate'] != null ? DateTime.tryParse(json['deliveryDate'].toString()) : null,
       deliveryNotes: json['deliveryNotes']?.toString(),
       deliveryImages: List<String>.from((json['deliveryImages'] ?? []).map((e) => e.toString())),
@@ -139,8 +151,10 @@ class Donation {
       views: parseIntSafe(json['views']) ?? 0,
       createdAt: json['createdAt'] != null ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()) : DateTime.now(),
+      distance: json['distance'] != null ? (json['distance'] as num).toDouble() : null,
       donor: json['donor'] != null && json['donor'] is Map ? User.fromJson(json['donor']) : null,
       ngo: json['ngo'] != null && json['ngo'] is Map ? User.fromJson(json['ngo']) : null,
+      volunteer: json['volunteer'] != null && json['volunteer'] is Map ? User.fromJson(json['volunteer']) : null,
     );
   }
   

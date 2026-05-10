@@ -2,36 +2,45 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../public/uploads/profiles');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
+/**
+ * Flexible Multer Upload Middleware
+ * Supports different directories and file types
+ */
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+        // Determine subfolder based on fieldname or query
+        const type = req.query.type || 'general';
+        const uploadDir = path.join(__dirname, `../public/uploads/${type}`);
+        
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
         cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-        // timestamp_userid.ext
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
         cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
     }
 });
 
 const fileFilter = (req, file, cb) => {
-    // Accept images only
-    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
-        return cb(new Error('Only image files are allowed!'), false);
+    // Allowed extensions
+    const allowedImages = /\.(jpg|jpeg|png|gif)$/;
+    const allowedDocs = /\.(pdf|doc|docx|txt)$/;
+    
+    if (file.originalname.match(allowedImages) || file.originalname.match(allowedDocs)) {
+        cb(null, true);
+    } else {
+        cb(new Error('File type not supported!'), false);
     }
-    cb(null, true);
 };
 
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
     limits: {
-        fileSize: 5 * 1024 * 1024 // 5MB max
+        fileSize: 10 * 1024 * 1024 // 10MB max
     }
 });
 

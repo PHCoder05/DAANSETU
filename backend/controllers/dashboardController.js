@@ -78,6 +78,26 @@ const getUserDashboard = async (req, res) => {
         }
       ]).toArray();
 
+      // Inventory analytics
+      const inventoryStats = await db.collection('donations').aggregate([
+        { $match: { claimedBy: new ObjectId(userId) } },
+        {
+          $group: {
+            _id: null,
+            totalStock: { $sum: { $cond: [{ $eq: ['$status', 'delivered'] }, '$quantity', 0] } },
+            totalDistributed: { 
+              $sum: { 
+                $reduce: {
+                  input: { $ifNull: ['$distributionHistory', []] },
+                  initialValue: 0,
+                  in: { $add: ["$$value", "$$this.quantity"] }
+                }
+              }
+            }
+          }
+        }
+      ]).toArray();
+
       const availableDonations = await db.collection('donations')
         .find({ status: 'available', active: true })
         .sort({ createdAt: -1 })
@@ -92,7 +112,8 @@ const getUserDashboard = async (req, res) => {
             acc[curr._id] = curr.count;
             return acc;
           }, {}),
-          totalRequests: requestStats.reduce((sum, curr) => sum + curr.count, 0)
+          totalRequests: requestStats.reduce((sum, curr) => sum + curr.count, 0),
+          inventory: inventoryStats[0] || { totalStock: 0, totalDistributed: 0 }
         },
         claimedDonations: claimedDonations.slice(0, 5),
         availableDonations: availableDonations.slice(0, 5)
@@ -281,6 +302,21 @@ const getLeaderboard = async (req, res) => {
             deliveredCount: 1
           }
         }
+      ]).toArray();
+    } else if (type === 'volunteers') {
+      // Top Volunteers by deliveries and points
+      leaderboard = await db.collection('users').aggregate([
+        { $match: { role: 'volunteer', active: true } },
+        {
+          $project: {
+            name: 1,
+            deliveries: { $ifNull: ['$volunteerStats.pickupsCompleted', 0] },
+            points: { $ifNull: ['$volunteerStats.totalPoints', 0] },
+            rating: { $ifNull: ['$volunteerStats.rating', 5.0] }
+          }
+        },
+        { $sort: { points: -1, deliveries: -1 } },
+        { $limit: parseInt(limit) }
       ]).toArray();
     }
 

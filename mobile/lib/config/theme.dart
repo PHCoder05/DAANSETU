@@ -59,6 +59,25 @@ class AppTheme {
     ),
   ];
 
+  static InputDecoration inputDecoration(String label) => InputDecoration(
+    labelText: label,
+    filled: true,
+    fillColor: offWhite,
+    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: BorderSide.none,
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(12),
+      borderSide: const BorderSide(color: primaryRed, width: 2),
+    ),
+  );
+
   // Border Radius
   static BorderRadius get borderRadiusSmall => BorderRadius.circular(8);
   static BorderRadius get borderRadiusMedium => BorderRadius.circular(12);

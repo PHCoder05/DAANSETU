@@ -11,8 +11,10 @@ class User {
   final bool active;
   final NgoDetails? ngoDetails;
   final DonorStats? donorStats;
+  final VolunteerStats? volunteerStats;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final bool? isAvailable; // For volunteers to toggle online/offline
   final int impactScore;
   final List<Badge> badges;
   final List<String> bookmarks;
@@ -30,8 +32,10 @@ class User {
     this.active = true,
     this.ngoDetails,
     this.donorStats,
+    this.volunteerStats,
     required this.createdAt,
     required this.updatedAt,
+    this.isAvailable,
     this.impactScore = 0,
     this.badges = const [],
     this.bookmarks = const [],
@@ -40,6 +44,7 @@ class User {
   bool get isDonor => role == 'donor';
   bool get isNgo => role == 'ngo';
   bool get isAdmin => role == 'admin';
+  bool get isVolunteer => role == 'volunteer';
   bool get isVerifiedNgo => isNgo && (ngoDetails?.verificationStatus == 'verified');
   
   factory User.fromJson(Map<String, dynamic> json) {
@@ -56,8 +61,10 @@ class User {
       active: json['active'] == true || json['active'] == 'true' || json['active'] == null,
       ngoDetails: json['ngoDetails'] != null && json['ngoDetails'] is Map ? NgoDetails.fromJson(json['ngoDetails']) : null,
       donorStats: json['donorStats'] != null && json['donorStats'] is Map ? DonorStats.fromJson(json['donorStats']) : null,
+      volunteerStats: json['volunteerStats'] != null && json['volunteerStats'] is Map ? VolunteerStats.fromJson(json['volunteerStats']) : null,
       createdAt: json['createdAt'] != null ? (DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()) : DateTime.now(),
       updatedAt: json['updatedAt'] != null ? (DateTime.tryParse(json['updatedAt'].toString()) ?? DateTime.now()) : DateTime.now(),
+      isAvailable: json['isAvailable'] == true || json['isAvailable'] == 'true',
       impactScore: (json['impactScore'] is int) ? json['impactScore'] : ((json['impactScore'] is double) ? (json['impactScore'] as double).toInt() : 0),
       badges: (json['badges'] != null && json['badges'] is List) ? (json['badges'] as List).map((x) => Badge.fromJson(x as Map<String, dynamic>)).toList() : [],
       bookmarks: (json['bookmarks'] != null && json['bookmarks'] is List) ? (json['bookmarks'] as List).map((e) => e.toString()).toList() : [],
@@ -77,6 +84,7 @@ class User {
     bool? active,
     NgoDetails? ngoDetails,
     DonorStats? donorStats,
+    VolunteerStats? volunteerStats,
     DateTime? createdAt,
     DateTime? updatedAt,
     int? impactScore,
@@ -96,8 +104,10 @@ class User {
       active: active ?? this.active,
       ngoDetails: ngoDetails ?? this.ngoDetails,
       donorStats: donorStats ?? this.donorStats,
+      volunteerStats: volunteerStats ?? this.volunteerStats,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      isAvailable: isAvailable ?? this.isAvailable,
       impactScore: impactScore ?? this.impactScore,
       badges: badges ?? this.badges,
       bookmarks: bookmarks ?? this.bookmarks,
@@ -118,9 +128,10 @@ class User {
       'active': active,
       'ngoDetails': ngoDetails?.toJson(),
       'donorStats': donorStats?.toJson(),
+      'volunteerStats': volunteerStats?.toJson(),
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt.toIso8601String(),
-      'impactScore': impactScore,
+      'isAvailable': isAvailable,
       'impactScore': impactScore,
       'badges': badges.map((e) => e.toJson()).toList(),
       'bookmarks': bookmarks,
@@ -176,7 +187,6 @@ class NgoDetails {
   });
   
   factory NgoDetails.fromJson(Map<String, dynamic> json) {
-    // Helper function to safely parse int values
     int? parseIntSafe(dynamic value) {
       if (value == null) return null;
       if (value is int) return value;
@@ -221,14 +231,11 @@ class DonorStats {
   });
   
   factory DonorStats.fromJson(Map<String, dynamic> json) {
-    // Helper function to safely parse int values
-    // Handles MongoDB $inc operator: {"$inc": 1}
     int parseIntSafe(dynamic value, [int defaultValue = 0]) {
       if (value == null) return defaultValue;
       if (value is int) return value;
       if (value is String) return int.tryParse(value) ?? defaultValue;
       if (value is double) return value.toInt();
-      // Handle MongoDB $inc operator which returns {"$inc": 1}
       if (value is Map) {
         final incValue = value[r'$inc'] ?? value['\$inc'];
         if (incValue != null) {
@@ -253,6 +260,38 @@ class DonorStats {
       'totalDonations': totalDonations,
       'activeDonations': activeDonations,
       'completedDonations': completedDonations,
+    };
+  }
+}
+
+class VolunteerStats {
+  final int totalDeliveries;
+  final int totalPoints;
+  final double rating;
+  final int reliabilityScore;
+
+  VolunteerStats({
+    this.totalDeliveries = 0,
+    this.totalPoints = 0,
+    this.rating = 0.0,
+    this.reliabilityScore = 100,
+  });
+
+  factory VolunteerStats.fromJson(Map<String, dynamic> json) {
+    return VolunteerStats(
+      totalDeliveries: json['pickupsCompleted'] ?? json['totalDeliveries'] ?? 0,
+      totalPoints: json['totalPoints'] ?? 0,
+      rating: (json['rating'] ?? 0.0).toDouble(),
+      reliabilityScore: json['reliabilityScore'] ?? 100,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'totalDeliveries': totalDeliveries,
+      'totalPoints': totalPoints,
+      'rating': rating,
+      'reliabilityScore': reliabilityScore,
     };
   }
 }

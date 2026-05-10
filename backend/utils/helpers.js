@@ -63,10 +63,77 @@ const buildPaginationResponse = (data, total, page, limit) => {
 };
 
 // Sanitize user object (remove sensitive fields)
-const sanitizeUser = (user) => {
+const sanitizeUser = (user, requester = null) => {
   if (!user) return null;
 
-  const { password, ...sanitized } = user;
+  const isOwner = requester && requester.userId === user._id?.toString();
+  const isAdmin = requester && requester.role === 'admin';
+
+  // Fields that are ALWAYS public
+  const sanitized = {
+    _id: user._id,
+    id: user._id?.toString(),
+    name: user.name,
+    role: user.role,
+    profileImage: user.profileImage,
+    verified: user.verified,
+    createdAt: user.createdAt
+  };
+
+  // Role-specific public fields
+  if (user.role === 'ngo') {
+    sanitized.ngoDetails = {
+      description: user.ngoDetails?.description,
+      website: user.ngoDetails?.website,
+      categories: user.ngoDetails?.categories,
+      establishedYear: user.ngoDetails?.establishedYear,
+      verificationStatus: user.ngoDetails?.verificationStatus
+    };
+    
+    if (isOwner || isAdmin) {
+      sanitized.email = user.email;
+      sanitized.phone = user.phone;
+      sanitized.address = user.address;
+      sanitized.location = user.location;
+      sanitized.ngoDetails.registrationNumber = user.ngoDetails?.registrationNumber;
+      sanitized.ngoDetails.documents = user.ngoDetails?.documents;
+    }
+  } else if (user.role === 'donor') {
+    sanitized.donorStats = user.donorStats;
+    sanitized.impactScore = user.impactScore;
+    sanitized.badges = user.badges;
+
+    if (isOwner || isAdmin) {
+      sanitized.email = user.email;
+      sanitized.phone = user.phone;
+      sanitized.address = user.address;
+      sanitized.location = user.location;
+      sanitized.bookmarks = user.bookmarks;
+    }
+  }
+
+  return sanitized;
+};
+
+// Sanitize donation object
+const sanitizeDonation = (donation) => {
+  if (!donation) return null;
+  
+  const sanitized = {
+    ...donation,
+    id: donation._id?.toString(),
+    donorId: donation.donorId?.toString(),
+    claimedBy: donation.claimedBy?.toString()
+  };
+  
+  if (sanitized.donor && sanitized.donor._id) {
+    sanitized.donor.id = sanitized.donor._id.toString();
+  }
+  
+  if (sanitized.ngo && sanitized.ngo._id) {
+    sanitized.ngo.id = sanitized.ngo._id.toString();
+  }
+  
   return sanitized;
 };
 
@@ -104,23 +171,30 @@ const buildDonationFilter = (queryParams, userId = null, role = null) => {
     filter.category = queryParams.category;
   }
 
-  // Status filter with DATA ISOLATION for claimed donations
+  // Status filter with DATA ISOLATION
   if (queryParams.status) {
-    filter.status = queryParams.status;
-
-    // ══════════════════════════════════════════════════════════════
-    // DATA ISOLATION: NGOs only see their OWN claimed/in-transit/delivered
-    // Like Zomato - restaurants only see their own orders in each status
-    // ══════════════════════════════════════════════════════════════
-    if (['claimed', 'in-transit', 'delivered'].includes(queryParams.status)) {
-      if (role === 'ngo' && userId) {
-        // NGO viewing claimed status should only see their own claims
+    // If requesting a restricted status, verify permission
+    if (['claimed', 'in-transit', 'delivered', 'cancelled'].includes(queryParams.status)) {
+      if (role === 'admin') {
+        filter.status = queryParams.status;
+      } else if (role === 'ngo' && userId) {
+        filter.status = queryParams.status;
         filter.claimedBy = userId;
       } else if (role === 'donor' && userId) {
-        // Donors viewing claimed status should see their own donations
+        filter.status = queryParams.status;
         filter.donorId = userId;
+      } else {
+        // Public or mismatched user: Force back to 'available' for privacy
+        filter.status = 'available';
       }
-      // Admins see everything (no additional filter)
+    } else {
+      filter.status = queryParams.status;
+    }
+  } else {
+    // DEFAULT: Only show available donations for browsing
+    // Unless explicitly looking at "my" donations via other flags
+    if (queryParams.myDonations !== 'true' && queryParams.claimed !== 'true') {
+      filter.status = 'available';
     }
   }
 
@@ -140,8 +214,8 @@ const buildDonationFilter = (queryParams, userId = null, role = null) => {
     filter.claimedBy = userId;
   }
 
-  // Search by title/description
-  if (queryParams.search) {
+  // Search by title/description (Ensure it's a string)
+  if (queryParams.search && typeof queryParams.search === 'string') {
     filter.$or = [
       { title: { $regex: queryParams.search, $options: 'i' } },
       { description: { $regex: queryParams.search, $options: 'i' } }
@@ -266,6 +340,26 @@ const buildSecureFilter = (baseFilter, user, options = {}) => {
   return filter;
 };
 
+/**
+ * Sanitizes a request object for frontend use
+ * @param {Object} request - The request object to sanitize
+ * @returns {Object} Sanitized request
+ */
+const sanitizeRequest = (request) => {
+  if (!request) return null;
+  const sanitized = { ...request };
+  
+  if (sanitized._id) sanitized.id = sanitized._id.toString();
+  if (sanitized.ngoId) sanitized.ngoId = sanitized.ngoId.toString();
+  if (sanitized.donationId) sanitized.donationId = sanitized.donationId.toString();
+  
+  // Sanitize nested objects if they exist
+  if (sanitized.ngo) sanitized.ngo = sanitizeUser(sanitized.ngo);
+  if (sanitized.donation) sanitized.donation = sanitizeDonation(sanitized.donation);
+  
+  return sanitized;
+};
+
 module.exports = {
   hashPassword,
   comparePassword,
@@ -277,10 +371,11 @@ module.exports = {
   formatDate,
   isExpired,
   buildDonationFilter,
+  sanitizeDonation,
+  sanitizeRequest,
   successResponse,
   errorResponse,
   // New data isolation helpers
   checkOwnership,
   buildSecureFilter
 };
-

@@ -180,5 +180,63 @@ router.put('/:id/respond',
   reviewController.respondToReview
 );
 
+/**
+ * @swagger
+ * /api/reviews/volunteer:
+ *   post:
+ *     summary: Create review for Volunteer (Donor or NGO)
+ *     tags: [Reviews]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - volunteerId
+ *               - donationId
+ *               - rating
+ *             properties:
+ *               volunteerId:
+ *                 type: string
+ *               donationId:
+ *                 type: string
+ *               rating:
+ *                 type: integer
+ *               comment:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Review submitted
+ */
+router.post('/volunteer',
+  authenticate,
+  [
+    body('volunteerId').isMongoId().withMessage('Valid Volunteer ID required'),
+    body('donationId').isMongoId().withMessage('Valid Donation ID required'),
+    body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be 1-5'),
+    body('comment').optional().trim().isLength({ max: 500 }),
+    validate
+  ],
+  reviewController.createVolunteerReview
+);
+
+/**
+ * @swagger
+ * /api/reviews/volunteer/{volunteerId}:
+ *   get:
+ *     summary: Get reviews for a volunteer
+ *     tags: [Reviews]
+ *     parameters:
+ *       - in: path
+ *         name: volunteerId
+ *         required: true
+ *         schema:
+ *           type: string
+ */
+router.get('/volunteer/:volunteerId', mongoIdValidation('volunteerId'), reviewController.getVolunteerReviews);
+
 module.exports = router;
 

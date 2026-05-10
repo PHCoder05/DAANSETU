@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
@@ -33,7 +34,7 @@ app.use(requestId);         // Request ID for tracing/debugging
 // GLOBAL MIDDLEWARE
 // ═══════════════════════════════════════════════════════════════════
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
 }));
 
@@ -145,7 +146,7 @@ const startServer = async () => {
     // Initialize Socket.io
     const io = socketIo(server, {
       cors: {
-        origin: process.env.CORS_ORIGIN || '*',
+        origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
         methods: ["GET", "POST"],
         credentials: true
       }
@@ -153,6 +154,10 @@ const startServer = async () => {
 
     // Setup Chat Sockets
     chatSocket(io);
+    
+    // Setup Tracking Sockets
+    const trackingSocket = require('./sockets/trackingSocket');
+    trackingSocket(io);
 
     // Start Server
     server.listen(PORT, () => {

@@ -98,6 +98,37 @@ class SocketService {
     socket.on('user_online', callback);
   }
 
+  // --- Tracking Events ---
+  void joinTracking(String donationId) {
+    socket.emit('join_tracking', donationId);
+    debugPrint('Joined tracking room: $donationId');
+  }
+
+  void leaveTracking(String donationId) {
+    socket.emit('leave_tracking', donationId);
+    debugPrint('Left tracking room: $donationId');
+  }
+
+  void emitLocation(String donationId, double lat, double lng) {
+    socket.emit('update_location', {
+      'donationId': donationId,
+      'lat': lat,
+      'lng': lng,
+    });
+  }
+
+  void broadcastVolunteerLocation(String userId, double lat, double lng) {
+    socket.emit('volunteer_location_update', {
+      'userId': userId,
+      'lat': lat,
+      'lng': lng,
+    });
+  }
+
+  void onLocationUpdated(Function(dynamic) callback) {
+    socket.on('location_updated', callback);
+  }
+
   void off(String event) {
     socket.off(event);
   }

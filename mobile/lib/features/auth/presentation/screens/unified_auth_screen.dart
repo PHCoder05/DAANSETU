@@ -638,7 +638,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                 },
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
             Expanded(
               child: _RoleChip(
                 label: 'NGO',
@@ -647,6 +647,18 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                 onTap: () {
                   HapticFeedback.selectionClick();
                   setState(() => _selectedRole = AppConstants.roleNgo);
+                },
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _RoleChip(
+                label: 'Volunteer',
+                icon: Icons.handshake_rounded,
+                isSelected: _selectedRole == AppConstants.roleVolunteer,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedRole = AppConstants.roleVolunteer);
                 },
               ),
             ),
@@ -838,7 +850,7 @@ class _RoleChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.primaryRed : AppTheme.white,
           borderRadius: BorderRadius.circular(12),
@@ -859,15 +871,15 @@ class _RoleChip extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 20,
+              size: 18,
               color: isSelected ? AppTheme.white : AppTheme.primaryRed,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                fontSize: 14,
+                fontSize: 12,
                 color: isSelected ? AppTheme.white : AppTheme.black,
               ),
             ),

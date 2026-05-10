@@ -368,7 +368,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ],
                               ),
                             ),
-                            SizedBox(height: isKeyboardOpen ? 8 : 16),
+                            
+                            if (!isKeyboardOpen) ...[
+                              const SizedBox(height: 32),
+                              // Enterprise Trust Signals
+                              Center(
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        _TrustBadge(icon: Icons.shield_outlined, label: 'Govt API Verified'),
+                                        const SizedBox(width: 16),
+                                        _TrustBadge(icon: Icons.lock_outline_rounded, label: 'E2E Encrypted'),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'SECURED BY DAANSETU ENTERPRISE SHIELD',
+                                      style: TextStyle(
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.w900,
+                                        color: AppTheme.gray.withOpacity(0.5),
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            
+                            SizedBox(height: isKeyboardOpen ? 8 : 24),
                           ],
                         ),
                       ),
@@ -376,6 +406,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ],
                 ),
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TrustBadge extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _TrustBadge({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppTheme.scaffoldLight,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.lightGray),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppTheme.darkGray),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: AppTheme.darkGray,
             ),
           ),
         ],

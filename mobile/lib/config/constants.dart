@@ -143,6 +143,7 @@ class AppConstants {
   // User Roles
   static const String roleDonor = 'donor';
   static const String roleNgo = 'ngo';
+  static const String roleVolunteer = 'volunteer';
   static const String roleAdmin = 'admin';
   
   // ========== LOADING QUOTES (Zomato-style) ==========

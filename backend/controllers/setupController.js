@@ -60,7 +60,7 @@ const firstTimeSetup = async (req, res) => {
     });
     
     return successResponse(res, 201, 'Admin account created successfully', {
-      user: sanitizeUser(user),
+      user: sanitizeUser(user, { userId: user._id.toString(), role: 'admin' }),
       accessToken,
       refreshToken,
       expiresIn: '15m'

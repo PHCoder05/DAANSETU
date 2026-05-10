@@ -619,6 +619,28 @@ const resolveFraudAlert = async (req, res) => {
     }
 };
 
+/**
+ * Upload verification document
+ */
+const uploadVerificationDocument = async (req, res) => {
+    try {
+        if (!req.file) {
+            return errorResponse(res, 400, 'No file uploaded');
+        }
+
+        const fileUrl = `/uploads/verification/${req.file.filename}`;
+        
+        return successResponse(res, 200, 'Document uploaded successfully', {
+            url: fileUrl,
+            filename: req.file.originalname,
+            mimetype: req.file.mimetype
+        });
+    } catch (error) {
+        console.error('Upload document error:', error);
+        return errorResponse(res, 500, 'Error uploading document');
+    }
+};
+
 module.exports = {
     requestVerification,
     autoVerifyNgo,
@@ -639,5 +661,6 @@ module.exports = {
     respondToSupport,
     // Fraud alerts
     getFraudAlerts,
-    resolveFraudAlert
+    resolveFraudAlert,
+    uploadVerificationDocument
 };

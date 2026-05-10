@@ -31,7 +31,7 @@ const getAllUsers = async (req, res) => {
       sort: { createdAt: -1 }
     });
 
-    const sanitizedUsers = users.map(sanitizeUser);
+    const sanitizedUsers = users.map(u => sanitizeUser(u, req.user));
     const total = await User.count(db, filter);
 
     return successResponse(
@@ -65,14 +65,37 @@ const getPendingNGOs = async (req, res) => {
       sort: { createdAt: 1 } // Oldest first
     });
 
-    const sanitizedNGOs = ngos.map(sanitizeUser);
+    // Enrich with verification steps data (Step 1: Govt API results)
+    const enrichedNGOs = await Promise.all(
+      ngos.map(async (ngo) => {
+        const sanitized = sanitizeUser(ngo, req.user);
+        
+        // Find the latest verification record for this NGO
+        const verification = await db.collection('verifications').findOne(
+          { 
+            userId: ngo._id, 
+            type: { $in: ['ngo_registration', 'ngo_certificate'] }
+          },
+          { sort: { createdAt: -1 } }
+        );
+
+        if (verification) {
+          sanitized.steps = verification.steps || {};
+          sanitized.verificationId = verification._id;
+          sanitized.verificationStatus = verification.status;
+        }
+
+        return sanitized;
+      })
+    );
+
     const total = await User.count(db, filter);
 
     return successResponse(
       res,
       200,
       'Pending NGO verifications retrieved successfully',
-      buildPaginationResponse(sanitizedNGOs, total, page, limitNum)
+      buildPaginationResponse(enrichedNGOs, total, page, limitNum)
     );
   } catch (error) {
     console.error('Get pending NGOs error:', error);
@@ -123,7 +146,7 @@ const verifyNGO = async (req, res) => {
     const updatedUser = await User.findById(db, userId);
 
     return successResponse(res, 200, `NGO ${status} successfully`, {
-      user: sanitizeUser(updatedUser)
+      user: sanitizeUser(updatedUser, req.user)
     });
   } catch (error) {
     console.error('Verify NGO error:', error);
@@ -269,7 +292,7 @@ const getPlatformStats = async (req, res) => {
       },
       recentActivity: {
         donations: recentDonations,
-        users: recentUsers.map(sanitizeUser)
+        users: recentUsers.map(u => sanitizeUser(u, req.user))
       }
     });
   } catch (error) {
@@ -371,6 +394,29 @@ const seedDatabase = async (req, res) => {
   }
 };
 
+// Get active volunteers and their locations
+const getActiveVolunteers = async (req, res) => {
+  try {
+    const db = getDB();
+    const volunteers = await db.collection('users').find({
+      role: 'volunteer',
+      active: true,
+      isAvailable: true,
+      'location.lat': { $exists: true }
+    }).project({
+      name: 1,
+      email: 1,
+      location: 1,
+      volunteerStats: 1
+    }).toArray();
+
+    return successResponse(res, 200, 'Active volunteers retrieved', { volunteers });
+  } catch (error) {
+    console.error('Get active volunteers error:', error);
+    return errorResponse(res, 500, 'Error fetching active volunteers', error.message);
+  }
+};
+
 module.exports = {
   getAllUsers,
   getPendingNGOs,
@@ -378,6 +424,7 @@ module.exports = {
   toggleUserStatus,
   deleteUser,
   getPlatformStats,
+  getActiveVolunteers,
   seedDatabase
 };
 

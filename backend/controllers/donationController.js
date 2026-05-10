@@ -4,10 +4,12 @@ const Donation = require('../models/Donation');
 const Request = require('../models/Request');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const ReceiptService = require('../services/receiptService');
 const {
   getPagination,
   buildPaginationResponse,
   buildDonationFilter,
+  sanitizeDonation,
   successResponse,
   errorResponse
 } = require('../utils/helpers');
@@ -33,7 +35,9 @@ const createDonation = async (req, res) => {
       'donorStats.activeDonations': { $inc: 1 }
     });
 
-    return successResponse(res, 201, 'Donation created successfully', { donation });
+    return successResponse(res, 201, 'Donation created successfully', { 
+      donation: sanitizeDonation(donation) 
+    });
   } catch (error) {
     console.error('Create donation error:', error);
     return errorResponse(res, 500, 'Error creating donation', error.message);
@@ -82,7 +86,7 @@ const getDonations = async (req, res) => {
       res,
       200,
       'Donations retrieved successfully',
-      buildPaginationResponse(donations, total, page, limitNum)
+      buildPaginationResponse(donations.map(sanitizeDonation), total, page, limitNum)
     );
   } catch (error) {
     console.error('Get donations error:', error);
@@ -100,7 +104,7 @@ const getDonationById = async (req, res) => {
       _id: new ObjectId(id)
     });
 
-    if (!donations || donations.length === 0) {
+    if (!donations || donations.length === 0 || !donations[0].active) {
       return errorResponse(res, 404, 'Donation not found');
     }
 
@@ -150,7 +154,9 @@ const getDonationById = async (req, res) => {
       }
     }
 
-    return successResponse(res, 200, 'Donation retrieved successfully', { donation: visibleDonation });
+    return successResponse(res, 200, 'Donation retrieved successfully', { 
+      donation: sanitizeDonation(visibleDonation) 
+    });
   } catch (error) {
     console.error('Get donation by ID error:', error);
     return errorResponse(res, 500, 'Error fetching donation', error.message);
@@ -188,7 +194,9 @@ const updateDonation = async (req, res) => {
 
     const updatedDonation = await Donation.findById(db, id);
 
-    return successResponse(res, 200, 'Donation updated successfully', { donation: updatedDonation });
+    return successResponse(res, 200, 'Donation updated successfully', { 
+      donation: sanitizeDonation(updatedDonation) 
+    });
   } catch (error) {
     console.error('Update donation error:', error);
     return errorResponse(res, 500, 'Error updating donation', error.message);
@@ -233,17 +241,19 @@ const deleteDonation = async (req, res) => {
 // Claim a donation (NGO only)
 const claimDonation = async (req, res) => {
   try {
-    if (req.user.role !== 'ngo') {
-      return errorResponse(res, 403, 'Only NGOs can claim donations');
+    if (req.user.role !== 'ngo' && req.user.role !== 'volunteer') {
+      return errorResponse(res, 403, 'Only NGOs and Volunteers can claim donations');
     }
 
     const { id } = req.params;
     const db = getDB();
 
-    // Check if NGO is verified
-    const ngo = await User.findById(db, req.user.userId);
-    if (!ngo.verified || ngo.ngoDetails?.verificationStatus !== 'verified') {
-      return errorResponse(res, 403, 'Your NGO must be verified to claim donations');
+    // If NGO, check verification
+    if (req.user.role === 'ngo') {
+      const ngo = await User.findById(db, req.user.userId);
+      if (!ngo.verified || ngo.ngoDetails?.verificationStatus !== 'verified') {
+        return errorResponse(res, 403, 'Your NGO must be verified to claim donations');
+      }
     }
 
     // Check if donation exists and is available
@@ -263,11 +273,14 @@ const claimDonation = async (req, res) => {
       return errorResponse(res, 400, 'Failed to claim donation');
     }
 
+    // Fetch user details for notification
+    const claimant = await User.findById(db, req.user.userId);
+    
     // Create notification for donor
     await Notification.create(db, {
       userId: donation.donorId,
-      title: 'Donation Claimed',
-      message: `Your donation "${donation.title}" has been claimed by ${ngo.name}`,
+      title: 'Donation Claimed!',
+      message: `Great news! Your donation "${donation.title}" has been claimed by ${claimant.name}.`,
       type: 'claim',
       relatedId: id,
       relatedType: 'donation',
@@ -276,7 +289,9 @@ const claimDonation = async (req, res) => {
 
     const updatedDonation = await Donation.findById(db, id);
 
-    return successResponse(res, 200, 'Donation claimed successfully', { donation: updatedDonation });
+    return successResponse(res, 200, 'Donation claimed successfully', { 
+      donation: sanitizeDonation(updatedDonation) 
+    });
   } catch (error) {
     console.error('Claim donation error:', error);
     return errorResponse(res, 500, 'Error claiming donation', error.message);
@@ -404,7 +419,9 @@ const updateDonationStatus = async (req, res) => {
 
     const updatedDonation = await Donation.findById(db, id);
 
-    return successResponse(res, 200, 'Donation status updated successfully', { donation: updatedDonation });
+    return successResponse(res, 200, 'Donation status updated successfully', { 
+      donation: sanitizeDonation(updatedDonation) 
+    });
   } catch (error) {
     console.error('Update donation status error:', error);
     return errorResponse(res, 500, 'Error updating donation status', error.message);
@@ -493,6 +510,17 @@ const getDonationTimeline = async (req, res) => {
       return errorResponse(res, 404, 'Donation not found');
     }
 
+    // ══════════════════════════════════════════════════════════════
+    // DATA ISOLATION: Check if user has permission to see the timeline
+    // ══════════════════════════════════════════════════════════════
+    const isDonor = donation.donorId && donation.donorId.toString() === req.user.userId;
+    const isClaimedNGO = donation.claimedBy && donation.claimedBy.toString() === req.user.userId;
+    const isAdmin = req.user.role === 'admin';
+
+    if (donation.status !== 'available' && !isDonor && !isClaimedNGO && !isAdmin) {
+      return errorResponse(res, 403, 'You do not have permission to view the timeline for this donation');
+    }
+
     // Get timeline
     const timeline = await DonationHistory.getTimeline(db, id);
 
@@ -525,8 +553,8 @@ const getMyDonations = async (req, res) => {
     if (role === 'donor' || req.user.role === 'donor') {
       // Donations I created
       filter.donorId = new ObjectId(userId);
-    } else if (role === 'ngo' || req.user.role === 'ngo') {
-      // Donations I claimed
+    } else if (role === 'ngo' || req.user.role === 'ngo' || req.user.role === 'volunteer') {
+      // Donations I claimed (as NGO or Volunteer)
       filter.claimedBy = new ObjectId(userId);
     }
 
@@ -543,10 +571,39 @@ const getMyDonations = async (req, res) => {
       sort: { createdAt: -1 }
     });
 
-    return successResponse(res, 200, 'Donations retrieved', { donations });
+    return successResponse(res, 200, 'Donations retrieved', { 
+      donations: donations.map(sanitizeDonation) 
+    });
   } catch (error) {
     console.error('Get my donations error:', error);
     return errorResponse(res, 500, 'Error fetching donations', error.message);
+  }
+};
+
+// Get tax receipt PDF
+const getDonationReceipt = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const db = getDB();
+
+    const donation = await Donation.findById(db, id);
+    if (!donation) {
+      return errorResponse(res, 404, 'Donation not found');
+    }
+
+    // Authorization: Only donor or admin can download receipt
+    if (donation.donorId.toString() !== req.user.userId && req.user.role !== 'admin') {
+      return errorResponse(res, 403, 'You do not have permission to download this receipt');
+    }
+
+    const pdfBuffer = await ReceiptService.generateDonationReceipt(db, id);
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=receipt-${id}.pdf`);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Generate receipt error:', error);
+    return errorResponse(res, 500, 'Error generating receipt', error.message);
   }
 };
 
@@ -561,5 +618,6 @@ module.exports = {
   getNearbyDonations,
   getDonationStats,
   getDonationTimeline,
-  getMyDonations
+  getMyDonations,
+  getDonationReceipt
 };

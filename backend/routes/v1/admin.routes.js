@@ -156,6 +156,20 @@ router.put('/ngos/:userId/verify', verifyNGOValidation, adminController.verifyNG
  */
 router.get('/stats', adminController.getPlatformStats);
 
+/**
+ * @swagger
+ * /api/admin/volunteers/active:
+ *   get:
+ *     summary: Get all active volunteers and their locations (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of active volunteers
+ */
+router.get('/volunteers/active', adminController.getActiveVolunteers);
+
 // Development only - seed database
 if (process.env.NODE_ENV === 'development') {
   /**

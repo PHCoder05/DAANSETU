@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const User = require('../models/User');
 const RefreshToken = require('../models/RefreshToken');
 const EmailVerification = require('../models/EmailVerification');
+const Volunteer = require('../models/Volunteer');
 const config = require('../config/appConfig');
 const { hashPassword, comparePassword, sanitizeUser, successResponse, errorResponse } = require('../utils/helpers');
 const { generateToken, generateRefreshToken, verifyRefreshToken } = require('../middleware/auth');
@@ -79,8 +80,34 @@ const register = async (req, res) => {
       };
     }
 
+    // Add Volunteer details if role is Volunteer
+    if (role === 'volunteer') {
+      userData.volunteerStats = {
+        pickupsCompleted: 0,
+        hoursContributed: 0,
+        reliabilityScore: 100
+      };
+      userData.isAvailable = true;
+    }
+
     // Create user
     const user = await User.create(db, userData);
+
+    // Initialize volunteer profile if role is volunteer
+    if (role === 'volunteer') {
+      await Volunteer.create(db, {
+        userId: user._id,
+        name,
+        email,
+        phone,
+        location,
+        stats: {
+          pickupsCompleted: 0,
+          hoursContributed: 0,
+          reliabilityScore: 100
+        }
+      });
+    }
 
     // Generate tokens
     const accessToken = generateToken(user._id.toString(), user.email, user.role);
@@ -97,7 +124,7 @@ const register = async (req, res) => {
     });
 
     return successResponse(res, 201, 'User registered successfully', {
-      user: sanitizeUser(user),
+      user: sanitizeUser(user, { userId: user._id.toString() }),
       accessToken,
       refreshToken,
       expiresIn: '15m'
@@ -114,6 +141,8 @@ const login = async (req, res) => {
     const { email, password } = req.body;
 
     const db = getDB();
+    const { logLogin } = require('../middleware/activityLogger');
+    const FraudAlert = require('../models/FraudAlert');
 
     // Find user by email
     const user = await User.findByEmail(db, email);
@@ -123,14 +152,26 @@ const login = async (req, res) => {
 
     // Check if account is active
     if (!user.active) {
+      await logLogin(req, user._id.toString(), false, 'account_deactivated');
       return errorResponse(res, 401, 'Your account has been deactivated');
     }
 
     // Verify password
     const isValidPassword = await comparePassword(password, user.password);
     if (!isValidPassword) {
+      // Log failed attempt
+      await logLogin(req, user._id.toString(), false, 'invalid_password');
+      
+      // Check for fraud
+      const { getClientInfo } = require('../middleware/activityLogger');
+      const { ip, userAgent } = getClientInfo(req);
+      await FraudAlert.checkSuspiciousLogin(db, user._id.toString(), ip, userAgent);
+      
       return errorResponse(res, 401, 'Invalid email or password');
     }
+
+    // Log successful login
+    await logLogin(req, user._id.toString(), true);
 
     // Generate tokens
     const accessToken = generateToken(user._id.toString(), user.email, user.role);
@@ -147,7 +188,7 @@ const login = async (req, res) => {
     });
 
     return successResponse(res, 200, 'Login successful', {
-      user: sanitizeUser(user),
+      user: sanitizeUser(user, { userId: user._id.toString() }),
       accessToken,
       refreshToken,
       expiresIn: '15m'
@@ -169,7 +210,7 @@ const getProfile = async (req, res) => {
     }
 
     return successResponse(res, 200, 'Profile retrieved successfully', {
-      user: sanitizeUser(user)
+      user: sanitizeUser(user, req.user)
     });
   } catch (error) {
     console.error('Get profile error:', error);
@@ -203,7 +244,7 @@ const updateProfile = async (req, res) => {
     const user = await User.findById(db, req.user.userId);
 
     return successResponse(res, 200, 'Profile updated successfully', {
-      user: sanitizeUser(user)
+      user: sanitizeUser(user, req.user)
     });
   } catch (error) {
     console.error('Update profile error:', error);
@@ -275,7 +316,7 @@ const updateNGODetails = async (req, res) => {
     const updatedUser = await User.findById(db, req.user.userId);
 
     return successResponse(res, 200, 'NGO details updated successfully', {
-      user: sanitizeUser(updatedUser)
+      user: sanitizeUser(updatedUser, req.user)
     });
   } catch (error) {
     console.error('Update NGO details error:', error);
@@ -422,7 +463,7 @@ const generateUserToken = async (req, res) => {
     });
 
     return successResponse(res, 200, 'JWT token generated successfully', {
-      user: sanitizeUser(user),
+      user: sanitizeUser(user, req.user),
       accessToken,
       refreshToken,
       expiresIn: '15m',
@@ -484,7 +525,7 @@ const uploadProfileImage = async (req, res) => {
     const user = await User.findById(db, req.user.userId);
 
     return successResponse(res, 200, 'Profile image uploaded successfully', {
-      user: sanitizeUser(user),
+      user: sanitizeUser(user, req.user),
       imagePath
     });
   } catch (error) {

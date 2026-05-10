@@ -29,6 +29,19 @@ class Notification {
   static async create(db, notificationData) {
     const notification = new Notification(notificationData);
     const result = await db.collection(this.collectionName).insertOne(notification);
+    
+    // Send push notification asynchronously
+    const pushService = require('../utils/pushService');
+    pushService.sendToUser(db, notificationData.userId, {
+      title: notificationData.title,
+      body: notificationData.message,
+      data: {
+        type: notificationData.type,
+        relatedId: notificationData.relatedId?.toString() || '',
+        relatedType: notificationData.relatedType || ''
+      }
+    }).catch(err => console.error('Push notification error:', err));
+
     return { ...notification, _id: result.insertedId };
   }
 

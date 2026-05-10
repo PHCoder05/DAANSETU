@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +13,11 @@ import '../../../../shared/models/donation.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/widgets/skeleton_loader.dart';
 import '../widgets/donation_card.dart';
+import '../widgets/volunteer_dashboard_view.dart';
+import '../widgets/ngo_inventory_view.dart';
+import '../../../../core/services/location_service.dart';
+import '../../../../core/services/socket_service.dart';
+import '../../../../shared/widgets/custom_snackbar.dart';
 
 /// Custom exception class for API errors with user-friendly messages
 class DonationException implements Exception {
@@ -96,6 +100,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
   String _searchQuery = '';
   String _selectedLocation = 'Current Location';
   String _sortBy = 'newest';
+  bool _isNgoInventoryMode = false;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
@@ -113,6 +118,55 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _showTutorialIfNeeded());
+  }
+
+  Future<void> _toggleAvailability(bool value) async {
+    try {
+      HapticFeedback.mediumImpact();
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.updateProfile({'isAvailable': value});
+      
+      if (response.statusCode == 200) {
+        // Update local state via auth provider
+        await ref.read(authStateProvider.notifier).refreshProfile();
+        
+        // Handle background tracking
+        final locationService = ref.read(locationServiceProvider);
+        final socketService = ref.read(socketServiceProvider);
+        
+        if (value) {
+          locationService.startLocationStream((position) {
+            final userId = ref.read(authStateProvider).user?.id;
+            if (userId != null) {
+              socketService.broadcastVolunteerLocation(
+                userId,
+                position.latitude,
+                position.longitude,
+              );
+            }
+          });
+        } else {
+          locationService.stopLocationStream();
+        }
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(value ? 'You are now Online' : 'You are now Offline'),
+              backgroundColor: value ? AppTheme.success : AppTheme.charcoal,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update status: $e'), backgroundColor: AppTheme.primaryRed),
+        );
+      }
+    }
   }
 
   @override
@@ -329,6 +383,30 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                   ),
                 ),
                 actions: [
+                  if (user?.isVolunteer == true)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Row(
+                        children: [
+                          Text(
+                            user?.isAvailable == true ? 'ONLINE' : 'OFFLINE',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: user?.isAvailable == true ? AppTheme.success : AppTheme.gray,
+                            ),
+                          ),
+                          Transform.scale(
+                            scale: 0.7,
+                            child: Switch.adaptive(
+                              value: user?.isAvailable ?? false,
+                              onChanged: (val) => _toggleAvailability(val),
+                              activeColor: AppTheme.success,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   GestureDetector(
                     onTap: () => context.go(AppRoutes.profile),
                     child: Container(
@@ -354,6 +432,9 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                   ),
                 ],
               ),
+
+              // 0. Urgent Needs Banner (Zomato-style Highlight)
+              _buildUrgentBanner(donationsAsync),
               
               // 1. Verification Banner for NGOs
               if (user?.isNgo == true && user?.isVerifiedNgo == false)
@@ -594,56 +675,117 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                 ),
               ),
 
-              // 5. Feed Title
+              // 5. Feed Title / NGO Toggle
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
-                  child: Text(
-                    'All Donations around you',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
+                  child: Row(
+                    children: [
+                      Text(
+                        _isNgoInventoryMode ? 'My Inventory' : 'All Donations around you',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (user?.role == AppConstants.roleNgo)
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.offWhite,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              _buildToggleOption(
+                                "EXPLORE", 
+                                !_isNgoInventoryMode, 
+                                () => setState(() => _isNgoInventoryMode = false)
+                              ),
+                              _buildToggleOption(
+                                "INVENTORY", 
+                                _isNgoInventoryMode, 
+                                () => setState(() => _isNgoInventoryMode = true)
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
 
               // 6. Content List
-              donationsAsync.when(
-                loading: () => SliverToBoxAdapter(child: _buildLoadingState()),
-                error: (error, stack) => SliverToBoxAdapter(child: _buildErrorState(error)),
-                data: (donations) {
-                  final filteredDonations = donations.where((d) {
-                    final matchesCategory = _selectedCategory == 'all' || d.category == _selectedCategory;
-                    final matchesSearch = _searchQuery.isEmpty || 
-                        d.title.toLowerCase().contains(_searchQuery) ||
-                        d.description.toLowerCase().contains(_searchQuery) ||
-                        d.category.toLowerCase().contains(_searchQuery);
-                    
-                    return matchesCategory && matchesSearch;
-                  }).toList();
-                  
-                  if (filteredDonations.isEmpty) {
-                    return SliverToBoxAdapter(child: _buildEmptyState());
-                  }
-
-                  return SliverPadding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final donation = filteredDonations[index];
-                          return DonationCard(
-                            donation: donation,
-                            onTap: () => context.go('${AppRoutes.donations}/${donation.id}'),
-                          ).animate(delay: Duration(milliseconds: index * 50)).fade().slideY(begin: 0.05, end: 0);
-                        },
-                        childCount: filteredDonations.length,
-                      ),
+              user?.role == AppConstants.roleVolunteer 
+                ? SliverFillRemaining(
+                    child: VolunteerDashboardView(
+                      donations: donationsAsync.value ?? [],
+                      onRefresh: () => ref.invalidate(donationsProvider),
                     ),
-                  );
-                },
-              ),
+                  )
+                : (user?.role == AppConstants.roleNgo && _isNgoInventoryMode)
+                    ? SliverFillRemaining(
+                        child: NgoInventoryView(
+                          inventory: (donationsAsync.value ?? []).where((d) => 
+                            d.status == 'delivered' && d.ngo?.id == user?.id
+                          ).toList(),
+                          onRefresh: () => ref.invalidate(donationsProvider),
+                          onAction: (item, action) async {
+                            try {
+                              HapticFeedback.mediumImpact();
+                              final apiClient = ref.read(apiClientProvider);
+                              // Map actions to API statuses
+                              final apiStatus = action == 'used' ? 'distributed' : 'disposed';
+                              
+                              await apiClient.updateInventoryStatus(item.id, apiStatus);
+                              ref.invalidate(donationsProvider);
+                              if (mounted) {
+                                CustomSnackBar.success(context, "Item marked as ${action == 'used' ? 'distributed' : 'removed'}.");
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                CustomSnackBar.error(context, "Failed to update inventory: $e");
+                              }
+                            }
+                          },
+                        ),
+                      )
+                    : donationsAsync.when(
+                    loading: () => SliverToBoxAdapter(child: _buildLoadingState()),
+                    error: (error, stack) => SliverToBoxAdapter(child: _buildErrorState(error)),
+                    data: (donations) {
+                      final filteredDonations = donations.where((d) {
+                        final matchesCategory = _selectedCategory == 'all' || d.category == _selectedCategory;
+                        final matchesSearch = _searchQuery.isEmpty || 
+                            d.title.toLowerCase().contains(_searchQuery) ||
+                            d.description.toLowerCase().contains(_searchQuery) ||
+                            d.category.toLowerCase().contains(_searchQuery);
+                        
+                        return matchesCategory && matchesSearch;
+                      }).toList();
+                      
+                      if (filteredDonations.isEmpty) {
+                        return SliverToBoxAdapter(child: _buildEmptyState());
+                      }
+
+                      return SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final donation = filteredDonations[index];
+                              return DonationCard(
+                                donation: donation,
+                                onTap: () => context.go('${AppRoutes.donations}/${donation.id}'),
+                              ).animate(delay: Duration(milliseconds: index * 50)).fade().slideY(begin: 0.05, end: 0);
+                            },
+                            childCount: filteredDonations.length,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
               
               // Bottom Padding
               const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
@@ -696,6 +838,121 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
         border: Border.all(color: AppTheme.lightGray),
       ),
       child: Icon(icon, size: 16, color: AppTheme.charcoal),
+    );
+  }
+  
+  Widget _buildUrgentBanner(AsyncValue<List<Donation>> donationsAsync) {
+    return donationsAsync.when(
+      data: (donations) {
+        final urgentDonations = donations.where((d) => d.priority == 'urgent' && d.status == 'available').toList();
+        if (urgentDonations.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+        return SliverToBoxAdapter(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_fire_department_rounded, color: AppTheme.primaryRed, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      "Urgent Needs Nearby",
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        color: AppTheme.primaryRed,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 160,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: urgentDonations.length,
+                  itemBuilder: (context, index) {
+                    final donation = urgentDonations[index];
+                    return GestureDetector(
+                      onTap: () => context.go('${AppRoutes.donations}/${donation.id}'),
+                      child: Container(
+                        width: 280,
+                        margin: const EdgeInsets.only(right: 12, bottom: 8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                          ],
+                          border: Border.all(color: AppTheme.primaryRed.withOpacity(0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                              child: Container(
+                                width: 100,
+                                height: double.infinity,
+                                color: AppTheme.primaryRed.withOpacity(0.1),
+                                child: donation.images.isNotEmpty 
+                                  ? Image.network(donation.images.first, fit: BoxFit.cover)
+                                  : const Icon(Icons.emergency_rounded, color: AppTheme.primaryRed, size: 32),
+                              ),
+                            ),
+                            Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      donation.title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      donation.description,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(color: AppTheme.gray, fontSize: 11),
+                                    ),
+                                    const Spacer(),
+                                    Row(
+                                      children: [
+                                        Icon(Icons.location_on_rounded, size: 10, color: AppTheme.gray),
+                                        const SizedBox(width: 2),
+                                        Expanded(
+                                          child: Text(
+                                            donation.pickupLocation.address ?? 'Nearby',
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(color: AppTheme.gray, fontSize: 10),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ).animate().slideX(begin: 0.2, end: 0, delay: Duration(milliseconds: index * 100)).fadeIn();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SliverToBoxAdapter(child: SizedBox.shrink()),
+      error: (_, __) => const SliverToBoxAdapter(child: SizedBox.shrink()),
     );
   }
   

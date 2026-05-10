@@ -92,4 +92,15 @@ router.get('/active/list', authenticate, deliveryController.getActiveDeliveries)
  */
 router.get('/:donationId/history', authenticate, mongoIdValidation('donationId'), deliveryController.getLocationHistory);
 
+/**
+ * @swagger
+ * /api/v1/delivery/{donationId}/sos:
+ *   post:
+ *     summary: Report emergency during delivery
+ *     tags: [Delivery]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:donationId/sos', authenticate, mongoIdValidation('donationId'), deliveryController.reportSOS);
+
 module.exports = router;

@@ -5,6 +5,7 @@ const { authenticate } = require('../../middleware/auth');
 const { mongoIdValidation } = require('../../utils/validators');
 const { body } = require('express-validator');
 const { validate } = require('../../utils/validators');
+const upload = require('../../middleware/upload');
 
 /**
  * @swagger
@@ -23,6 +24,22 @@ router.post(
         validate
     ],
     verificationController.requestVerification
+);
+
+/**
+ * @swagger
+ * /api/v1/verification/documents:
+ *   post:
+ *     summary: Upload verification documents
+ *     tags: [Verification]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post(
+    '/documents',
+    authenticate,
+    upload.single('document'),
+    verificationController.uploadVerificationDocument
 );
 
 /**

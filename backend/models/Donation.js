@@ -14,6 +14,13 @@ class Donation {
 
     // Location
     this.pickupLocation = data.pickupLocation; // { lat, lng, address }
+    this.location = {
+      type: 'Point',
+      coordinates: [
+        parseFloat(data.pickupLocation?.lng || 0),
+        parseFloat(data.pickupLocation?.lat || 0)
+      ]
+    };
     this.pickupInstructions = data.pickupInstructions || null;
 
     // Status
@@ -26,6 +33,8 @@ class Donation {
     this.deliveryDate = data.deliveryDate || null;
     this.deliveryNotes = data.deliveryNotes || null;
     this.deliveryImages = data.deliveryImages || [];
+    // Distribution
+    this.distributionHistory = data.distributionHistory || []; // [{ beneficiaryName, location, quantity, distributedAt }]
 
     // Metadata
     this.priority = data.priority || 'normal'; // 'low', 'normal', 'high', 'urgent'
@@ -102,7 +111,17 @@ class Donation {
         {
           $project: {
             'donor.password': 0,
-            'ngo.password': 0
+            'donor.phone': 0,
+            'donor.address': 0,
+            'donor.location': 0,
+            'donor.bookmarks': 0,
+            'donor.email': 0,
+            'ngo.password': 0,
+            'ngo.phone': 0,
+            'ngo.address': 0,
+            'ngo.location': 0,
+            'ngo.ngoDetails.documents': 0,
+            'ngo.email': 0
           }
         }
       ])
@@ -161,16 +180,36 @@ class Donation {
     // maxDistance in meters (default 50km)
     const { skip = 0, limit = 10 } = options;
 
-    return await db.collection(this.collectionName)
-      .find({
-        status: 'available',
-        active: true,
-        'pickupLocation.lat': { $exists: true },
-        'pickupLocation.lng': { $exists: true }
-      })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+    return await db.collection(this.collectionName).aggregate([
+      {
+        $geoNear: {
+          near: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
+          distanceField: 'distance',
+          maxDistance: parseFloat(maxDistance),
+          query: { status: 'available', active: true },
+          spherical: true
+        }
+      },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'donorId',
+          foreignField: '_id',
+          as: 'donor'
+        }
+      },
+      { $unwind: { path: '$donor', preserveNullAndEmptyArrays: true } },
+      {
+        $project: {
+          'donor.password': 0,
+          'donor.email': 0,
+          'donor.phone': 0,
+          'donor.address': 0
+        }
+      }
+    ]).toArray();
   }
 }
 

@@ -26,6 +26,7 @@ const setupRoutes = require('./setup.routes');
 const deliveryRoutes = require('./delivery.routes');
 const auditRoutes = require('./audit.routes');
 const verificationRoutes = require('./verification.routes');
+const inventoryRoutes = require('./inventory.routes');
 
 // ═══════════════════════════════════════════════════════════════════
 // REGISTER ROUTES
@@ -52,6 +53,7 @@ router.use('/chat', chatRoutes);
 router.use('/delivery', deliveryRoutes);
 router.use('/audit', auditRoutes);
 router.use('/verification', verificationRoutes);
+router.use('/ngo/inventory', inventoryRoutes);
 
 // Admin & Setup
 router.use('/admin', adminRoutes);
@@ -59,7 +61,10 @@ router.use('/setup', setupRoutes);
 
 // Health Checks (also available at /health directly)
 const healthRoutes = require('./health.routes');
+const reportRoutes = require('./report.routes');
+
 router.use('/health', healthRoutes);
+router.use('/reports', reportRoutes);
 
 // ═══════════════════════════════════════════════════════════════════
 // API VERSION INFO ENDPOINT

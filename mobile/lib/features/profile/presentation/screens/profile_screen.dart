@@ -505,7 +505,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
 
           // ═══════════════════════════════════════════════════════════
-          // ANIMATED STATS SECTION (For Donors)
+          // ANIMATED STATS SECTION (For Donors & Volunteers)
           // ═══════════════════════════════════════════════════════════
           if (user.isDonor && user.donorStats != null)
             SliverToBoxAdapter(
@@ -540,6 +540,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         icon: Icons.check_circle_rounded,
                         color: const Color(0xFF1BAC4B),
                         delay: 200,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else if (user.isVolunteer && user.volunteerStats != null)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _AnimatedStatCard(
+                        value: user.volunteerStats!.totalDeliveries,
+                        label: 'Deliveries',
+                        icon: Icons.delivery_dining_rounded,
+                        color: const Color(0xFFE23744),
+                        delay: 0,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _AnimatedStatCard(
+                        value: user.volunteerStats!.reliabilityScore,
+                        label: 'Trust',
+                        icon: Icons.verified_user_rounded,
+                        color: const Color(0xFFF39C12),
+                        delay: 100,
+                        isPercentage: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _AnimatedStatCard(
+                        value: user.volunteerStats!.rating,
+                        label: 'Rating',
+                        icon: Icons.star_rounded,
+                        color: const Color(0xFF1BAC4B),
+                        delay: 200,
+                        decimalPlaces: 1,
                       ),
                     ),
                   ],
@@ -664,6 +705,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       onTap: () => context.go(AppRoutes.editProfile),
                     ),
                     _PremiumMenuItem(
+                      icon: Icons.verified_user_outlined,
+                      title: 'Trust & Verification',
+                      subtitle: 'Verify your identity & status',
+                      color: const Color(0xFF1BAC4B),
+                      onTap: () => context.go(AppRoutes.verification),
+                    ),
+                    if (user.isVolunteer || user.isNgo)
+                      _PremiumMenuItem(
+                        icon: Icons.badge_outlined,
+                        title: 'Digital ID Card',
+                        subtitle: 'Official field verification ID',
+                        color: AppTheme.primaryRed,
+                        onTap: () => context.go(AppRoutes.volunteerId),
+                      ),
+                    _PremiumMenuItem(
                       icon: Icons.lock_outline_rounded,
                       title: 'Change Password',
                       subtitle: 'Keep your account secure',
@@ -692,6 +748,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       color: const Color(0xFF1ABC9C),
                       onTap: () => context.go(AppRoutes.notifications),
                       badge: '3',
+                    ),
+                    _PremiumMenuItem(
+                      icon: Icons.emoji_events_outlined,
+                      title: 'Milestones & Badges',
+                      subtitle: 'Track your achievements',
+                      color: const Color(0xFFF1C40F),
+                      onTap: () => context.go(AppRoutes.milestones),
                     ),
                   ],
                 ),
@@ -970,11 +1033,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _AnimatedStatCard extends StatelessWidget {
-  final int value;
+  final num value;
   final String label;
   final IconData icon;
   final Color color;
   final int delay;
+  final bool isPercentage;
+  final int decimalPlaces;
 
   const _AnimatedStatCard({
     required this.value,
@@ -982,6 +1047,8 @@ class _AnimatedStatCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.delay,
+    this.isPercentage = false,
+    this.decimalPlaces = 0,
   });
 
   @override
@@ -1012,13 +1079,22 @@ class _AnimatedStatCard extends StatelessWidget {
             child: Icon(icon, color: color, size: 24),
           ),
           const SizedBox(height: 12),
-          TweenAnimationBuilder<int>(
-            tween: IntTween(begin: 0, end: value),
+          TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0, end: value.toDouble()),
             duration: Duration(milliseconds: 800 + delay),
             curve: Curves.easeOutCubic,
             builder: (context, val, child) {
+              String displayValue;
+              if (decimalPlaces > 0) {
+                displayValue = val.toStringAsFixed(decimalPlaces);
+              } else {
+                displayValue = val.toInt().toString();
+              }
+              
+              if (isPercentage) displayValue += '%';
+              
               return Text(
-                '$val',
+                displayValue,
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,

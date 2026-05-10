@@ -19,7 +19,28 @@ const getTrackingStatus = async (req, res) => {
             return errorResponse(res, 404, 'Tracking not found for this donation');
         }
 
-        return successResponse(res, 200, 'Tracking status retrieved', { tracking });
+        // Security: Remove sensitive QR codes based on role
+        // Volunteers shouldn't see any QR codes (they must scan them)
+        // Donors should only see pickupQrCode
+        // NGOs should only see deliveryQrCode
+        
+        const safeTracking = { ...tracking };
+        const userId = req.user.userId;
+
+        if (req.user.role === 'volunteer') {
+            delete safeTracking.pickupQrCode;
+            delete safeTracking.deliveryQrCode;
+        } else if (req.user.role === 'donor' && tracking.donorId?.toString() === userId) {
+            delete safeTracking.deliveryQrCode;
+        } else if (req.user.role === 'ngo' && tracking.ngoId?.toString() === userId) {
+            delete safeTracking.pickupQrCode;
+        } else {
+            // Default: Hide both if not directly involved
+            delete safeTracking.pickupQrCode;
+            delete safeTracking.deliveryQrCode;
+        }
+
+        return successResponse(res, 200, 'Tracking status retrieved', { tracking: safeTracking });
     } catch (error) {
         console.error('Get tracking status error:', error);
         return errorResponse(res, 500, 'Error fetching tracking status', error.message);
@@ -44,7 +65,7 @@ const initializeTracking = async (req, res) => {
         }
 
         if (donation.claimedBy?.toString() !== req.user.userId) {
-            return errorResponse(res, 403, 'Only the claiming NGO can initialize tracking');
+            return errorResponse(res, 403, 'Only the participant who claimed this can initialize tracking');
         }
 
         // Create tracking record
@@ -88,8 +109,8 @@ const markPickedUp = async (req, res) => {
             previousStatus: 'claimed',
             newStatus: 'in-transit',
             changedBy: req.user.userId,
-            changedByRole: 'ngo',
-            note: 'Picked up by NGO'
+            changedByRole: req.user.role,
+            note: `Picked up by ${req.user.role}`
         });
 
         // Notify donor
@@ -150,7 +171,7 @@ const markDelivered = async (req, res) => {
             previousStatus: 'in-transit',
             newStatus: 'delivered',
             changedBy: req.user.userId,
-            changedByRole: 'ngo',
+            changedByRole: req.user.role,
             note: 'Delivered successfully'
         });
 
@@ -163,6 +184,20 @@ const markDelivered = async (req, res) => {
             message: `Your donation "${donation.title}" has been delivered! Please confirm.`,
             data: { donationId }
         });
+
+        // Update Volunteer Stats (if role is volunteer)
+        if (req.user.role === 'volunteer') {
+            const User = require('../models/User');
+            await db.collection('users').updateOne(
+                { _id: new ObjectId(req.user.userId) },
+                { 
+                    $inc: { 
+                        'volunteerStats.pickupsCompleted': 1,
+                        'volunteerStats.totalPoints': 15
+                    } 
+                }
+            );
+        }
 
         await logDonationAction(req, 'delivered', donationId, { hasPhoto: !!photo });
 
@@ -242,6 +277,51 @@ const getLocationHistory = async (req, res) => {
     }
 };
 
+// SOS Alert
+const reportSOS = async (req, res) => {
+  try {
+    const { donationId } = req.params;
+    const { location, message } = req.body;
+    const { userId } = req.user;
+    const db = getDB();
+
+    const tracking = await db.collection('delivery_tracking').findOne({ donationId: new ObjectId(donationId) });
+    if (!tracking) return errorResponse(res, 404, 'Tracking not found');
+
+    // Create an emergency audit log
+    await db.collection('audit_logs').insertOne({
+      action: 'SOS_ALERT',
+      resource: 'delivery',
+      resourceId: new ObjectId(donationId),
+      userId: new ObjectId(userId),
+      data: { location, message },
+      severity: 'high',
+      createdAt: new Date()
+    });
+
+    // Notify all admins
+    const Notification = require('../models/Notification');
+    const admins = await db.collection('users').find({ role: 'admin' }).toArray();
+    
+    for (const admin of admins) {
+      await Notification.create(db, {
+        userId: admin._id,
+        title: '🚨 EMERGENCY: SOS Alert',
+        message: `Volunteer ${req.user.name} reported an issue during delivery. Message: ${message || 'No details provided'}`,
+        type: 'sos',
+        relatedId: donationId,
+        relatedType: 'donation',
+        priority: 'high',
+        createdAt: new Date()
+      });
+    }
+
+    return successResponse(res, 200, 'SOS alert sent to all administrators');
+  } catch (error) {
+    return errorResponse(res, 500, 'Error reporting SOS', error.message);
+  }
+};
+
 module.exports = {
     getTrackingStatus,
     initializeTracking,
@@ -250,5 +330,6 @@ module.exports = {
     markDelivered,
     confirmDelivery,
     getActiveDeliveries,
-    getLocationHistory
+    getLocationHistory,
+    reportSOS
 };

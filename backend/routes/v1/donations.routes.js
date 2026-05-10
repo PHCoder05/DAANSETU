@@ -313,4 +313,26 @@ router.get('/my', authenticate, donationController.getMyDonations);
  */
 router.get('/:id/timeline', authenticate, mongoIdValidation('id'), donationController.getDonationTimeline);
 
+/**
+ * @swagger
+ * /api/donations/{id}/receipt:
+ *   get:
+ *     summary: Download tax receipt PDF
+ *     tags: [Donations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: PDF content
+ *       403:
+ *         description: Only donor or admin can download receipt
+ */
+router.get('/:id/receipt', authenticate, mongoIdValidation('id'), donationController.getDonationReceipt);
+
 module.exports = router;

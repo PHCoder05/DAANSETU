@@ -379,6 +379,10 @@ class Verification {
             return status.email === 'verified' &&
                 status.phone === 'verified' &&
                 status.ngo_registration === 'verified';
+        } else if (role === 'volunteer') {
+            return status.email === 'verified' &&
+                status.phone === 'verified' &&
+                status.id_proof === 'verified';
         }
 
         return false;

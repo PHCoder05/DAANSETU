@@ -7,6 +7,7 @@ const {
   getPagination,
   buildPaginationResponse,
   sanitizeUser,
+  sanitizeRequest,
   successResponse,
   errorResponse
 } = require('../utils/helpers');
@@ -45,7 +46,7 @@ const getNGOs = async (req, res) => {
     });
 
     // Sanitize user data
-    const sanitizedNGOs = ngos.map(sanitizeUser);
+    const sanitizedNGOs = ngos.map(u => sanitizeUser(u, req.user));
 
     const total = await User.count(db, filter);
 
@@ -74,7 +75,7 @@ const getNGOById = async (req, res) => {
     }
 
     return successResponse(res, 200, 'NGO retrieved successfully', {
-      ngo: sanitizeUser(ngo)
+      ngo: sanitizeUser(ngo, req.user)
     });
   } catch (error) {
     console.error('Get NGO by ID error:', error);
@@ -145,7 +146,9 @@ const createRequest = async (req, res) => {
       priority: 'normal'
     });
 
-    return successResponse(res, 201, 'Request created successfully', { request });
+    return successResponse(res, 201, 'Request created successfully', { 
+      request: sanitizeRequest(request) 
+    });
   } catch (error) {
     console.error('Create request error:', error);
     return errorResponse(res, 500, 'Error creating request', error.message);
@@ -191,7 +194,7 @@ const getRequests = async (req, res) => {
       res,
       200,
       'Requests retrieved successfully',
-      buildPaginationResponse(requests, total, page, limitNum)
+      buildPaginationResponse(requests.map(r => sanitizeRequest(r)), total, page, limitNum)
     );
   } catch (error) {
     console.error('Get requests error:', error);
@@ -278,7 +281,9 @@ const updateRequestStatus = async (req, res) => {
 
     const updatedRequest = await Request.findById(db, id);
 
-    return successResponse(res, 200, 'Request status updated successfully', { request: updatedRequest });
+    return successResponse(res, 200, 'Request status updated successfully', { 
+      request: sanitizeRequest(updatedRequest) 
+    });
   } catch (error) {
     console.error('Update request status error:', error);
     return errorResponse(res, 500, 'Error updating request status', error.message);

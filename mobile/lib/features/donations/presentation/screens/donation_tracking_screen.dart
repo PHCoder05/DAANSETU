@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:confetti/confetti.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../../shared/widgets/impact_share_card.dart';
 
 // Provider to fetch single donation
 final donationDetailProvider = FutureProvider.family<Donation, String>((ref, id) async {
@@ -95,6 +98,24 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
             child: const Text('Help', style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold)),
           )
         ],
+      ),
+      floatingActionButton: donationAsync.when(
+        data: (donation) {
+          final user = ref.watch(authStateProvider).user;
+          // Only show SOS to the person handling the delivery (Volunteer/NGO)
+          if (donation.status == 'in-transit' && donation.claimedBy == user?.id) {
+            return FloatingActionButton.extended(
+              heroTag: 'sos_fab',
+              onPressed: () => _showSOSDialog(context, donation.id),
+              backgroundColor: AppTheme.primaryRed,
+              icon: const Icon(Icons.emergency_rounded, color: Colors.white),
+              label: const Text('SOS', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ).animate().shake(duration: 1.seconds);
+          }
+          return null;
+        },
+        loading: () => null,
+        error: (_, __) => null,
       ),
       body: Stack(
         children: [
@@ -223,8 +244,8 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
               ),
             ),
             
-            // QR Verification Button
-            if (currentStepIndex >= 1 && currentStepIndex < 3)
+            // QR Verification Button (For Donor to show for pickup, or NGO to show for delivery)
+            if ((isDonor && donation.status == 'claimed') || (isClaimedNGO && donation.status == 'in-transit'))
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: SizedBox(
@@ -232,11 +253,12 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                    child: ElevatedButton.icon(
                      onPressed: () => _showQrCode(context, donation.id),
                      icon: const Icon(Icons.qr_code_rounded),
-                     label: const Text('Show Pickup QR Code'),
+                     label: Text(donation.status == 'claimed' ? 'Show Pickup QR Code' : 'Show Delivery QR Code'),
                      style: ElevatedButton.styleFrom(
                        backgroundColor: AppTheme.black,
                        foregroundColor: AppTheme.white,
                        padding: const EdgeInsets.all(16),
+                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                      ),
                    ),
                 ),
@@ -299,6 +321,54 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                         ],
                       ),
                       const SizedBox(height: 32),
+
+                      // ACTION REQUIRED (Volunteer/NGO side)
+                      if (isClaimedNGO && (donation.status == 'claimed' || donation.status == 'in-transit'))
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 32),
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppTheme.offWhite,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primaryRed),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    donation.status == 'claimed' ? "Pickup Verification" : "Delivery Verification",
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                donation.status == 'claimed' 
+                                  ? "Scan the QR code on the donor's app or item to confirm pickup."
+                                  : "Scan the QR code at the NGO destination to confirm delivery.",
+                                style: const TextStyle(color: AppTheme.gray, fontSize: 13),
+                              ),
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () => _scanQrCode(context, donation),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primaryRed,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    padding: const EdgeInsets.symmetric(vertical: 14),
+                                  ),
+                                  child: const Text("SCAN NOW", style: TextStyle(fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ).animate().slideY(begin: 0.1, end: 0).fadeIn(),
 
                       // TIMELINE
                       ListView.builder(
@@ -373,6 +443,45 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                           );
                         },
                       ),
+                      
+                      // IMPACT SHARE CARD
+                      if (donation.status == 'delivered') ...[
+                        const SizedBox(height: 32),
+                        const Divider(),
+                        const SizedBox(height: 32),
+                        const Text(
+                          'Spread the Kindness',
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Your donation made a real difference! Share this impact with your friends and family.',
+                          style: TextStyle(color: AppTheme.gray, fontSize: 13),
+                        ),
+                        const SizedBox(height: 24),
+                        Center(
+                          child: ImpactShareCard(
+                            donation: donation,
+                            donorName: user?.name ?? 'Hero',
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                               Share.share('I just donated ${donation.title} via DAANSETU! Together we are fighting hunger and waste. Join the movement! #DaanSetu #Impact');
+                            },
+                            icon: const Icon(Icons.share_rounded),
+                            label: const Text('Share Impact Card'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryRed,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -398,6 +507,80 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
     );
   }
   
+  void _scanQrCode(BuildContext context, Donation donation) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        height: MediaQuery.of(context).size.height * 0.8,
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          children: [
+            const SizedBox(height: 12),
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            const Text("Scan QR Code", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            const SizedBox(height: 8),
+            Text(
+              donation.status == 'claimed' ? "Scan donor's ID to confirm pickup" : "Scan destination ID to confirm delivery",
+              style: const TextStyle(color: AppTheme.gray),
+            ),
+            const SizedBox(height: 24),
+            Expanded(
+              child: Container(
+                margin: const EdgeInsets.symmetric(horizontal: 24),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                clipBehavior: Clip.antiAlias,
+                child: MobileScanner(
+                  onDetect: (capture) async {
+                    final List<Barcode> barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty) {
+                      final String? code = barcodes.first.rawValue;
+                      if (code != null && code.contains(donation.id)) {
+                        // Success!
+                        HapticFeedback.heavyImpact();
+                        context.pop(); // Close scanner
+                        
+                        final nextStatus = donation.status == 'claimed' ? 'in-transit' : 'delivered';
+                        
+                        try {
+                          await ref.read(apiClientProvider).updateDonationStatus(donation.id, nextStatus);
+                          ref.invalidate(donationDetailProvider(donation.id));
+                          CustomSnackBar.success(context, "Verification Successful!");
+                        } catch (e) {
+                          CustomSnackBar.error(context, "Failed to update status: $e");
+                        }
+                      }
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: OutlinedButton(
+                onPressed: () => context.pop(),
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text("CANCEL"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showQrCode(BuildContext context, String donationId) {
     showModalBottomSheet(
       context: context,
@@ -562,5 +745,55 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
         ),
       ),
     ).animate().fade();
+  }
+
+  void _showSOSDialog(BuildContext context, String donationId) {
+    final messageController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.emergency_rounded, color: AppTheme.primaryRed),
+            SizedBox(width: 8),
+            Text('SOS Emergency'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Need immediate help? This will alert all administrators and share your current location.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: messageController,
+              maxLines: 2,
+              decoration: InputDecoration(
+                hintText: 'Describe the issue (optional)...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () async {
+              try {
+                final apiClient = ref.read(apiClientProvider);
+                await apiClient.reportSOS(donationId, message: messageController.text);
+                if (mounted) {
+                  Navigator.pop(context);
+                  CustomSnackBar.success(context, 'SOS Alert Sent! Help is on the way.');
+                }
+              } catch (e) {
+                if (mounted) CustomSnackBar.error(context, 'Failed to send SOS');
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryRed),
+            child: const Text('SEND ALERT', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 }

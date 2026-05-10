@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../shared/models/user.dart';
+import '../../../../shared/providers/auth_provider.dart';
 
 class NgoDetailScreen extends ConsumerStatefulWidget {
   final String ngoId;
@@ -377,7 +378,11 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                   else
                     ...List.generate(_reviews.length.clamp(0, 5), (index) {
                       final review = _reviews[index];
+                      final authState = ref.watch(authStateProvider);
+                      final isMyNgo = authState.user?.id == widget.ngoId;
+                      
                       return _ReviewCard(
+                        reviewId: review['_id'],
                         reviewerName: review['donor']?['name'] ?? 'Anonymous',
                         rating: (review['rating'] ?? 0).toDouble(),
                         comment: review['comment'] ?? '',
@@ -385,6 +390,8 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                             ? DateTime.parse(review['createdAt']) 
                             : DateTime.now(),
                         response: review['response'],
+                        canRespond: isMyNgo && review['response'] == null,
+                        onRespond: (reviewId, response) => _submitResponse(reviewId, response),
                       ).animate(delay: Duration(milliseconds: 300 + index * 100)).fade().slideY(begin: 0.1, end: 0);
                     }),
                   
@@ -396,6 +403,28 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _submitResponse(String reviewId, String response) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final res = await apiClient.respondToReview(reviewId, response);
+      
+      if (res.statusCode == 200) {
+        if (mounted) {
+           ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text('Response submitted successfully'), backgroundColor: AppTheme.success)
+           );
+           _loadNgoDetails(); // Refresh
+        }
+      }
+    } catch (e) {
+       if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+             const SnackBar(content: Text('Failed to submit response'), backgroundColor: AppTheme.error)
+          );
+       }
+    }
   }
   
   double _getRatingPercentage(int rating) {
@@ -466,18 +495,24 @@ class _ContactRow extends StatelessWidget {
 }
 
 class _ReviewCard extends StatelessWidget {
+  final String reviewId;
   final String reviewerName;
   final double rating;
   final String comment;
   final DateTime date;
   final String? response;
+  final bool canRespond;
+  final Function(String, String)? onRespond;
   
   const _ReviewCard({
+    required this.reviewId,
     required this.reviewerName,
     required this.rating,
     required this.comment,
     required this.date,
     this.response,
+    this.canRespond = false,
+    this.onRespond,
   });
 
   @override
@@ -538,6 +573,13 @@ class _ReviewCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (canRespond)
+                TextButton.icon(
+                  onPressed: () => _showResponseDialog(context),
+                  icon: const Icon(Icons.reply_rounded, size: 16),
+                  label: const Text('Reply', style: TextStyle(fontSize: 12)),
+                  style: TextButton.styleFrom(foregroundColor: AppTheme.primaryRed),
+                ),
             ],
           ),
           if (comment.isNotEmpty) ...[
@@ -570,6 +612,37 @@ class _ReviewCard extends StatelessWidget {
     );
   }
   
+  void _showResponseDialog(BuildContext context) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Respond to Review'),
+        content: TextField(
+          controller: controller,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'Write your response here...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.trim().isNotEmpty) {
+                onRespond?.call(reviewId, controller.text.trim());
+                Navigator.pop(context);
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryRed),
+            child: const Text('Submit', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }

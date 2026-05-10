@@ -99,13 +99,107 @@ class DashboardScreen extends ConsumerWidget {
           // Stats
           SliverToBoxAdapter(
             child: dashboardAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(40),
-                child: Center(child: CircularProgressIndicator(color: AppTheme.primaryRed)),
+              loading: () => Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    // Shimmer stats row
+                    Row(
+                      children: List.generate(2, (i) => Expanded(
+                        child: Container(
+                          height: 100,
+                          margin: EdgeInsets.only(right: i == 0 ? 12 : 0),
+                          decoration: BoxDecoration(
+                            color: AppTheme.lightGray.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      )),
+                    ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1200.ms, color: AppTheme.white.withOpacity(0.5)),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: List.generate(2, (i) => Expanded(
+                        child: Container(
+                          height: 100,
+                          margin: EdgeInsets.only(right: i == 0 ? 12 : 0),
+                          decoration: BoxDecoration(
+                            color: AppTheme.lightGray.withOpacity(0.5),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      )),
+                    ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1200.ms, delay: 200.ms, color: AppTheme.white.withOpacity(0.5)),
+                    const SizedBox(height: 20),
+                    // Shimmer action bar
+                    Container(
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppTheme.lightGray.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1200.ms, delay: 400.ms, color: AppTheme.white.withOpacity(0.5)),
+                    const SizedBox(height: 20),
+                    // Shimmer list items
+                    ...List.generate(3, (i) => Container(
+                      height: 72,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.lightGray.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    )).animate(onPlay: (c) => c.repeat()).shimmer(duration: 1200.ms, delay: 600.ms, color: AppTheme.white.withOpacity(0.5)),
+                  ],
+                ),
               ),
               error: (error, stack) => Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('Failed to load dashboard: $error'),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+                child: Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: AppTheme.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppTheme.lightGray),
+                    boxShadow: AppTheme.cardShadow,
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.error.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.cloud_off_rounded, size: 40, color: AppTheme.error),
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Something went wrong',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.charcoal),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'We couldn\'t load your dashboard. Check your connection and try again.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: AppTheme.darkGray, height: 1.4),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton.icon(
+                          onPressed: () => ref.invalidate(dashboardProvider),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryRed,
+                            foregroundColor: AppTheme.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.refresh_rounded, size: 20),
+                          label: const Text('Try Again', style: TextStyle(fontWeight: FontWeight.w600)),
+                        ),
+                      ),
+                    ],
+                  ),
+                ).animate().fade().scale(begin: const Offset(0.95, 0.95)),
               ),
               data: (data) {
                 final stats = data['stats'] as Map<String, dynamic>? ?? {};
@@ -119,8 +213,84 @@ class DashboardScreen extends ConsumerWidget {
                       // Stats Grid
                       if (user?.isDonor == true) ...[
                         _buildDonorStats(context, stats),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => context.go(AppRoutes.analytics),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppTheme.primaryRed, AppTheme.primaryRed.withOpacity(0.8)],
+                              ),
+                              borderRadius: AppTheme.borderRadiusLarge,
+                              boxShadow: AppTheme.cardShadow,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.analytics_rounded, color: AppTheme.white, size: 28),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Impact Analytics', style: TextStyle(color: AppTheme.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text('See how your donations are helping lives', style: TextStyle(color: AppTheme.white.withOpacity(0.9), fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.white, size: 16),
+                              ],
+                            ),
+                          ),
+                        ).animate().fade().slideY(begin: 0.1),
                       ] else if (user?.isNgo == true) ...[
                         _buildNgoStats(context, stats),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => context.go(AppRoutes.ngoInventory),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [AppTheme.info, AppTheme.info.withOpacity(0.8)],
+                              ),
+                              borderRadius: AppTheme.borderRadiusLarge,
+                              boxShadow: AppTheme.cardShadow,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.inventory_2_rounded, color: AppTheme.white, size: 28),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Manage Inventory', style: TextStyle(color: AppTheme.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text('Distribute items to beneficiaries', style: TextStyle(color: AppTheme.white.withOpacity(0.9), fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.white, size: 16),
+                              ],
+                            ),
+                          ),
+                        ).animate().fade().slideY(begin: 0.1),
                       ],
                       
                       const SizedBox(height: 24),
