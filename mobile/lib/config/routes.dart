@@ -42,6 +42,8 @@ import '../features/admin/presentation/screens/admin_fraud_alerts_screen.dart';
 import '../features/profile/presentation/screens/contact_support_screen.dart';
 import '../features/profile/presentation/screens/volunteer_id_screen.dart';
 import '../features/profile/presentation/screens/milestones_screen.dart';
+import '../features/stories/presentation/screens/impact_stories_screen.dart';
+import '../features/stories/presentation/screens/create_story_screen.dart';
 import '../shared/providers/auth_provider.dart';
 
 // Route names
@@ -91,6 +93,8 @@ class AppRoutes {
   // NGO routes
   static const String ngoClaims = '/ngo/claims';
   static const String ngoInventory = '/ngo/inventory';
+  static const String impactStories = '/stories';
+  static const String createStory = '/stories/create';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -212,6 +216,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.ngoInventory,
             builder: (context, state) => const InventoryScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.impactStories,
+            builder: (context, state) => const ImpactStoriesScreen(),
+            routes: [
+              GoRoute(
+                path: 'create',
+                builder: (context, state) {
+                  final extra = state.extra as Map<String, dynamic>? ?? {};
+                  return CreateImpactStoryScreen(
+                    donationId: extra['donationId'],
+                    category: extra['category'],
+                  );
+                },
+              ),
+            ],
           ),
           GoRoute(
             path: AppRoutes.donations,

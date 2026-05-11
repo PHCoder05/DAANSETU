@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
 import '../../../../shared/models/donation.dart';
+import '../widgets/voice_form_modal.dart';
 
 class CreateDonationScreen extends ConsumerStatefulWidget {
   final Donation? initialData;
@@ -42,6 +43,8 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
   double? _selectedLat;
   double? _selectedLng;
   bool _gettingLocation = false;
+  bool _isAnalyzing = false;
+  List<dynamic> _recommendations = [];
 
   // Wizard State
   int _currentStep = 0;
@@ -140,6 +143,93 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
     setState(() {
       _selectedImages.removeAt(index);
     });
+  }
+
+  Future<void> _runAIAnalysis() async {
+    if (_selectedImages.isEmpty) {
+      CustomSnackBar.info(context, 'Please add a photo first for AI analysis.');
+      return;
+    }
+
+    setState(() => _isAnalyzing = true);
+    HapticFeedback.selectionClick();
+
+    try {
+      final img = _selectedImages.first;
+      final bytes = await img.readAsBytes();
+      final base64Str = base64Encode(bytes);
+      
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.analyzeImage('data:image/jpeg;base64,$base64Str');
+      
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        setState(() {
+          _titleController.text = data['title'] ?? _titleController.text;
+          _descriptionController.text = data['description'] ?? _descriptionController.text;
+          _selectedCategory = data['category'] ?? _selectedCategory;
+          _quantityController.text = data['estimatedQuantity']?.toString() ?? _quantityController.text;
+          _selectedUnit = data['suggestedUnit'] ?? _selectedUnit;
+          _selectedPriority = data['urgency'] ?? _selectedPriority;
+        });
+        
+        if (mounted) {
+          CustomSnackBar.success(context, 'AI analysis complete! Fields auto-filled.');
+          
+          // Fetch recommendations
+          _fetchRecommendations(data['category'] ?? _selectedCategory);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        CustomSnackBar.error(context, 'AI analysis failed. Please fill manually.');
+      }
+    } finally {
+      if (mounted) setState(() => _isAnalyzing = false);
+    }
+  }
+
+  Future<void> _showVoiceAssistant() async {
+    HapticFeedback.mediumImpact();
+    final result = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const VoiceFormModal(),
+    );
+
+    if (result != null && result is Map<String, dynamic> && mounted) {
+      setState(() {
+        _titleController.text = result['title'] ?? _titleController.text;
+        _descriptionController.text = result['description'] ?? _descriptionController.text;
+        _selectedCategory = result['category'] ?? _selectedCategory;
+        _quantityController.text = result['quantity']?.toString() ?? _quantityController.text;
+        _selectedUnit = result['unit'] ?? _selectedUnit;
+        _selectedCondition = result['condition'] ?? _selectedCondition;
+        _selectedPriority = result['priority'] ?? _selectedPriority;
+      });
+      
+      CustomSnackBar.success(context, 'Setu AI has filled the form for you!');
+    }
+  }
+
+  Future<void> _fetchRecommendations(String category) async {
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      final response = await apiClient.getRecommendedNgos(
+        category,
+        lat: _selectedLat,
+        lng: _selectedLng,
+      );
+      
+      if (response.statusCode == 200) {
+        setState(() {
+          _recommendations = response.data['data'] ?? [];
+        });
+      }
+    } catch (e) {
+      debugPrint('Recommendation fetch failed: $e');
+    }
   }
 
   Future<void> _submit() async {
@@ -268,9 +358,136 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
             selected: _selectedCategory,
             onChanged: (value) => setState(() => _selectedCategory = value),
           ).animate(delay: 350.ms).fadeIn().slideY(begin: 0.1),
+          
+          if (_selectedImages.isNotEmpty) ...[
+            const SizedBox(height: 32),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppTheme.primaryRed.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: AppTheme.primaryRed),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Try "Snap & Donate" AI',
+                          style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryRed),
+                        ),
+                      ),
+                      if (_isAnalyzing)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryRed),
+                        )
+                      else
+                        TextButton(
+                          onPressed: _runAIAnalysis,
+                          child: const Text('Run Analysis'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Our AI will analyze your photo to automatically fill in the category, title, and description.',
+                    style: TextStyle(fontSize: 12, color: AppTheme.gray),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn().scale(),
+          ],
+          
+          if (_recommendations.isNotEmpty) ...[
+            const SizedBox(height: 32),
+            Text(
+              'Best Matches for this Donation',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ).animate().fadeIn(),
+            const SizedBox(height: 12),
+            ..._recommendations.map((ngo) => _buildRecommendationCard(ngo)).toList(),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildRecommendationCard(dynamic ngo) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.primaryRed.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 50,
+            height: 50,
+            decoration: BoxDecoration(
+              color: AppTheme.offWhite,
+              borderRadius: BorderRadius.circular(12),
+              image: ngo['profileImage'] != null 
+                  ? DecorationImage(image: NetworkImage(ngo['profileImage']), fit: BoxFit.cover)
+                  : null,
+            ),
+            child: ngo['profileImage'] == null ? const Icon(Icons.business_rounded, color: AppTheme.gray) : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        ngo['name'] ?? 'NGO',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.success.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '${ngo['matchScore']}% Match',
+                        style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 10),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  ngo['matchingReason'] ?? '',
+                  style: const TextStyle(color: AppTheme.gray, fontSize: 12),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn().slideX(begin: 0.1);
   }
 
   Widget _buildStep2Details() {
@@ -337,6 +554,33 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
                         ),
                       ),
                     ),
+                    
+                    // AI Assistant Button
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildActionButton(
+                              icon: Icons.auto_awesome_rounded,
+                              label: 'AI Photo Analysis',
+                              onTap: _runAIAnalysis,
+                              isLoading: _isAnalyzing,
+                              color: AppTheme.accentOrange,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildActionButton(
+                              icon: Icons.mic_rounded,
+                              label: 'Voice Assistant',
+                              onTap: _showVoiceAssistant,
+                              color: AppTheme.primaryRed,
+                            ),
+                          ),
+                        ],
+                      ).animate().fadeIn(delay: 400.ms).slideX(),
+
+                      const SizedBox(height: 24),
+                    
                     Positioned(
                       top: 4,
                       right: 16,

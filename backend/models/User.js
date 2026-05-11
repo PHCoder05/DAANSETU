@@ -27,6 +27,7 @@ class User {
         documents: data.ngoDetails?.documents || [],
         verificationStatus: data.ngoDetails?.verificationStatus || 'pending', // 'pending', 'verified', 'rejected'
         categories: data.ngoDetails?.categories || [], // areas of work
+        needs: data.ngoDetails?.needs || [], // [{ category, priority, description, lastUpdated }]
         establishedYear: data.ngoDetails?.establishedYear || null
       };
     }

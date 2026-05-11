@@ -27,6 +27,9 @@ const deliveryRoutes = require('./delivery.routes');
 const auditRoutes = require('./audit.routes');
 const verificationRoutes = require('./verification.routes');
 const inventoryRoutes = require('./inventory.routes');
+const aiRoutes = require('./ai.routes');
+const storiesRoutes = require('./stories.routes');
+const gamificationRoutes = require('./gamification.routes');
 
 // ═══════════════════════════════════════════════════════════════════
 // REGISTER ROUTES
@@ -56,6 +59,9 @@ router.use('/verification', verificationRoutes);
 router.use('/ngo/inventory', inventoryRoutes);
 
 // Admin & Setup
+router.use('/ai', aiRoutes);
+router.use('/stories', storiesRoutes);
+router.use('/gamification', gamificationRoutes);
 router.use('/admin', adminRoutes);
 router.use('/setup', setupRoutes);
 

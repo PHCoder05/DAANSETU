@@ -9,11 +9,13 @@ import '../../../../shared/models/donation.dart';
 class DonationCard extends StatelessWidget {
   final Donation donation;
   final VoidCallback? onTap;
+  final bool isRecommended;
   
   const DonationCard({
     super.key,
     required this.donation,
     this.onTap,
+    this.isRecommended = false,
   });
 
   @override
@@ -85,6 +87,14 @@ class DonationCard extends StatelessWidget {
                   top: 12,
                   right: 12,
                   child: _QuantityBadge(quantity: donation.quantity!, unit: donation.unit),
+                ),
+
+              // Gemini Recommended Badge - Bottom Right
+              if (isRecommended)
+                Positioned(
+                  bottom: 12,
+                  right: 12,
+                  child: const _SetuSmartRecommendationBadge(),
                 ),
               
               // Content at bottom - Zomato style overlay
@@ -230,20 +240,23 @@ class DonationCard extends StatelessWidget {
   
   Widget _buildImage(Color categoryColor) {
     if (donation.images.isNotEmpty) {
-      return CachedNetworkImage(
-        imageUrl: donation.images.first,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          color: categoryColor.withOpacity(0.3),
-          child: Center(
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: categoryColor,
+        child: Hero(
+          tag: 'donation_image_${donation.id}',
+          child: CachedNetworkImage(
+            imageUrl: donation.images.first,
+            fit: BoxFit.cover,
+            placeholder: (context, url) => Container(
+              color: categoryColor.withOpacity(0.3),
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: categoryColor,
+                ),
+              ),
             ),
+            errorWidget: (context, url, error) => _buildCategoryImage(categoryColor),
           ),
         ),
-        errorWidget: (context, url, error) => _buildCategoryImage(categoryColor),
-      );
     }
     return _buildCategoryImage(categoryColor);
   }
@@ -449,5 +462,45 @@ class _QuantityBadge extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _SetuSmartRecommendationBadge extends StatelessWidget {
+  const _SetuSmartRecommendationBadge();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppTheme.black.withOpacity(0.8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.primaryRed.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: AppTheme.primaryRed.withOpacity(0.2),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.auto_awesome_rounded, size: 12, color: AppTheme.primaryRed),
+          const SizedBox(width: 4),
+          Text(
+            'Recommended',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.white.withOpacity(0.9),
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    ).animate(onPlay: (c) => c.repeat())
+        .shimmer(duration: 2.seconds, color: AppTheme.primaryRed.withOpacity(0.3));
   }
 }

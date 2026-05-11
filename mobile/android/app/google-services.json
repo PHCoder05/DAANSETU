@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "957292676200",
+    "project_id": "daansetu-d001d",
+    "storage_bucket": "daansetu-d001d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:957292676200:android:8354a9778de36c6550a7dd",
+        "android_client_info": {
+          "package_name": "com.daansetu.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWaINcC-Krqq-N7uKaRkAoN5a_IoVUCOM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

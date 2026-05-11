@@ -83,49 +83,66 @@ class Donation {
   }
 
   static async findWithDonorDetails(db, filter = {}, options = {}) {
-    const { skip = 0, limit = 10, sort = { createdAt: -1 } } = options;
-    return await db.collection(this.collectionName)
-      .aggregate([
-        { $match: filter },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'donorId',
-            foreignField: '_id',
-            as: 'donor'
-          }
-        },
-        { $unwind: { path: '$donor', preserveNullAndEmptyArrays: true } },
-        {
-          $lookup: {
-            from: 'users',
-            localField: 'claimedBy',
-            foreignField: '_id',
-            as: 'ngo'
-          }
-        },
-        { $unwind: { path: '$ngo', preserveNullAndEmptyArrays: true } },
-        { $sort: sort },
-        { $skip: skip },
-        { $limit: limit },
-        {
-          $project: {
-            'donor.password': 0,
-            'donor.phone': 0,
-            'donor.address': 0,
-            'donor.location': 0,
-            'donor.bookmarks': 0,
-            'donor.email': 0,
-            'ngo.password': 0,
-            'ngo.phone': 0,
-            'ngo.address': 0,
-            'ngo.location': 0,
-            'ngo.ngoDetails.documents': 0,
-            'ngo.email': 0
-          }
+    const { skip = 0, limit = 10, sort = { createdAt: -1 }, near } = options;
+    
+    let pipeline = [];
+
+    // If 'near' coordinates are provided, use $geoNear as the first stage
+    if (near && near.lat && near.lng) {
+      pipeline.push({
+        $geoNear: {
+          near: { type: 'Point', coordinates: [parseFloat(near.lng), parseFloat(near.lat)] },
+          distanceField: 'distance',
+          maxDistance: parseFloat(near.radius || 50000), // Default 50km
+          query: filter,
+          spherical: true
         }
-      ])
-      .toArray();
+      });
+    } else {
+      pipeline.push({ $match: filter });
+      pipeline.push({ $sort: sort });
+    }
+
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'donorId',
+          foreignField: '_id',
+          as: 'donor'
+        }
+      },
+      { $unwind: { path: '$donor', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'claimedBy',
+          foreignField: '_id',
+          as: 'ngo'
+        }
+      },
+      { $unwind: { path: '$ngo', preserveNullAndEmptyArrays: true } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          'donor.password': 0,
+          'donor.phone': 0,
+          'donor.address': 0,
+          'donor.location': 0,
+          'donor.bookmarks': 0,
+          'donor.email': 0,
+          'ngo.password': 0,
+          'ngo.phone': 0,
+          'ngo.address': 0,
+          'ngo.location': 0,
+          'ngo.ngoDetails.documents': 0,
+          'ngo.email': 0
+        }
+      }
+    );
+
+    return await db.collection(this.collectionName).aggregate(pipeline).toArray();
   }
 
   static async count(db, filter = {}) {

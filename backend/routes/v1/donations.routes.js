@@ -74,6 +74,47 @@ router.get('/nearby', optionalAuth, donationController.getNearbyDonations);
 
 /**
  * @swagger
+ * /api/donations/stats/summary:
+ *   get:
+ *     summary: Get donation statistics
+ *     tags: [Donations]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Statistics retrieved successfully
+ */
+router.get('/stats/summary', authenticate, donationController.getDonationStats);
+
+/**
+ * @swagger
+ * /api/donations/my:
+ *   get:
+ *     summary: Get my donations (as donor or NGO)
+ *     tags: [Donations]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [all, active, completed, expired]
+ *         description: Filter by status type
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [donor, ngo]
+ *         description: Override role for filter
+ *     responses:
+ *       200:
+ *         description: List of user's donations
+ */
+router.get('/my', authenticate, donationController.getMyDonations);
+
+/**
+ * @swagger
  * /api/donations/{id}:
  *   get:
  *     summary: Get donation by ID
@@ -252,46 +293,6 @@ router.put(
   donationController.updateDonationStatus
 );
 
-/**
- * @swagger
- * /api/donations/stats/summary:
- *   get:
- *     summary: Get donation statistics
- *     tags: [Donations]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Statistics retrieved successfully
- */
-router.get('/stats/summary', authenticate, donationController.getDonationStats);
-
-/**
- * @swagger
- * /api/donations/my:
- *   get:
- *     summary: Get my donations (as donor or NGO)
- *     tags: [Donations]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: type
- *         schema:
- *           type: string
- *           enum: [all, active, completed, expired]
- *         description: Filter by status type
- *       - in: query
- *         name: role
- *         schema:
- *           type: string
- *           enum: [donor, ngo]
- *         description: Override role for filter
- *     responses:
- *       200:
- *         description: List of user's donations
- */
-router.get('/my', authenticate, donationController.getMyDonations);
 
 /**
  * @swagger

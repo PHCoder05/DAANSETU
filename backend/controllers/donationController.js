@@ -47,7 +47,7 @@ const createDonation = async (req, res) => {
 // Get all donations with filters
 const getDonations = async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, status, priority, search } = req.query;
+    const { page = 1, limit = 10, category, status, priority, search, lat, lng, radius } = req.query;
     const { skip, limit: limitNum } = getPagination(page, limit);
 
     const db = getDB();
@@ -74,11 +74,22 @@ const getDonations = async (req, res) => {
     }
 
     // Get donations with donor details
-    const donations = await Donation.findWithDonorDetails(db, filter, {
+    const options = {
       skip,
       limit: limitNum,
       sort: { createdAt: -1 }
-    });
+    };
+
+    // Add geo search options if coordinates provided
+    if (lat && lng) {
+      options.near = {
+        lat: parseFloat(lat),
+        lng: parseFloat(lng),
+        radius: radius ? parseFloat(radius) * 1000 : 50000 // default 50km
+      };
+    }
+
+    const donations = await Donation.findWithDonorDetails(db, filter, options);
 
     const total = await Donation.count(db, filter);
 

@@ -6,6 +6,7 @@ import '../../../../config/routes.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../shared/providers/auth_provider.dart';
+import '../widgets/gemini_assistant_modal.dart';
 
 final dashboardProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final apiClient = ref.watch(apiClientProvider);
@@ -18,8 +19,15 @@ final dashboardProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref)
   return {};
 });
 
-class DashboardScreen extends ConsumerWidget {
-  const DashboardScreen({super.key});
+  void _showGeminiAssistant(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const GeminiAssistantModal(),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,6 +37,11 @@ class DashboardScreen extends ConsumerWidget {
     
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showGeminiAssistant(context),
+        backgroundColor: AppTheme.black,
+        child: const Icon(Icons.auto_awesome_rounded, color: AppTheme.primaryRed),
+      ).animate().scale(delay: 1.seconds, duration: 400.ms, curve: Curves.easeOutBack),
       body: CustomScrollView(
         slivers: [
           // Header
@@ -291,6 +304,46 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                         ).animate().fade().slideY(begin: 0.1),
+                      ] else if (user?.role == 'volunteer') ...[
+                        _buildVolunteerStats(context, stats),
+                        const SizedBox(height: 16),
+                        GestureDetector(
+                          onTap: () => context.go(AppRoutes.donations),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [const Color(0xFF6C5CE7), const Color(0xFF8E44AD)],
+                              ),
+                              borderRadius: AppTheme.borderRadiusLarge,
+                              boxShadow: AppTheme.cardShadow,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.white.withOpacity(0.2),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.explore_rounded, color: AppTheme.white, size: 28),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('Find Nearby Pickups', style: TextStyle(color: AppTheme.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      Text('Use Smart Zone to find nearest donations', style: TextStyle(color: AppTheme.white.withOpacity(0.9), fontSize: 13)),
+                                    ],
+                                  ),
+                                ),
+                                const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.white, size: 16),
+                              ],
+                            ),
+                          ),
+                        ).animate().fade().slideY(begin: 0.1),
                       ],
                       
                       const SizedBox(height: 24),
@@ -452,6 +505,39 @@ class DashboardScreen extends ConsumerWidget {
             label: 'Delivered',
             icon: Icons.check_circle_rounded,
             color: AppTheme.success,
+          ),
+        ),
+      ],
+    ).animate().fade().slideY(begin: 0.1, end: 0);
+  }
+
+  Widget _buildVolunteerStats(BuildContext context, Map<String, dynamic> stats) {
+    return Row(
+      children: [
+        Expanded(
+          child: _StatCard(
+            value: '${stats['activeTasks'] ?? 0}',
+            label: 'Tasks',
+            icon: Icons.assignment_turned_in_rounded,
+            color: AppTheme.primaryRed,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatCard(
+            value: '${stats['completedDeliveries'] ?? 0}',
+            label: 'Delivered',
+            icon: Icons.local_shipping_rounded,
+            color: AppTheme.success,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: _StatCard(
+            value: '${stats['totalPoints'] ?? 0}',
+            label: 'Points',
+            icon: Icons.stars_rounded,
+            color: AppTheme.warning,
           ),
         ),
       ],

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../config/routes.dart';
@@ -17,7 +19,10 @@ import '../widgets/volunteer_dashboard_view.dart';
 import '../widgets/ngo_inventory_view.dart';
 import '../../../../core/services/location_service.dart';
 import '../../../../core/services/socket_service.dart';
+import '../../../../core/providers/tracking_provider.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
+import '../../../../core/providers/location_provider.dart';
+import '../widgets/voice_search_modal.dart';
 
 /// Custom exception class for API errors with user-friendly messages
 class DonationException implements Exception {
@@ -31,13 +36,21 @@ class DonationException implements Exception {
 }
 
 final myDonationsFilterProvider = StateProvider.autoDispose<bool>((ref) => false);
+final radiusFilterProvider = StateProvider.autoDispose<double?>((ref) => 50.0); // Default 50km
 
 final donationsProvider = FutureProvider.autoDispose<List<Donation>>((ref) async {
   final apiClient = ref.watch(apiClientProvider);
   final myDonations = ref.watch(myDonationsFilterProvider);
+  final location = ref.watch(userLocationProvider);
+  final radius = ref.watch(radiusFilterProvider);
   
   try {
-    final response = await apiClient.getDonations(myDonations: myDonations);
+    final response = await apiClient.getDonations(
+      myDonations: myDonations,
+      lat: location?.latitude,
+      lng: location?.longitude,
+      radius: radius,
+    );
     
     if (response.statusCode == 200) {
       final data = response.data;
@@ -117,7 +130,10 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _showTutorialIfNeeded());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showTutorialIfNeeded();
+      ref.read(userLocationProvider.notifier).updateLocation();
+    });
   }
 
   Future<void> _toggleAvailability(bool value) async {
@@ -130,24 +146,8 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
         // Update local state via auth provider
         await ref.read(authStateProvider.notifier).refreshProfile();
         
-        // Handle background tracking
-        final locationService = ref.read(locationServiceProvider);
-        final socketService = ref.read(socketServiceProvider);
-        
-        if (value) {
-          locationService.startLocationStream((position) {
-            final userId = ref.read(authStateProvider).user?.id;
-            if (userId != null) {
-              socketService.broadcastVolunteerLocation(
-                userId,
-                position.latitude,
-                position.longitude,
-              );
-            }
-          });
-        } else {
-          locationService.stopLocationStream();
-        }
+        // Handle background tracking via global provider
+        await ref.read(trackingProvider.notifier).toggleGlobalOnline(value);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -330,6 +330,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
     
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
+      drawer: _buildDrawer(context, user),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -352,6 +353,12 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                 pinned: true,
                 floating: true,
                 toolbarHeight: 60,
+                leading: Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(Icons.menu_rounded, color: AppTheme.black),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                ),
                 title: GestureDetector(
                   key: _locationKey,
                   onTap: () => _showLocationSelector(context),
@@ -528,7 +535,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                               ),
                               child: IconButton(
                                 icon: const Icon(Icons.mic_none_rounded, color: AppTheme.primaryRed),
-                                onPressed: () => _showVoiceSearchDialog(context),
+                                onPressed: _showVoiceSearch,
                               ),
                             ),
                           ],
@@ -682,7 +689,9 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                   child: Row(
                     children: [
                       Text(
-                        _isNgoInventoryMode ? 'My Inventory' : 'All Donations around you',
+                        _isNgoInventoryMode 
+                          ? 'My Inventory' 
+                          : 'Within ${ref.watch(radiusFilterProvider)?.toInt() ?? 50} km',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
@@ -775,9 +784,31 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                           delegate: SliverChildBuilderDelegate(
                             (context, index) {
                               final donation = filteredDonations[index];
-                              return DonationCard(
-                                donation: donation,
-                                onTap: () => context.go('${AppRoutes.donations}/${donation.id}'),
+                              return Slidable(
+                                key: ValueKey(donation.id),
+                                endActionPane: ActionPane(
+                                  motion: const ScrollMotion(),
+                                  children: [
+                                    SlidableAction(
+                                      onPressed: (context) => _toggleBookmark(donation.id),
+                                      backgroundColor: AppTheme.accentOrange,
+                                      foregroundColor: Colors.white,
+                                      icon: Icons.bookmark_border_rounded,
+                                      label: 'Save',
+                                    ),
+                                    SlidableAction(
+                                      onPressed: (context) => Share.share('Check out this donation on Daansetu: ${donation.title}'),
+                                      backgroundColor: AppTheme.info,
+                                      foregroundColor: Colors.white,
+                                      icon: Icons.share_rounded,
+                                      label: 'Share',
+                                    ),
+                                  ],
+                                ),
+                                child: DonationCard(
+                                  donation: donation,
+                                  onTap: () => context.go('${AppRoutes.donations}/${donation.id}'),
+                                ),
                               ).animate(delay: Duration(milliseconds: index * 50)).fade().slideY(begin: 0.05, end: 0);
                             },
                             childCount: filteredDonations.length,
@@ -963,72 +994,139 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
     
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          final currentRadius = ref.watch(radiusFilterProvider) ?? 50.0;
+          
+          return Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Select Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('Location Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                const Text('Radius Range', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Slider(
+                        value: currentRadius,
+                        min: 5,
+                        max: 200,
+                        divisions: 19,
+                        activeColor: AppTheme.primaryRed,
+                        label: '${currentRadius.toInt()} km',
+                        onChanged: (value) {
+                          setModalState(() {
+                            ref.read(radiusFilterProvider.notifier).state = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Container(
+                      width: 60,
+                      alignment: Alignment.center,
+                      child: Text('${currentRadius.toInt()} km', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryRed)),
+                    ),
+                  ],
+                ),
+                const Divider(height: 32),
+                const Text('Address', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                const SizedBox(height: 8),
+                ...locations.map((loc) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    loc == 'Current Location' ? Icons.my_location : Icons.location_on_outlined,
+                    color: _selectedLocation == loc ? AppTheme.primaryRed : AppTheme.gray,
+                  ),
+                  title: Text(loc),
+                  trailing: _selectedLocation == loc ? const Icon(Icons.check, color: AppTheme.primaryRed) : null,
+                  onTap: () {
+                    setState(() => _selectedLocation = loc);
+                    if (loc == 'Current Location') {
+                      ref.read(userLocationProvider.notifier).updateLocation();
+                    }
+                    Navigator.pop(context);
+                  },
+                )).toList(),
               ],
             ),
-            const SizedBox(height: 16),
-            ...locations.map((loc) => ListTile(
-              leading: Icon(
-                loc == 'Current Location' ? Icons.my_location : Icons.location_on_outlined,
-                color: _selectedLocation == loc ? AppTheme.primaryRed : AppTheme.gray,
-              ),
-              title: Text(loc),
-              trailing: _selectedLocation == loc ? const Icon(Icons.check, color: AppTheme.primaryRed) : null,
-              onTap: () {
-                setState(() => _selectedLocation = loc);
-                Navigator.pop(context);
-              },
-            )).toList(),
-          ],
-        ),
+          );
+        }
       ),
     );
   }
   
-  /// Show voice search dialog (placeholder)
-  void _showVoiceSearchDialog(BuildContext context) {
+  Future<void> _toggleBookmark(String donationId) async {
+    final user = ref.read(authStateProvider).user;
+    if (user == null) {
+      if (mounted) CustomSnackBar.error(context, 'Please login to bookmark');
+      return;
+    }
+
+    final isBookmarked = user.bookmarks.contains(donationId);
+    HapticFeedback.lightImpact();
+
+    // Optimistic update
+    final newBookmarks = List<String>.from(user.bookmarks);
+    if (!isBookmarked) {
+      newBookmarks.add(donationId);
+      if (mounted) CustomSnackBar.success(context, 'Donation saved');
+    } else {
+      newBookmarks.remove(donationId);
+      if (mounted) CustomSnackBar.info(context, 'Removed from saved');
+    }
+    
+    ref.read(authStateProvider.notifier).updateUser(user.copyWith(bookmarks: newBookmarks));
+
+    try {
+      await ref.read(apiClientProvider).toggleBookmark(donationId);
+    } catch (e) {
+      // Revert on failure
+      ref.read(authStateProvider.notifier).updateUser(user);
+      if (mounted) CustomSnackBar.error(context, 'Failed to update bookmark');
+    }
+  }
+
+  void _showVoiceSearch() async {
     HapticFeedback.mediumImpact();
-    showDialog(
+    final result = await showModalBottomSheet(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: AppTheme.primaryRed.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.mic, size: 40, color: AppTheme.primaryRed),
-            ),
-            const SizedBox(height: 16),
-            const Text('Listening...', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Text('Say "food" or "clothes" to search', style: TextStyle(color: AppTheme.gray)),
-            const SizedBox(height: 16),
-            const Text('(Voice search coming soon)', style: TextStyle(color: AppTheme.gray, fontSize: 12)),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-        ],
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => const VoiceSearchModal(),
     );
+
+    if (result != null && mounted) {
+      if (result is Map<String, dynamic>) {
+        // AI returned filters
+        setState(() {
+          if (result['category'] != null) {
+            _selectedCategory = result['category'].toString().toLowerCase();
+          }
+          if (result['searchTerm'] != null) {
+            _searchQuery = result['searchTerm'].toString().toLowerCase();
+            _searchController.text = result['searchTerm'].toString();
+          }
+        });
+        
+        CustomSnackBar.success(context, 'Filters applied from voice search');
+      } else if (result == 'keyboard') {
+        FocusScope.of(context).requestFocus(FocusNode());
+      }
+    }
   }
   
   /// Show filter sheet
@@ -1259,6 +1357,100 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
     );
   }
   
+  Widget _buildDrawer(BuildContext context, user) {
+    return Drawer(
+      backgroundColor: AppTheme.white,
+      child: Column(
+        children: [
+          // Header with profile info
+          UserAccountsDrawerHeader(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFE23744), Color(0xFFFF4E50)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: AppTheme.white,
+              child: Text(
+                user?.name?[0].toUpperCase() ?? 'U',
+                style: const TextStyle(color: AppTheme.primaryRed, fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+            ),
+            accountName: Text(user?.name ?? 'User', style: const TextStyle(fontWeight: FontWeight.bold)),
+            accountEmail: Text(user?.email ?? 'user@example.com'),
+          ),
+          
+          Expanded(
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                _buildDrawerItem(Icons.dashboard_outlined, 'Dashboard', () {
+                  Navigator.pop(context);
+                  context.go(AppRoutes.dashboard);
+                }),
+                _buildDrawerItem(Icons.history_rounded, 'My Donations', () {
+                  Navigator.pop(context);
+                  context.go(AppRoutes.myDonations);
+                }),
+                _buildDrawerItem(Icons.emoji_events_outlined, 'Leaderboard', () {
+                  Navigator.pop(context);
+                  context.go(AppRoutes.leaderboard);
+                }),
+                _buildDrawerItem(Icons.auto_awesome_rounded, 'Impact Stories', () {
+                  Navigator.pop(context);
+                  context.go(AppRoutes.impactStories);
+                }),
+                const Divider(),
+                _buildDrawerItem(Icons.settings_outlined, 'Settings', () {
+                  Navigator.pop(context);
+                  // context.go(AppRoutes.settings);
+                }),
+                _buildDrawerItem(Icons.help_outline_rounded, 'Help & Support', () {
+                  Navigator.pop(context);
+                }),
+                const Divider(),
+                _buildDrawerItem(Icons.logout_rounded, 'Logout', () {
+                  Navigator.pop(context);
+                  ref.read(authStateProvider.notifier).logout();
+                  context.go(AppRoutes.login);
+                }, color: AppTheme.primaryRed),
+              ],
+            ),
+          ),
+          
+          // Version info at bottom
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              'v1.0.0 (Premium)',
+              style: TextStyle(color: AppTheme.gray.withOpacity(0.5), fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap, {Color? color}) {
+    return ListTile(
+      leading: Icon(icon, color: color ?? AppTheme.charcoal),
+      title: Text(
+        title,
+        style: TextStyle(
+          color: color ?? AppTheme.charcoal,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      visualDensity: VisualDensity.compact,
+    );
+  }
+
   Widget colEmpty() {
     return Column(
       children: [

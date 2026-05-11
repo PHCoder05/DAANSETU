@@ -1,13 +1,9 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/api/api_client.dart';
-import '../../../../shared/providers/auth_provider.dart';
 
 class ImpactLeaderboardScreen extends ConsumerStatefulWidget {
   const ImpactLeaderboardScreen({super.key});
@@ -16,376 +12,134 @@ class ImpactLeaderboardScreen extends ConsumerStatefulWidget {
   ConsumerState<ImpactLeaderboardScreen> createState() => _ImpactLeaderboardScreenState();
 }
 
-class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScreen> 
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final List<String> _tabs = ['Donors', 'NGOs', 'Volunteers'];
-  
-  Map<String, List<Map<String, dynamic>>> _leaderboardData = {
-    'Donors': [],
-    'NGOs': [],
-    'Volunteers': [],
-  };
-  
+class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScreen> {
   bool _isLoading = true;
+  List<dynamic> _leaderboard = [];
+  Map<String, dynamic>? _userStats;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        _loadLeaderboard(_tabs[_tabController.index].toLowerCase());
-      }
-    });
-    _loadLeaderboard('donors');
+    _fetchData();
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadLeaderboard(String type) async {
+  Future<void> _fetchData() async {
     setState(() => _isLoading = true);
     try {
-      final response = await ref.read(apiClientProvider).getLeaderboard(type: type);
-      if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['data']['leaderboard'];
-        final tabName = _tabs.firstWhere((t) => t.toLowerCase() == type);
-        
+      final apiClient = ref.read(apiClientProvider);
+      final lbResponse = await apiClient.getLeaderboard();
+      final statsResponse = await apiClient.getGamificationStats();
+
+      if (mounted) {
         setState(() {
-          _leaderboardData[tabName] = data.map((item) {
-            return {
-              'name': item['name'] ?? 'Anonymous',
-              'value': item['impactScore'] ?? item['donationCount'] ?? item['deliveredCount'] ?? item['points'] ?? 0,
-              'subtitle': _getSubtitle(item, type),
-              'image': item['profileImage'],
-            };
-          }).toList();
+          _leaderboard = lbResponse.data['data']['leaderboard'] ?? [];
+          _userStats = statsResponse.data['data'];
           _isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint('Error loading leaderboard: $e');
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
-  }
-
-  String _getSubtitle(Map<String, dynamic> item, String type) {
-    if (type == 'donors') return '${item['donationCount'] ?? 0} Donations';
-    if (type == 'ngos') return '${item['deliveredCount'] ?? 0} Delivered';
-    if (type == 'volunteers') return '${item['deliveries'] ?? 0} Pickups';
-    return '';
   }
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authStateProvider);
-    final user = authState.user;
-    
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+      backgroundColor: const Color(0xFFF8F9FE),
       body: CustomScrollView(
         slivers: [
-          // ═══════════════════════════════════════════════════════════
-          // PREMIUM STICKY HEADER
-          // ═══════════════════════════════════════════════════════════
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: false,
-            pinned: true,
-            elevation: 0,
-            backgroundColor: AppTheme.white,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppTheme.black, size: 20),
-              onPressed: () => context.pop(),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.share_rounded, color: AppTheme.black),
-                onPressed: () {
-                   HapticFeedback.lightImpact();
-                   Share.share('Check out the DaanSetu Leaderboard! Together we are making a difference. #DaanSetu #Impact');
-                },
-              ),
-              const SizedBox(width: 8),
-            ],
-            flexibleSpace: FlexibleSpaceBar(
-              centerTitle: true,
-              title: const Text(
-                'Wall of Fame',
-                style: TextStyle(
-                  color: AppTheme.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              background: Container(color: AppTheme.white),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(48),
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.offWhite,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: AppTheme.primaryRed,
-                  ),
-                  labelColor: Colors.white,
-                  unselectedLabelColor: AppTheme.gray,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  tabs: _tabs.map((t) => Tab(text: t)).toList(),
-                ),
-              ),
-            ),
-          ),
-
-          // ═══════════════════════════════════════════════════════════
-          // PODIUM SECTION (TOP 3)
-          // ═══════════════════════════════════════════════════════════
-          SliverToBoxAdapter(
-            child: _isLoading 
-              ? const SizedBox(height: 200, child: Center(child: CircularProgressIndicator(color: AppTheme.primaryRed)))
-              : _buildPodium(_leaderboardData[_tabs[_tabController.index]]!),
-          ),
-
-          // ═══════════════════════════════════════════════════════════
-          // LIST SECTION (RANK 4+)
-          // ═══════════════════════════════════════════════════════════
-          _isLoading 
-            ? const SliverToBoxAdapter(child: SizedBox.shrink())
-            : SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final listData = _leaderboardData[_tabs[_tabController.index]]!;
-                      if (listData.length <= 3) return null;
-                      if (index + 3 >= listData.length) return null;
-                      
-                      final item = listData[index + 3];
-                      final rank = index + 4;
-                      
-                      return _buildLeaderboardTile(item, rank);
-                    },
-                    childCount: math.max(0, _leaderboardData[_tabs[_tabController.index]]!.length - 3),
-                  ),
-                ),
-              ),
-        ],
-      ),
-      bottomNavigationBar: _buildMyRankCard(user, _leaderboardData[_tabs[_tabController.index]]!),
-    );
-  }
-
-  Widget _buildMyRankCard(user, List<Map<String, dynamic>> listData) {
-    if (user == null || listData.isEmpty) return const SizedBox.shrink();
-    
-    final myIndex = listData.indexWhere((item) => item['name'] == user.name);
-    if (myIndex == -1) return const SizedBox.shrink();
-    
-    final myItem = listData[myIndex];
-    final rank = myIndex + 1;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-      decoration: BoxDecoration(
-        color: AppTheme.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.primaryRed,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              'Rank #$rank',
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-          ),
-          const SizedBox(width: 16),
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: AppTheme.primaryRed.withOpacity(0.1),
-            child: Text(
-              user.name[0].toUpperCase(),
-              style: const TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Text(
-              'Your Position',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-            ),
-          ),
-          Text(
-            '${myItem['value']}',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18, color: AppTheme.primaryRed),
-          ),
+          _buildSliverAppBar(),
+          if (_isLoading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator(color: AppTheme.primaryRed)),
+            )
+          else if (_leaderboard.isEmpty)
+            const SliverFillRemaining(
+              child: Center(child: Text('No champions yet. Be the first!')),
+            )
+          else
+            _buildLeaderboardList(),
         ],
       ),
     );
   }
 
-  Widget _buildPodium(List<Map<String, dynamic>> topList) {
-    if (topList.isEmpty) return const SizedBox(height: 100, child: Center(child: Text('No data yet')));
-    
-    // Top 3 positions
-    final first = topList.isNotEmpty ? topList[0] : null;
-    final second = topList.length > 1 ? topList[1] : null;
-    final third = topList.length > 2 ? topList[2] : null;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // 2nd Place
-          if (second != null) _buildPodiumItem(second, 2, 120),
-          const SizedBox(width: 12),
-          // 1st Place
-          if (first != null) _buildPodiumItem(first, 1, 160),
-          const SizedBox(width: 12),
-          // 3rd Place
-          if (third != null) _buildPodiumItem(third, 3, 100),
-        ],
-      ),
-    ).animate().fadeIn(duration: 600.ms).slideY(begin: 0.1, end: 0);
-  }
-
-  Widget _buildPodiumItem(Map<String, dynamic> item, int rank, double height) {
-    Color podiumColor;
-    String trophy;
-    switch (rank) {
-      case 1: 
-        podiumColor = const Color(0xFFFFD700); 
-        trophy = '👑';
-        break;
-      case 2: 
-        podiumColor = const Color(0xFFC0C0C0); 
-        trophy = '🥈';
-        break;
-      default: 
-        podiumColor = const Color(0xFFCD7F32); 
-        trophy = '🥉';
-    }
-
-    return Expanded(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 240,
+      floating: false,
+      pinned: true,
+      backgroundColor: AppTheme.primaryRed,
+      elevation: 0,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFFE53935), Color(0xFFC62828)],
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: rank == 1 ? 80 : 65,
-                height: rank == 1 ? 80 : 65,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: podiumColor, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: podiumColor.withOpacity(0.3),
-                      blurRadius: 15,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: item['image'] != null
-                    ? Image.network(item['image'], fit: BoxFit.cover)
-                    : Container(
-                        color: podiumColor.withOpacity(0.1),
-                        child: Center(
-                          child: Text(
-                            item['name'][0].toUpperCase(),
-                            style: TextStyle(
-                              color: podiumColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: rank == 1 ? 24 : 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                ),
+              const SizedBox(height: 40),
+              const Icon(Icons.emoji_events_rounded, color: Colors.white, size: 60)
+                  .animate()
+                  .scale(duration: 600.ms, curve: Curves.easeOutBack)
+                  .shimmer(delay: 1.seconds),
+              const SizedBox(height: 12),
+              const Text(
+                'Impact Champions',
+                style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              Positioned(
-                bottom: -10,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              const Text(
+                'Making the world better, one donation at a time',
+                style: TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              if (_userStats != null) ...[
+                const SizedBox(height: 20),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: podiumColor,
-                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    trophy,
-                    style: const TextStyle(fontSize: 12),
+                    'Your Rank: #${_userStats!['rank']}  •  ${_userStats!['impactScore']} Pts',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
-                ),
-              ),
+                ).animate().fadeIn().slideY(begin: 0.2),
+              ],
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            item['name'],
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardList() {
+    return SliverPadding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      sliver: SliverMainAxisGroup(
+        slivers: [
+          SliverToBoxAdapter(
+            child: _buildPodium(),
           ),
-          const SizedBox(height: 4),
-          Text(
-            '${item['value']}',
-            style: TextStyle(
-              color: AppTheme.primaryRed,
-              fontWeight: FontWeight.w900,
-              fontSize: rank == 1 ? 16 : 14,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            height: height,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  podiumColor.withOpacity(0.8),
-                  podiumColor.withOpacity(0.2),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-            ),
-            child: Center(
-              child: Text(
-                '#$rank',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 24,
-                ),
-              ),
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                // Skip first 3 as they are in podium
+                final actualIndex = index + 3;
+                if (actualIndex >= _leaderboard.length) return null;
+                
+                final user = _leaderboard[actualIndex];
+                final rank = actualIndex + 1;
+                return _buildLeaderboardItem(user, rank);
+              },
+              childCount: _leaderboard.length > 3 ? _leaderboard.length - 3 : 0,
             ),
           ),
         ],
@@ -393,12 +147,111 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
     );
   }
 
-  Widget _buildLeaderboardTile(Map<String, dynamic> item, int rank) {
+  Widget _buildPodium() {
+    if (_leaderboard.isEmpty) return const SizedBox.shrink();
+    
+    final top3 = _leaderboard.take(3).toList();
+    
+    return Container(
+      height: 220,
+      margin: const EdgeInsets.only(bottom: 32),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          // 2nd Place
+          if (top3.length > 1) 
+            _buildPodiumSpot(top3[1], 2, 160, const Color(0xFFC0C0C0)),
+          
+          // 1st Place
+          if (top3.isNotEmpty)
+            _buildPodiumSpot(top3[0], 1, 200, const Color(0xFFFFD700)),
+            
+          // 3rd Place
+          if (top3.length > 2)
+            _buildPodiumSpot(top3[2], 3, 140, const Color(0xFFCD7F32)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPodiumSpot(dynamic user, int rank, double height, Color color) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: color, width: 3),
+                boxShadow: [
+                  BoxShadow(color: color.withOpacity(0.3), blurRadius: 15, spreadRadius: 2),
+                ],
+              ),
+              child: CircleAvatar(
+                radius: rank == 1 ? 40 : 30,
+                backgroundColor: AppTheme.offWhite,
+                backgroundImage: user['profileImage'] != null ? NetworkImage(user['profileImage']) : null,
+                child: user['profileImage'] == null ? const Icon(Icons.person, color: AppTheme.gray) : null,
+              ),
+            ),
+            Positioned(
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: Text(
+                  '$rank',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Text(
+          user['name']?.split(' ')[0] ?? 'User',
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        Text(
+          '${user['impactScore'] ?? 0} pts',
+          style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.w600, fontSize: 12),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          width: 80,
+          height: height - 100,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [color.withOpacity(0.8), color.withOpacity(0.2)],
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          ),
+          child: rank == 1 ? const Icon(Icons.workspace_premium_rounded, color: Colors.white30, size: 32) : null,
+        ),
+      ],
+    ).animate().fadeIn(delay: (rank * 200).ms).slideY(begin: 0.2);
+  }
+
+  Widget _buildLeaderboardItem(dynamic user, int rank) {
+    final isTop3 = rank <= 3;
+    final rankColor = rank == 1 
+        ? const Color(0xFFFFD700) // Gold
+        : rank == 2 
+            ? const Color(0xFFC0C0C0) // Silver
+            : rank == 3 
+                ? const Color(0xFFCD7F32) // Bronze
+                : AppTheme.gray;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.white,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -410,54 +263,48 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 30,
-            child: Text(
-              '#$rank',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.gray,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: AppTheme.primaryRed.withOpacity(0.1),
-            child: Text(
-              item['name'][0].toUpperCase(),
-              style: const TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold),
-            ),
+          Container(
+            width: 35,
+            alignment: Alignment.center,
+            child: isTop3 
+                ? Icon(Icons.workspace_premium_rounded, color: rankColor, size: 28)
+                : Text('#$rank', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.gray)),
           ),
           const SizedBox(width: 12),
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: AppTheme.offWhite,
+            backgroundImage: user['profileImage'] != null ? NetworkImage(user['profileImage']) : null,
+            child: user['profileImage'] == null ? const Icon(Icons.person, color: AppTheme.gray) : null,
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item['name'],
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  user['name'] ?? 'Anonymous',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
-                  item['subtitle'],
-                  style: TextStyle(color: AppTheme.gray, fontSize: 12),
+                  '${user['donorStats']?['completedDonations'] ?? 0} Donations',
+                  style: const TextStyle(color: AppTheme.gray, fontSize: 13),
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.offWhite,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Text(
-              '${item['value']}',
-              style: const TextStyle(fontWeight: FontWeight.w900, color: AppTheme.charcoal),
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${user['impactScore'] ?? 0}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppTheme.primaryRed),
+              ),
+              const Text('Impact Pts', style: TextStyle(fontSize: 10, color: AppTheme.gray)),
+            ],
           ),
         ],
       ),
-    ).animate().fadeIn(delay: (rank * 50).ms).slideX(begin: 0.05, end: 0);
+    ).animate().fadeIn(delay: (rank * 50).ms).slideX(begin: 0.1);
   }
 }

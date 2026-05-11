@@ -42,7 +42,7 @@ const generalLimiter = rateLimit({
 // Strict rate limit for auth endpoints (login, register)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 attempts per 15 minutes
+    max: process.env.NODE_ENV === 'production' ? 10 : 50, // 10 attempts in prod, 50 in dev
     message: {
         success: false,
         error: {

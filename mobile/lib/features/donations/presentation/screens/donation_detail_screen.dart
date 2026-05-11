@@ -8,6 +8,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:open_file_plus/open_file_plus.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:confetti/confetti.dart';
 import '../../../../config/routes.dart';
 import '../../../../shared/widgets/smart_donation_image.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
@@ -23,6 +25,8 @@ import '../../../../shared/widgets/impact_share_card.dart';
 import '../widgets/verification_qr_modal.dart';
 import '../widgets/volunteer_review_modal.dart';
 import '../screens/qr_scanner_screen.dart';
+import '../../../../core/providers/tracking_provider.dart';
+
 
 class DonationDetailScreen extends ConsumerStatefulWidget {
   final String donationId;
@@ -42,33 +46,26 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
   bool _isDownloadingReceipt = false;
   Map<String, dynamic>? _tracking;
   bool _isFetchingTracking = false;
+  late ConfettiController _confettiController;
 
   Future<void> _toggleBroadcasting() async {
     if (_donation == null) return;
     
-    if (_isBroadcasting) {
-      ref.read(locationServiceProvider).stopLocationStream();
-      setState(() => _isBroadcasting = false);
+    final trackingState = ref.read(trackingProvider);
+    final isCurrentlyBroadcasting = trackingState.isBroadcasting && trackingState.activeDonationId == widget.donationId;
+
+    if (isCurrentlyBroadcasting) {
+      ref.read(trackingProvider.notifier).stopDonationTracking();
       CustomSnackBar.info(context, 'Live broadcasting stopped.');
     } else {
-      final hasPermission = await ref.read(locationServiceProvider).handleLocationPermission();
-      if (!hasPermission) {
+      final success = await ref.read(trackingProvider.notifier).startDonationTracking(widget.donationId);
+      if (success) {
+        if (mounted) CustomSnackBar.success(context, 'Live broadcasting started. It will continue in the background.');
+      } else {
         if (mounted) CustomSnackBar.error(context, 'Location permission is required to broadcast.');
-        return;
       }
-      
-      setState(() => _isBroadcasting = true);
-      CustomSnackBar.success(context, 'Live broadcasting started. Keep the app open.');
-      
-      ref.read(locationServiceProvider).startLocationStream((position) {
-        if (!mounted || !_isBroadcasting) return;
-        ref.read(socketServiceProvider).emitLocation(
-          widget.donationId, 
-          position.latitude, 
-          position.longitude
-        );
-      });
     }
+    setState(() {}); // Refresh UI
   }
   
   // Action Handlers
@@ -161,7 +158,14 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
   @override
   void initState() {
     super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _loadDonation().then((_) => _loadTracking());
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
   }
   
   Future<void> _loadDonation() async {
@@ -182,10 +186,15 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
         }
         
         if (donationData != null) {
+          final donation = Donation.fromJson(donationData);
           setState(() {
-            _donation = Donation.fromJson(donationData!);
+            _donation = donation;
             _isLoading = false;
           });
+          
+          if (donation.status == 'delivered' || donation.status == 'distributed') {
+            _confettiController.play();
+          }
         } else {
           setState(() => _isLoading = false);
         }
@@ -406,10 +415,13 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
               const SizedBox(width: 8),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              background: SmartDonationImage(
-                imageUrl: donation.images.isNotEmpty ? donation.images.first : null,
-                category: donation.category,
-                fit: BoxFit.cover,
+              background: Hero(
+                tag: 'donation_image_${donation.id}',
+                child: SmartDonationImage(
+                  imageUrl: donation.images.isNotEmpty ? donation.images.first : null,
+                  category: donation.category,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
           ),
@@ -529,7 +541,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(donation.status == 'in-transit' ? 'Live Tracking' : 'Pickup Location', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
-                      if (donation.status == 'in-transit' && _isBroadcasting)
+                      if (donation.status == 'in-transit' && ref.watch(trackingProvider).isBroadcasting && ref.watch(trackingProvider).activeDonationId == widget.donationId)
                         const Row(children: [Icon(Icons.circle, color: Colors.red, size: 12), SizedBox(width: 4), Text('LIVE', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 12))]).animate(onPlay: (c) => c.repeat(reverse: true)).fade(duration: 500.ms),
                     ],
                   ),
@@ -567,15 +579,22 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                     Container(
                       margin: const EdgeInsets.only(top: 16),
                       width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _toggleBroadcasting,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: _isBroadcasting ? Colors.red : Colors.blue,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        ),
-                        icon: Icon(_isBroadcasting ? Icons.stop_circle_rounded : Icons.my_location_rounded, color: Colors.white),
-                        label: Text(_isBroadcasting ? 'Stop Broadcasting' : 'Broadcast Live Location', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: Consumer(
+                        builder: (context, ref, child) {
+                          final trackingState = ref.watch(trackingProvider);
+                          final isBroadcastingThis = trackingState.isBroadcasting && trackingState.activeDonationId == widget.donationId;
+                          
+                          return ElevatedButton.icon(
+                            onPressed: _toggleBroadcasting,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isBroadcastingThis ? Colors.red : Colors.blue,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: Icon(isBroadcastingThis ? Icons.stop_circle_rounded : Icons.my_location_rounded, color: Colors.white),
+                            label: Text(isBroadcastingThis ? 'Stop Broadcasting' : 'Broadcast Live Location', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                          );
+                        }
                       ),
                     ),
                   
@@ -591,6 +610,21 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                   const SizedBox(height: 100),
                 ],
               ),
+            ),
+          ),
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                AppTheme.primaryRed,
+                AppTheme.accentOrange,
+                Colors.amber,
+                Colors.blue,
+                Colors.green,
+              ],
             ),
           ),
         ],
@@ -646,12 +680,37 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
     }
 
     if (user?.role == 'ngo' && donation.claimedBy == user?.id) {
-       if (donation.status == 'in-transit') {
+        if (donation.status == 'in-transit') {
           final deliveryQr = _tracking?['deliveryQrCode'];
           if (deliveryQr != null) {
             return _buildActionBottomBar(title: "Volunteer Arriving", subtitle: "Show this QR to receive donation", buttonLabel: "Show Delivery QR", onPressed: () => _showQrCode('delivery', deliveryQr), color: AppTheme.success);
           }
-       }
+        } else if (donation.status == 'delivered' || donation.status == 'distributed') {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))]),
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildSecondaryActionButton(
+                    label: 'Post Impact Story', 
+                    icon: Icons.auto_stories_rounded, 
+                    onPressed: () => context.push(AppRoutes.createStory, extra: {'donationId': donation.id, 'category': donation.category}),
+                    color: AppTheme.primaryRed
+                  ),
+                  const SizedBox(height: 12),
+                  _buildSecondaryActionButton(
+                    label: 'Mark as Distributed', 
+                    icon: Icons.check_circle_outline_rounded, 
+                    onPressed: donation.status == 'distributed' ? null : () => _updateStatus('distributed'),
+                    color: AppTheme.success
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
     }
 
     if (user?.isNgo == true && donation.isAvailable) {

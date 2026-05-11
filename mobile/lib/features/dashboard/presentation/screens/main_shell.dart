@@ -37,7 +37,7 @@ class _MainShellState extends ConsumerState<MainShell> {
           _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home', path: AppRoutes.home),
           _NavItem(icon: Icons.volunteer_activism_outlined, activeIcon: Icons.volunteer_activism_rounded, label: 'Donations', path: AppRoutes.donations),
           _NavItem(icon: Icons.assignment_outlined, activeIcon: Icons.assignment_rounded, label: 'Claims', path: AppRoutes.ngoClaims),
-          _NavItem(icon: Icons.notifications_outlined, activeIcon: Icons.notifications_rounded, label: 'Alerts', path: AppRoutes.notifications),
+          _NavItem(icon: Icons.auto_stories_outlined, activeIcon: Icons.auto_stories_rounded, label: 'Stories', path: AppRoutes.impactStories),
           _NavItem(icon: Icons.chat_bubble_outline_rounded, activeIcon: Icons.chat_bubble_rounded, label: 'Chat', path: '/chat'),
           _NavItem(icon: Icons.person_outline, activeIcon: Icons.person_rounded, label: 'Profile', path: AppRoutes.profile),
         ];
@@ -46,9 +46,8 @@ class _MainShellState extends ConsumerState<MainShell> {
         return [
           _NavItem(icon: Icons.home_outlined, activeIcon: Icons.home_rounded, label: 'Home', path: AppRoutes.home),
           _NavItem(icon: Icons.volunteer_activism_outlined, activeIcon: Icons.volunteer_activism_rounded, label: 'Donations', path: AppRoutes.donations),
-          _NavItem(icon: Icons.business_outlined, activeIcon: Icons.business_rounded, label: 'NGOs', path: AppRoutes.ngos),
-          _NavItem(icon: Icons.notifications_outlined, activeIcon: Icons.notifications_rounded, label: 'Alerts', path: AppRoutes.notifications),
-          _NavItem(icon: Icons.chat_bubble_outline_rounded, activeIcon: Icons.chat_bubble_rounded, label: 'Chat', path: '/chat'),
+          _NavItem(icon: Icons.emoji_events_outlined, activeIcon: Icons.emoji_events_rounded, label: 'Rank', path: AppRoutes.leaderboard),
+          _NavItem(icon: Icons.auto_stories_outlined, activeIcon: Icons.auto_stories_rounded, label: 'Stories', path: AppRoutes.impactStories),
           _NavItem(icon: Icons.person_outline, activeIcon: Icons.person_rounded, label: 'Profile', path: AppRoutes.profile),
         ];
     }

@@ -119,6 +119,9 @@ class ApiClient {
     String? search,
     bool myDonations = false,
     bool saved = false,
+    double? lat,
+    double? lng,
+    double? radius,
   }) async {
     return _dio.get('/donations', queryParameters: {
       'page': page,
@@ -128,6 +131,9 @@ class ApiClient {
       if (search != null) 'search': search,
       if (myDonations) 'myDonations': 'true',
       if (saved) 'saved': 'true',
+      if (lat != null) 'lat': lat,
+      if (lng != null) 'lng': lng,
+      if (radius != null) 'radius': radius,
     });
   }
   
@@ -626,6 +632,74 @@ class ApiClient {
       'resolution': resolution,
       'isFalsePositive': isFalsePositive,
     });
+  }
+
+  // AI endpoints
+  Future<Response> analyzeImage(String base64Image) async {
+    return _dio.post('/ai/analyze', data: {'image': base64Image});
+  }
+
+  Future<Response> voiceSearch(String query) async {
+    return _dio.post('/ai/voice-search', data: {'query': query});
+  }
+
+  Future<Response> voiceForm(String query) async {
+    return _dio.post('/ai/voice-form', data: {'query': query});
+  }
+
+  Future<Response> aiChat(String message, {List<Map<String, dynamic>>? history}) async {
+    return _dio.post('/ai/chat', data: {
+      'message': message,
+      if (history != null) 'history': history,
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Impact Stories endpoints
+  // ═══════════════════════════════════════════════════════════════════
+
+  Future<Response> getImpactStories({int page = 1, int limit = 20, String? category}) async {
+    return _dio.get('/stories', queryParameters: {
+      'page': page,
+      'limit': limit,
+      if (category != null) 'category': category,
+    });
+  }
+
+  Future<Response> createImpactStory(Map<String, dynamic> data) async {
+    return _dio.post('/stories', data: data);
+  }
+
+  Future<Response> toggleStoryLike(String storyId) async {
+    return _dio.post('/stories/$storyId/like');
+  }
+
+  Future<Response> addStoryComment(String storyId, String text) async {
+    return _dio.post('/stories/$storyId/comment', data: {'text': text});
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // AI Recommendation endpoints
+  // ═══════════════════════════════════════════════════════════════════
+
+  Future<Response> getRecommendedNgos(String category, {double? lat, double? lng}) async {
+    return _dio.post('/ai/match', data: {
+      'category': category,
+      'lat': lat,
+      'lng': lng,
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════
+  // Gamification endpoints
+  // ═══════════════════════════════════════════════════════════════════
+
+  Future<Response> getGamificationLeaderboard() async {
+    return _dio.get('/gamification/leaderboard');
+  }
+
+  Future<Response> getGamificationStats() async {
+    return _dio.get('/gamification/stats');
   }
 }
 
