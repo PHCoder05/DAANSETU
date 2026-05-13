@@ -115,7 +115,7 @@ class _ContactSupportScreenState extends ConsumerState<ContactSupportScreen> {
                     backgroundColor: AppTheme.primaryRed,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                     elevation: 4,
-                    shadowColor: AppTheme.primaryRed.withOpacity(0.3),
+                    shadowColor: AppTheme.primaryRed.withValues(alpha: 0.3),
                   ),
                   child: _isSubmitting
                       ? const CircularProgressIndicator(color: AppTheme.white)

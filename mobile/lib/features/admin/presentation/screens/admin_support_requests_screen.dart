@@ -10,7 +10,10 @@ final allSupportRequestsProvider = FutureProvider.autoDispose<List<dynamic>>((re
   final apiClient = ref.watch(apiClientProvider);
   final response = await apiClient.getAllSupportRequests();
   if (response.statusCode == 200) {
-    return response.data['data'] as List? ?? [];
+    final data = response.data['data'];
+    if (data != null && data['requests'] != null) {
+      return data['requests'] as List? ?? [];
+    }
   }
   return [];
 });
@@ -83,7 +86,7 @@ class _SupportRequestCardState extends ConsumerState<_SupportRequestCard> {
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: AppTheme.primaryRed.withOpacity(0.1),
+                  backgroundColor: AppTheme.primaryRed.withValues(alpha: 0.1),
                   child: Text(
                     (user['name'] as String?)?.isNotEmpty == true ? user['name'][0].toUpperCase() : 'U',
                     style: const TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold),
@@ -95,7 +98,7 @@ class _SupportRequestCardState extends ConsumerState<_SupportRequestCard> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(user['name'] ?? 'Unknown User', style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text(user['email'] ?? '', style: TextStyle(fontSize: 12, color: AppTheme.gray)),
+                      Text(user['email'] ?? '', style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
                     ],
                   ),
                 ),
@@ -166,9 +169,9 @@ class _SupportRequestCardState extends ConsumerState<_SupportRequestCard> {
                 padding: const EdgeInsets.all(12),
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: AppTheme.success.withOpacity(0.05),
+                  color: AppTheme.success.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppTheme.success.withOpacity(0.1)),
+                  border: Border.all(color: AppTheme.success.withValues(alpha: 0.1)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -197,7 +200,7 @@ class _SupportRequestCardState extends ConsumerState<_SupportRequestCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

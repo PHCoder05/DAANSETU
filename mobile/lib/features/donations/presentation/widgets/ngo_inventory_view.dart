@@ -40,7 +40,7 @@ class NgoInventoryView extends StatelessWidget {
                 const Icon(Icons.timer_rounded, color: AppTheme.error, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  "EXPIRING SOON",
+                  'EXPIRING SOON',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
                     color: AppTheme.error,
                     fontWeight: FontWeight.w900,
@@ -65,7 +65,7 @@ class NgoInventoryView extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 12),
           child: Text(
-            "Current Inventory (${inventory.length})",
+            'Current Inventory (${inventory.length})',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ),
@@ -91,15 +91,15 @@ class NgoInventoryView extends StatelessWidget {
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 5))
+          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 5)),
         ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem("Total Items", "${inventory.length}", Icons.inventory_2_rounded, AppTheme.primaryRed),
-          _buildStatItem("Needs Action", "${inventory.where((d) => d.expiryDate != null && d.expiryDate!.isBefore(DateTime.now().add(const Duration(days: 2)))).length}", Icons.warning_amber_rounded, AppTheme.warning),
-          _buildStatItem("Recently Added", "${inventory.where((d) => d.deliveryDate != null && d.deliveryDate!.isAfter(DateTime.now().subtract(const Duration(days: 1)))).length}", Icons.new_releases_rounded, AppTheme.success),
+          _buildStatItem('Total Items', '${inventory.length}', Icons.inventory_2_rounded, AppTheme.primaryRed),
+          _buildStatItem('Needs Action', '${inventory.where((d) => d.expiryDate != null && d.expiryDate!.isBefore(DateTime.now().add(const Duration(days: 2)))).length}', Icons.warning_amber_rounded, AppTheme.warning),
+          _buildStatItem('Recently Added', '${inventory.where((d) => d.deliveryDate != null && d.deliveryDate!.isAfter(DateTime.now().subtract(const Duration(days: 1)))).length}', Icons.new_releases_rounded, AppTheme.success),
         ],
       ),
     ).animate().fadeIn().slideY(begin: 0.1, end: 0);
@@ -125,9 +125,9 @@ class NgoInventoryView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppTheme.error.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.error.withValues(alpha: 0.2)),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 4))
+          BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 8, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -159,11 +159,11 @@ class NgoInventoryView extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.error.withOpacity(0.1),
+                    color: AppTheme.error.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    daysLeft == 0 ? "Expires Today" : "Expires in $daysLeft days",
+                    daysLeft == 0 ? 'Expires Today' : 'Expires in $daysLeft days',
                     style: const TextStyle(color: AppTheme.error, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -182,7 +182,7 @@ class NgoInventoryView extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.lightGray.withOpacity(0.5)),
+        border: Border.all(color: AppTheme.lightGray.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -235,26 +235,26 @@ class NgoInventoryView extends StatelessWidget {
         IconButton(
           onPressed: () => onAction(item, 'used'),
           icon: const Icon(Icons.check_circle_outline_rounded, color: AppTheme.success, size: 20),
-          tooltip: "Mark as Used",
+          tooltip: 'Mark as Used',
         ),
         IconButton(
           onPressed: () => onAction(item, 'disposed'),
           icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.gray, size: 20),
-          tooltip: "Remove from Inventory",
+          tooltip: 'Remove from Inventory',
         ),
       ],
     );
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(Icons.inventory_2_outlined, size: 64, color: AppTheme.lightGray),
-          const SizedBox(height: 16),
-          const Text("Inventory is empty", style: TextStyle(color: AppTheme.gray, fontSize: 16)),
-          const Text("Claim and receive donations to see them here.", style: TextStyle(color: AppTheme.gray, fontSize: 12)),
+          SizedBox(height: 16),
+          Text('Inventory is empty', style: TextStyle(color: AppTheme.gray, fontSize: 16)),
+          Text('Claim and receive donations to see them here.', style: TextStyle(color: AppTheme.gray, fontSize: 12)),
         ],
       ),
     );

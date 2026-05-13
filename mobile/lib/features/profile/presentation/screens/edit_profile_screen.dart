@@ -1,11 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
-import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
@@ -62,7 +60,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         });
       }
     } catch (e) {
-      CustomSnackBar.error(context, 'Failed to pick image');
+      if (mounted) CustomSnackBar.error(context, 'Failed to pick image');
     }
   }
 
@@ -89,7 +87,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             try {
               await apiClient.uploadProfileImage(_selectedImage!.path);
             } catch (imageError) {
-              print('Image upload failed: $imageError');
+              debugPrint('Image upload failed: $imageError');
             }
           }
 
@@ -161,7 +159,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           height: 150,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.white.withOpacity(0.08),
+                            color: Colors.white.withValues(alpha: 0.08),
                           ),
                         ),
                       ),
@@ -175,7 +173,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 icon: Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.2),
+                                    color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
@@ -220,7 +218,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFFE23744).withOpacity(0.4),
+                                  color: const Color(0xFFE23744).withValues(alpha: 0.4),
                                   blurRadius: 25,
                                   spreadRadius: 5,
                                 ),
@@ -272,7 +270,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.15),
+                                    color: Colors.black.withValues(alpha: 0.15),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -449,20 +447,20 @@ class _PremiumTextFieldState extends State<_PremiumTextField> {
             border: Border.all(
               color: _isFocused 
                   ? const Color(0xFFE23744) 
-                  : Colors.grey.withOpacity(0.15),
+                  : Colors.grey.withValues(alpha: 0.15),
               width: _isFocused ? 2 : 1,
             ),
             boxShadow: _isFocused
                 ? [
                     BoxShadow(
-                      color: const Color(0xFFE23744).withOpacity(0.1),
+                      color: const Color(0xFFE23744).withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
                   ]
                 : [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -492,8 +490,8 @@ class _PremiumTextFieldState extends State<_PremiumTextField> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       color: _isFocused
-                          ? const Color(0xFFE23744).withOpacity(0.1)
-                          : Colors.grey.withOpacity(0.08),
+                          ? const Color(0xFFE23744).withValues(alpha: 0.1)
+                          : Colors.grey.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
@@ -564,7 +562,7 @@ class _PremiumButtonState extends State<_PremiumButton> {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFE23744).withOpacity(0.4),
+                color: const Color(0xFFE23744).withValues(alpha: 0.4),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),

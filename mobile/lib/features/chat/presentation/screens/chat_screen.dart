@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -30,7 +29,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _messages = [];
-  bool _isLoading = false;
+
   bool _isRecipientTyping = false;
   Timer? _typingDebounce;
 
@@ -73,7 +72,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Future<void> _loadHistory() async {
-    setState(() => _isLoading = true);
     try {
       final response = await ref.read(apiClientProvider).getChatHistory(widget.recipientId);
       if (mounted) {
@@ -95,8 +93,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
     } catch (e) {
       if (mounted) CustomSnackBar.error(context, 'Failed to load chat history');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -169,7 +165,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundColor: AppTheme.primaryRed.withOpacity(0.1),
+              backgroundColor: AppTheme.primaryRed.withValues(alpha: 0.1),
               child: Text(
                 widget.recipientName.isNotEmpty ? widget.recipientName[0].toUpperCase() : '?',
                 style: const TextStyle(fontSize: 14, color: AppTheme.primaryRed, fontWeight: FontWeight.bold),
@@ -214,10 +210,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: AppTheme.primaryRed.withOpacity(0.05),
+                            color: AppTheme.primaryRed.withValues(alpha: 0.05),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(Icons.mark_chat_unread_outlined, size: 64, color: AppTheme.primaryRed.withOpacity(0.5)),
+                          child: Icon(Icons.mark_chat_unread_outlined, size: 64, color: AppTheme.primaryRed.withValues(alpha: 0.5)),
                         ),
                         const SizedBox(height: 16),
                         const Text(
@@ -225,8 +221,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           style: TextStyle(
                             fontSize: 18, 
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.charcoal
-                          )
+                            color: AppTheme.charcoal,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -290,7 +286,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         color: AppTheme.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, -2),
             blurRadius: 10,
           ),
@@ -410,10 +406,10 @@ class _ChatBubble extends StatelessWidget {
           boxShadow: [
              if (!isMe)
                 BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 5,
                     offset: const Offset(0, 2),
-                )
+                ),
           ],
         ),
         child: Column(
@@ -432,7 +428,7 @@ class _ChatBubble extends StatelessWidget {
             Text(
               DateFormat('hh:mm a').format(time),
               style: TextStyle(
-                color: isMe ? Colors.white.withOpacity(0.7) : AppTheme.gray,
+                color: isMe ? Colors.white.withValues(alpha: 0.7) : AppTheme.gray,
                 fontSize: 10,
               ),
             ),
@@ -522,19 +518,19 @@ class _TypingIndicator extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Row(
+      child: const Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _Dot(delay: 0),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           _Dot(delay: 200),
-          const SizedBox(width: 4),
+          SizedBox(width: 4),
           _Dot(delay: 400),
         ],
       ),

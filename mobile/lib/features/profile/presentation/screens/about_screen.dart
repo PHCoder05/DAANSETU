@@ -85,20 +85,20 @@ class AboutScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryRed.withOpacity(0.05),
-                    AppTheme.accentOrange.withOpacity(0.05),
+                    AppTheme.primaryRed.withValues(alpha: 0.05),
+                    AppTheme.accentOrange.withValues(alpha: 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: AppTheme.borderRadiusMedium,
-                border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+                border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.1)),
               ),
               child: Column(
                 children: [
                   const Icon(Icons.code_rounded, color: AppTheme.primaryRed, size: 32),
                   const SizedBox(height: 12),
-                  Text(
+                  const Text(
                     'Developed with ❤️ by',
                     style: TextStyle(
                       color: AppTheme.gray,

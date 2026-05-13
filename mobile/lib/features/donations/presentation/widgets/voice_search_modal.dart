@@ -18,7 +18,6 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   String _text = 'Listening...';
-  bool _isInitializing = true;
   bool _isParsing = false;
 
   @override
@@ -39,10 +38,9 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
             }
           }
         },
-        onError: (val) => print('Error: $val'),
+        onError: (val) => debugPrint('Error: $val'),
       );
       if (available) {
-        setState(() => _isInitializing = false);
         _startListening();
       } else {
         if (mounted) {
@@ -94,7 +92,7 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1A2E),
+        color: AppTheme.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
@@ -102,18 +100,18 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
         children: [
           Container(
             width: 40, height: 4,
-            decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: AppTheme.lightGray, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 32),
           Text(
             _isParsing ? 'Processing with AI...' : (_isListening ? 'Go ahead, I\'m listening' : 'Processing...'),
-            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w500),
+            style: const TextStyle(color: AppTheme.darkGray, fontSize: 14, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 24),
           Text(
             _text,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
+            style: const TextStyle(color: AppTheme.charcoal, fontSize: 24, fontWeight: FontWeight.bold, height: 1.4),
           ),
           const SizedBox(height: 48),
           _buildWaveform(),
@@ -124,7 +122,7 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
               _IconButton(
                 icon: Icons.close,
                 onTap: () => Navigator.pop(context),
-                color: Colors.white12,
+                color: AppTheme.offWhite,
               ),
               const SizedBox(width: 32),
               GestureDetector(
@@ -135,7 +133,7 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
                     color: AppTheme.primaryRed,
                     shape: BoxShape.circle,
                     boxShadow: [
-                      BoxShadow(color: AppTheme.primaryRed.withOpacity(0.3), blurRadius: 20, spreadRadius: 5),
+                      BoxShadow(color: AppTheme.primaryRed.withValues(alpha: 0.3), blurRadius: 20, spreadRadius: 5),
                     ],
                   ),
                   child: Icon(
@@ -148,14 +146,14 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
               _IconButton(
                 icon: Icons.keyboard_rounded,
                 onTap: () => Navigator.pop(context, 'keyboard'),
-                color: Colors.white12,
+                color: AppTheme.offWhite,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'Try: "Find food donations in Mumbai" or "Search for blood banks"',
-            style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12),
+            style: TextStyle(color: AppTheme.gray, fontSize: 12),
           ),
         ],
       ),
@@ -172,7 +170,7 @@ class _VoiceSearchModalState extends ConsumerState<VoiceSearchModal> {
             width: 6,
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
-              color: AppTheme.primaryRed.withOpacity(0.8),
+              color: AppTheme.primaryRed.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(3),
             ),
           )
@@ -202,7 +200,7 @@ class _IconButton extends StatelessWidget {
       child: Container(
         width: 52, height: 52,
         decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        child: Icon(icon, color: Colors.white, size: 24),
+        child: Icon(icon, color: AppTheme.charcoal, size: 24),
       ),
     );
   }

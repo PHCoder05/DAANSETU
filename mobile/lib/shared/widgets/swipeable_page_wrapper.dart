@@ -103,7 +103,7 @@ class _SwipeablePageWrapperState extends State<SwipeablePageWrapper>
           if (_isDragging)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.3 * (1 - progress)),
+                color: Colors.black.withValues(alpha: 0.3 * (1 - progress)),
               ),
             ),
           
@@ -131,7 +131,7 @@ class _SwipeablePageWrapperState extends State<SwipeablePageWrapper>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(2, 2),
                       ),

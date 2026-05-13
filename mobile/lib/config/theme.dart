@@ -45,7 +45,7 @@ class AppTheme {
   // Shadows
   static List<BoxShadow> get cardShadow => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.04),
+      color: Colors.black.withValues(alpha: 0.04),
       blurRadius: 10,
       offset: const Offset(0, 2),
     ),
@@ -53,7 +53,7 @@ class AppTheme {
   
   static List<BoxShadow> get elevatedShadow => [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 20,
       offset: const Offset(0, 4),
     ),
@@ -263,7 +263,7 @@ class AppTheme {
     // Chip Theme
     chipTheme: ChipThemeData(
       backgroundColor: offWhite,
-      selectedColor: primaryRed.withOpacity(0.1),
+      selectedColor: primaryRed.withValues(alpha: 0.1),
       labelStyle: GoogleFonts.poppins(fontSize: 13, color: darkGray),
       side: BorderSide.none,
       shape: RoundedRectangleBorder(

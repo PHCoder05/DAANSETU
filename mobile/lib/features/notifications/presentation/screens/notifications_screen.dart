@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/api/api_client.dart';
@@ -95,7 +94,7 @@ class NotificationsScreen extends ConsumerWidget {
               HapticFeedback.lightImpact();
               final apiClient = ref.read(apiClientProvider);
               await apiClient.markAllAsRead();
-              ref.refresh(notificationsProvider);
+              ref.invalidate(notificationsProvider);
             },
             icon: const Icon(Icons.done_all_rounded, color: AppTheme.primaryRed),
             tooltip: 'Mark all as read',
@@ -110,7 +109,7 @@ class NotificationsScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: AppTheme.error.withOpacity(0.5)),
+              Icon(Icons.error_outline, size: 48, color: AppTheme.error.withValues(alpha: 0.5)),
               const SizedBox(height: 16),
               const Text('Failed to load notifications'),
               TextButton(
@@ -144,7 +143,7 @@ class NotificationsScreen extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                       child: Text(
                         groupName.toUpperCase(),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.gray,
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
@@ -158,10 +157,10 @@ class NotificationsScreen extends ConsumerWidget {
                          if (!notification.read) {
                             final apiClient = ref.read(apiClientProvider);
                             await apiClient.markAsRead(notification.id);
-                            ref.refresh(notificationsProvider);
+                            ref.invalidate(notificationsProvider);
                          }
                       },
-                    )),
+                    ),),
                   ],
                 );
               },
@@ -179,11 +178,11 @@ class NotificationsScreen extends ConsumerWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.offWhite,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.notifications_none_rounded, size: 64, color: AppTheme.gray.withOpacity(0.5)),
+            child: Icon(Icons.notifications_none_rounded, size: 64, color: AppTheme.gray.withValues(alpha: 0.5)),
           ),
           const SizedBox(height: 24),
           Text(
@@ -242,7 +241,7 @@ class _NotificationTile extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        color: notification.read ? AppTheme.white : AppTheme.primaryRed.withOpacity(0.04),
+        color: notification.read ? AppTheme.white : AppTheme.primaryRed.withValues(alpha: 0.04),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -252,7 +251,7 @@ class _NotificationTile extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _getTypeColor(notification.type).withOpacity(0.1),
+                color: _getTypeColor(notification.type).withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -283,7 +282,7 @@ class _NotificationTile extends StatelessWidget {
                       ),
                       Text(
                         _formatTime(notification.createdAt),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.gray,
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
@@ -294,7 +293,7 @@ class _NotificationTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     notification.message,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppTheme.darkGray,
                       fontSize: 13,
                       height: 1.4,

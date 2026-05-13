@@ -85,11 +85,18 @@ final pendingNgosProvider = FutureProvider.autoDispose<List<dynamic>>((ref) asyn
   return [];
 });
 
-class AdminDashboardScreen extends ConsumerWidget {
+class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+}
+
+class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
+  int _touchedIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
     final user = authState.user;
     final statsAsync = ref.watch(adminStatsProvider);
@@ -97,24 +104,22 @@ class AdminDashboardScreen extends ConsumerWidget {
     
     return Scaffold(
       backgroundColor: AppTheme.scaffoldLight,
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            HapticFeedback.mediumImpact();
-            ref.invalidate(adminStatsProvider);
-            ref.invalidate(pendingNgosProvider);
-            await Future.delayed(const Duration(milliseconds: 500));
-          },
-          color: AppTheme.primaryRed,
-          child: CustomScrollView(
+      body: RefreshIndicator(
+        color: const Color(0xFF6C5CE7),
+        onRefresh: () async {
+          HapticFeedback.mediumImpact();
+          ref.invalidate(adminStatsProvider);
+          ref.invalidate(pendingNgosProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: CustomScrollView(
             slivers: [
-              // Header
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: _buildHeader(context, user, ref),
-                ),
+                child: _buildHeader(context, user, ref),
               ),
+
+              // Divider space
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
               
               // Stats
               SliverToBoxAdapter(
@@ -193,7 +198,7 @@ class AdminDashboardScreen extends ConsumerWidget {
                               child: Row(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: AppTheme.accentOrange.withOpacity(0.1),
+                                    backgroundColor: AppTheme.accentOrange.withValues(alpha: 0.1),
                                     child: const Icon(Icons.group_add_rounded, color: AppTheme.accentOrange),
                                   ),
                                   const SizedBox(width: 16),
@@ -255,63 +260,107 @@ class AdminDashboardScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              
-              const SliverPadding(padding: EdgeInsets.only(bottom: 100)),
             ],
           ),
         ),
+      );
+  }
+
+  Widget _buildHeader(BuildContext context, dynamic user, WidgetRef ref) {
+    final now = DateTime.now();
+    final hour = now.hour;
+    final greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 16, 20, 20),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2D1B69), Color(0xFF6C5CE7)],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46, height: 46,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(child: Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 24)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('$greeting,', style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 13)),
+                    Text(user?.name ?? 'Admin', style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold)),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(20)),
+                child: const Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(Icons.shield_rounded, color: Colors.white, size: 14),
+                  SizedBox(width: 4),
+                  Text('ADMIN', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.5)),
+                ]),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context, dynamic user, WidgetRef ref) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [AppTheme.primaryRed, AppTheme.primaryRed.withOpacity(0.8)]),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: AppTheme.primaryRed.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8))],
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 30,
-            backgroundColor: Colors.white.withOpacity(0.2),
-            child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white, size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Admin Dashboard', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
-                Text(user?.name ?? 'Super Admin', style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: () => ref.read(authStateProvider.notifier).logout(),
-            icon: const Icon(Icons.logout_rounded, color: Colors.white),
-          ),
-        ],
-      ),
-    ).animate().fadeIn().slideY(begin: -0.1, end: 0);
-  }
-
   Widget _buildStatsGrid(BuildContext context, Map<String, dynamic> stats) {
-    return GridView.count(
+    final items = [
+      {'title': 'Pending Approvals', 'value': stats['pendingVerifications'].toString(), 'icon': Icons.verified_user_rounded, 'color': const Color(0xFFF39C12)},
+      {'title': 'Fraud Alerts', 'value': stats['openFraudAlerts'].toString(), 'icon': Icons.security_rounded, 'color': const Color(0xFFE74C3C)},
+      {'title': 'Total Users', 'value': stats['totalUsers'].toString(), 'icon': Icons.people_rounded, 'color': const Color(0xFF3498DB)},
+      {'title': 'Total Donations', 'value': stats['totalDonations'].toString(), 'icon': Icons.volunteer_activism_rounded, 'color': const Color(0xFF1BAC4B)},
+    ];
+
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 12,
-      crossAxisSpacing: 12,
-      childAspectRatio: 1.4,
-      children: [
-        _StatCard(title: 'Pending Approvals', value: stats['pendingVerifications'].toString(), icon: Icons.verified_user_rounded, color: AppTheme.warning),
-        _StatCard(title: 'Fraud Alerts', value: stats['openFraudAlerts'].toString(), icon: Icons.security_rounded, color: AppTheme.primaryRed),
-        _StatCard(title: 'Active Users', value: stats['totalUsers'].toString(), icon: Icons.people_rounded, color: AppTheme.accentBlue),
-        _StatCard(title: 'Total Donations', value: stats['totalDonations'].toString(), icon: Icons.volunteer_activism_rounded, color: AppTheme.success),
-      ],
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.15),
+      itemCount: items.length,
+      itemBuilder: (context, i) {
+        final item = items[i];
+        final color = item['color'] as Color;
+        return Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 10, offset: const Offset(0, 2))],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                child: Icon(item['icon'] as IconData, color: color, size: 20),
+              ),
+              const Expanded(child: SizedBox(height: 4)),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(item['value'] as String, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppTheme.black, letterSpacing: -0.5)),
+              ),
+              const SizedBox(height: 2),
+              Text(item['title'] as String, style: const TextStyle(fontSize: 11, color: AppTheme.gray, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ).animate(delay: Duration(milliseconds: i * 80)).fade().scale(begin: const Offset(0.95, 0.95));
+      },
     );
   }
 
@@ -329,30 +378,67 @@ class AdminDashboardScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Donation Ecosystem', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(
+                child: Text(
+                  'Donation Ecosystem',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              if (_touchedIndex != -1)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.scaffoldLight,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    _touchedIndex == 0 ? '${active.toInt()} Available' : 
+                    _touchedIndex == 1 ? '${claimed.toInt()} Claimed' : 
+                    '${delivered.toInt()} Delivered',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF6C5CE7)),
+                  ),
+                ).animate().fadeIn().scale(),
+            ],
+          ),
           const SizedBox(height: 24),
           SizedBox(
             height: 180,
             child: PieChart(
               PieChartData(
+                pieTouchData: PieTouchData(
+                  touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    setState(() {
+                      if (!event.isInterestedForInteractions ||
+                          pieTouchResponse == null ||
+                          pieTouchResponse.touchedSection == null) {
+                        _touchedIndex = -1;
+                        return;
+                      }
+                      _touchedIndex = pieTouchResponse.touchedSection!.touchedSectionIndex;
+                    });
+                  },
+                ),
                 sectionsSpace: 4,
                 centerSpaceRadius: 40,
                 sections: [
-                  PieChartSectionData(color: AppTheme.accentOrange, value: active, title: '${(active/total*100).toStringAsFixed(0)}%', radius: 45, titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-                  PieChartSectionData(color: AppTheme.primaryBlue, value: claimed, title: '${(claimed/total*100).toStringAsFixed(0)}%', radius: 45, titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
-                  PieChartSectionData(color: AppTheme.success, value: delivered, title: '${(delivered/total*100).toStringAsFixed(0)}%', radius: 45, titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+                  _buildPieSection(0, active, total, AppTheme.accentOrange, 'Available'),
+                  _buildPieSection(1, claimed, total, AppTheme.primaryBlue, 'Claimed'),
+                  _buildPieSection(2, delivered, total, AppTheme.success, 'Delivered'),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          const Wrap(
+            alignment: WrapAlignment.center,
+            spacing: 16,
+            runSpacing: 8,
             children: [
               _ChartLegend(color: AppTheme.accentOrange, label: 'Available'),
-              const SizedBox(width: 16),
               _ChartLegend(color: AppTheme.primaryBlue, label: 'Claimed'),
-              const SizedBox(width: 16),
               _ChartLegend(color: AppTheme.success, label: 'Delivered'),
             ],
           ),
@@ -361,14 +447,37 @@ class AdminDashboardScreen extends ConsumerWidget {
     ).animate().fadeIn();
   }
 
+  PieChartSectionData _buildPieSection(int index, double value, double total, Color color, String label) {
+    final isTouched = index == _touchedIndex;
+    final fontSize = isTouched ? 16.0 : 10.0;
+    final radius = isTouched ? 55.0 : 45.0;
+    final widgetSize = isTouched ? 55.0 : 40.0;
+    final double opacity = isTouched ? 1.0 : 0.85;
+
+    return PieChartSectionData(
+      color: color.withValues(alpha: opacity),
+      value: value,
+      title: '${(value / total * 100).toStringAsFixed(0)}%',
+      radius: radius,
+      titleStyle: TextStyle(
+        fontSize: fontSize,
+        fontWeight: FontWeight.bold,
+        color: Colors.white,
+        shadows: const [Shadow(color: Colors.black26, blurRadius: 2)],
+      ),
+      badgeWidget: isTouched ? _Badge(color, label) : null,
+      badgePositionPercentageOffset: .98,
+    );
+  }
+
   Widget _buildEmptyState(String msg, IconData icon) {
     return Padding(
       padding: const EdgeInsets.all(40),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: AppTheme.gray.withOpacity(0.3)),
+          Icon(icon, size: 48, color: AppTheme.gray.withValues(alpha: 0.3)),
           const SizedBox(height: 12),
-          Text(msg, style: TextStyle(color: AppTheme.gray)),
+          Text(msg, style: const TextStyle(color: AppTheme.gray)),
         ],
       ),
     );
@@ -379,10 +488,12 @@ class AdminDashboardScreen extends ConsumerWidget {
     try {
       final apiClient = ref.read(apiClientProvider);
       await apiClient.verifyNgo(ngoId, 'verified');
+      if (!context.mounted) return;
       CustomSnackBar.success(context, 'NGO verified and activated!');
       ref.invalidate(pendingNgosProvider);
       ref.invalidate(adminStatsProvider);
     } catch (e) {
+      if (!context.mounted) return;
       CustomSnackBar.error(context, 'Verification failed');
     }
   }
@@ -404,6 +515,7 @@ class AdminDashboardScreen extends ConsumerWidget {
       try {
         final apiClient = ref.read(apiClientProvider);
         await apiClient.verifyNgo(ngoId, 'rejected');
+        if (!context.mounted) return;
         CustomSnackBar.warning(context, 'NGO registration rejected');
         ref.invalidate(pendingNgosProvider);
         ref.invalidate(adminStatsProvider);
@@ -412,30 +524,6 @@ class AdminDashboardScreen extends ConsumerWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final IconData icon;
-  final Color color;
-  const _StatCard({required this.title, required this.value, required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppTheme.white, borderRadius: BorderRadius.circular(16), boxShadow: AppTheme.cardShadow),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const Spacer(),
-          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-          Text(title, style: TextStyle(fontSize: 11, color: AppTheme.gray), maxLines: 1, overflow: TextOverflow.ellipsis),
-        ],
-      ),
-    );
-  }
-}
 
 class _QuickActionCard extends StatelessWidget {
   final IconData icon;
@@ -450,7 +538,7 @@ class _QuickActionCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: color.withOpacity(0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.2))),
+        decoration: BoxDecoration(color: color.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withValues(alpha: 0.2))),
         child: Column(
           children: [
             Icon(icon, color: color, size: 28),
@@ -479,14 +567,14 @@ class _NgoVerificationCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(backgroundColor: AppTheme.accentBlue.withOpacity(0.1), child: const Icon(Icons.business_rounded, color: AppTheme.accentBlue)),
+              CircleAvatar(backgroundColor: AppTheme.accentBlue.withValues(alpha: 0.1), child: const Icon(Icons.business_rounded, color: AppTheme.accentBlue)),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(ngo['name'] ?? 'NGO', style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(ngo['email'] ?? '', style: TextStyle(fontSize: 12, color: AppTheme.gray)),
+                    Text(ngo['email'] ?? '', style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
                   ],
                 ),
               ),
@@ -536,11 +624,11 @@ class _FieldOperationsMap extends ConsumerWidget {
             return const Center(child: CircularProgressIndicator());
           }
           
-          final volunteers = (snapshot.data?.data['data'] as List?) ?? [];
+          final volunteers = (snapshot.data?.data['data']['volunteers'] as List?) ?? [];
           
           return FlutterMap(
-            options: MapOptions(
-              initialCenter: const LatLng(19.0760, 72.8777), // Default to Mumbai
+            options: const MapOptions(
+              initialCenter: LatLng(19.0760, 72.8777), // Default to Mumbai
               initialZoom: 11,
             ),
             children: [
@@ -558,7 +646,7 @@ class _FieldOperationsMap extends ConsumerWidget {
                     height: 40,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryRed.withOpacity(0.2),
+                        color: AppTheme.primaryRed.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                         border: Border.all(color: AppTheme.primaryRed, width: 2),
                       ),
@@ -572,6 +660,31 @@ class _FieldOperationsMap extends ConsumerWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+class _Badge extends StatelessWidget {
+  final Color color;
+  final String label;
+  const _Badge(this.color, this.label);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 2),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 4)],
+      ),
+      child: Icon(
+        label == 'Available' ? Icons.inventory_2_rounded : 
+        label == 'Claimed' ? Icons.assignment_turned_in_rounded : 
+        Icons.check_circle_rounded,
+        size: 16,
+        color: color,
       ),
     );
   }

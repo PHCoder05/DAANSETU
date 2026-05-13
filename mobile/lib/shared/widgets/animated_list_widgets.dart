@@ -124,7 +124,7 @@ class EmptyState extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.primaryRed.withOpacity(0.1),
+                color: AppTheme.primaryRed.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -186,7 +186,7 @@ class ErrorState extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.1),
+                color: AppTheme.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(

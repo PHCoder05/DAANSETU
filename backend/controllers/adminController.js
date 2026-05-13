@@ -3,6 +3,7 @@ const { ObjectId } = require('mongodb');
 const User = require('../models/User');
 const Donation = require('../models/Donation');
 const Notification = require('../models/Notification');
+const GovApiService = require('../services/govApi.service');
 const {
   getPagination,
   buildPaginationResponse,
@@ -151,6 +152,45 @@ const verifyNGO = async (req, res) => {
   } catch (error) {
     console.error('Verify NGO error:', error);
     return errorResponse(res, 500, 'Error verifying NGO', error.message);
+  }
+};
+
+// Check NGO against Government API (Darpan)
+const checkGovVerification = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const db = getDB();
+
+    const user = await User.findById(db, userId);
+    if (!user || user.role !== 'ngo') {
+      return errorResponse(res, 404, 'NGO not found');
+    }
+
+    const registrationNumber = user.ngoDetails?.registrationNumber;
+    if (!registrationNumber) {
+      return errorResponse(res, 400, 'NGO has no registration number');
+    }
+
+    // Call Mock Gov API
+    const govResult = await GovApiService.verifyNgoRegistration(registrationNumber, user.name);
+    
+    const govStatus = govResult.verified ? 'verified' : 'failed';
+    
+    // Update DB
+    await User.update(db, userId, {
+      'ngoDetails.govVerificationStatus': govStatus,
+      'ngoDetails.govVerificationData': govResult.data
+    });
+
+    const updatedUser = await User.findById(db, userId);
+
+    return successResponse(res, 200, govResult.message, {
+      govResult,
+      user: sanitizeUser(updatedUser, req.user)
+    });
+  } catch (error) {
+    console.error('Gov API Check error:', error);
+    return errorResponse(res, 500, 'Error checking Government API', error.message);
   }
 };
 
@@ -425,6 +465,7 @@ module.exports = {
   deleteUser,
   getPlatformStats,
   getActiveVolunteers,
+  checkGovVerification,
   seedDatabase
 };
 

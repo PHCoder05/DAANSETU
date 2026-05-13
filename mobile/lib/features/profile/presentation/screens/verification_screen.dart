@@ -105,7 +105,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF1A1A2E).withOpacity(0.3),
+            color: const Color(0xFF1A1A2E).withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -137,9 +137,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.green.withOpacity(0.5)),
+                  border: Border.all(color: Colors.green.withValues(alpha: 0.5)),
                 ),
                 child: const Row(
                   children: [
@@ -159,7 +159,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
             borderRadius: BorderRadius.circular(10),
             child: LinearProgressIndicator(
               value: 0.75,
-              backgroundColor: Colors.white.withOpacity(0.1),
+              backgroundColor: Colors.white.withValues(alpha: 0.1),
               valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
               minHeight: 8,
             ),
@@ -167,7 +167,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
           const SizedBox(height: 12),
           Text(
             'Complete all verifications to reach "Elite" status.',
-            style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 12),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 12),
           ),
         ],
       ),
@@ -189,7 +189,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -201,7 +201,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: (isVerified ? Colors.green : AppTheme.primaryRed).withOpacity(0.1),
+            color: (isVerified ? Colors.green : AppTheme.primaryRed).withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -226,7 +226,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 margin: const EdgeInsets.only(right: 8),
                 decoration: BoxDecoration(
-                  color: (status == 'Action Required' ? Colors.orange : Colors.blue).withOpacity(0.1),
+                  color: (status == 'Action Required' ? Colors.orange : Colors.blue).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -252,9 +252,9 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.05),
+        color: Colors.blue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withOpacity(0.1)),
+        border: Border.all(color: Colors.blue.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -63,7 +63,7 @@ class MyDonationsScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.1),
+                  color: AppTheme.error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
@@ -430,7 +430,7 @@ class _MyDonationCard extends StatelessWidget {
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: categoryColor.withOpacity(0.1),
+                  color: categoryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -460,7 +460,7 @@ class _MyDonationCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: _getStatusColor(donation.status).withOpacity(0.1),
+                            color: _getStatusColor(donation.status).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -473,11 +473,11 @@ class _MyDonationCard extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Icon(Icons.visibility_outlined, size: 12, color: AppTheme.gray),
+                        const Icon(Icons.visibility_outlined, size: 12, color: AppTheme.gray),
                         const SizedBox(width: 2),
                         Text(
                           '${donation.views}',
-                          style: TextStyle(fontSize: 11, color: AppTheme.gray),
+                          style: const TextStyle(fontSize: 11, color: AppTheme.gray),
                         ),
                       ],
                     ),
@@ -543,7 +543,7 @@ class _ActionTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -586,7 +586,7 @@ class _StatusOption extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(

@@ -17,11 +17,11 @@ class LiveTrackingMap extends ConsumerStatefulWidget {
   final LocationData? pickupLocation;
 
   const LiveTrackingMap({
-    Key? key,
+    super.key,
     required this.donationId,
     this.initialLocation,
     this.pickupLocation,
-  }) : super(key: key);
+  });
 
   @override
   ConsumerState<LiveTrackingMap> createState() => _LiveTrackingMapState();
@@ -92,7 +92,7 @@ class _LiveTrackingMapState extends ConsumerState<LiveTrackingMap> {
       height: 300,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.2)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       clipBehavior: Clip.antiAlias,
       child: FlutterMap(
@@ -139,7 +139,7 @@ class _LiveTrackingMapState extends ConsumerState<LiveTrackingMap> {
                       border: Border.all(color: Colors.white, width: 3),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 8,
                         ),
                       ],

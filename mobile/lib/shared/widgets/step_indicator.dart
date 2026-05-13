@@ -26,10 +26,10 @@ class StepIndicator extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: i <= currentStep 
                       ? AppTheme.primaryRed 
-                      : AppTheme.lightGray.withOpacity(0.3),
+                      : AppTheme.lightGray.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(3),
                   boxShadow: i <= currentStep 
-                      ? [BoxShadow(color: AppTheme.primaryRed.withOpacity(0.3), blurRadius: 4, offset: const Offset(0, 2))]
+                      ? [BoxShadow(color: AppTheme.primaryRed.withValues(alpha: 0.3), blurRadius: 4, offset: const Offset(0, 2))]
                       : null,
                 ),
               ),

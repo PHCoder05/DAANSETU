@@ -191,8 +191,8 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      AppTheme.primaryRed.withOpacity(0.08),
-                      AppTheme.accentOrange.withOpacity(0.05),
+                      AppTheme.primaryRed.withValues(alpha: 0.08),
+                      AppTheme.accentOrange.withValues(alpha: 0.05),
                       Colors.transparent,
                     ],
                   ),
@@ -218,8 +218,8 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppTheme.primaryRed.withOpacity(0.3),
-                              AppTheme.primaryRed.withOpacity(0.05),
+                              AppTheme.primaryRed.withValues(alpha: 0.3),
+                              AppTheme.primaryRed.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -235,8 +235,8 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              AppTheme.accentOrange.withOpacity(0.25),
-                              AppTheme.accentOrange.withOpacity(0.05),
+                              AppTheme.accentOrange.withValues(alpha: 0.25),
+                              AppTheme.accentOrange.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -252,8 +252,8 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
                             colors: [
-                              Colors.green.withOpacity(0.2),
-                              Colors.green.withOpacity(0.05),
+                              Colors.green.withValues(alpha: 0.2),
+                              Colors.green.withValues(alpha: 0.05),
                             ],
                           ),
                         ),
@@ -282,8 +282,8 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                         end: Alignment.bottomRight,
                         colors: [
                           AppTheme.primaryRed,
-                          AppTheme.primaryRed.withOpacity(0.9),
-                          Color(0xFFFF6B6B),
+                          AppTheme.primaryRed.withValues(alpha: 0.9),
+                          const Color(0xFFFF6B6B),
                         ],
                       ),
                       borderRadius: isKeyboardOpen ? null : const BorderRadius.only(
@@ -292,7 +292,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                       ),
                       boxShadow: isKeyboardOpen ? null : [
                         BoxShadow(
-                          color: AppTheme.primaryRed.withOpacity(0.3),
+                          color: AppTheme.primaryRed.withValues(alpha: 0.3),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -312,7 +312,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                                 decoration: BoxDecoration(
                                   color: isKeyboardOpen 
                                     ? AppTheme.offWhite 
-                                    : Colors.white.withOpacity(0.2),
+                                    : Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Icon(
@@ -336,7 +336,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                             borderRadius: BorderRadius.circular(isKeyboardOpen ? 10 : 16),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
@@ -373,14 +373,14 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
+                                        color: Colors.white.withValues(alpha: 0.2),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
-                                          color: Colors.white.withOpacity(0.3),
+                                          color: Colors.white.withValues(alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
-                                      child: Text(
+                                      child: const Text(
                                         '🇮🇳 India\'s #1 Donation Platform',
                                         style: TextStyle(
                                           color: Colors.white,
@@ -436,7 +436,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                                             : (_isUserExists 
                                                 ? 'Sign in to continue making a difference' 
                                                 : 'Join our community of change-makers'),
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           color: AppTheme.gray,
                                           fontSize: 14,
                                         ),
@@ -467,7 +467,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.error.withOpacity(0.1),
+                                  color: AppTheme.error.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -518,8 +518,8 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
                                       child: Text(
                                         _isUserExists 
                                             ? "Don't have an account? Sign Up" 
-                                            : "Already have an account? Sign In",
-                                        style: TextStyle(
+                                            : 'Already have an account? Sign In',
+                                        style: const TextStyle(
                                           color: AppTheme.darkGray,
                                           fontSize: 13,
                                         ),
@@ -563,7 +563,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
           ),
           decoration: InputDecoration(
             hintText: 'Enter your email',
-            prefixIcon: Icon(Icons.email_outlined, color: AppTheme.gray),
+            prefixIcon: const Icon(Icons.email_outlined, color: AppTheme.gray),
             suffixIcon: !isEditable
                 ? IconButton(
                     icon: const Icon(Icons.edit, size: 18),
@@ -597,7 +597,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
           onFieldSubmitted: (_) => _submit(),
           decoration: InputDecoration(
             hintText: 'Enter your password',
-            prefixIcon: Icon(Icons.lock_outline, color: AppTheme.gray),
+            prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray),
             suffixIcon: IconButton(
               icon: Icon(
                 _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -681,7 +681,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
               obscureText: _obscurePassword,
               decoration: InputDecoration(
                 hintText: 'Min. 6 characters',
-                prefixIcon: Icon(Icons.lock_outline, color: AppTheme.gray),
+                prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray),
                 suffixIcon: IconButton(
                   icon: Icon(
                     _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -717,7 +717,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'NGO Details',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -741,7 +741,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
     TextEditingController controller, 
     String hint, 
     IconData icon, 
-    {bool required = true, int maxLines = 1, TextInputType? keyboardType}
+    {bool required = true, int maxLines = 1, TextInputType? keyboardType,}
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -789,7 +789,7 @@ class _UnifiedAuthScreenState extends ConsumerState<UnifiedAuthScreen>
           backgroundColor: AppTheme.primaryRed,
           foregroundColor: AppTheme.white,
           elevation: 4,
-          shadowColor: AppTheme.primaryRed.withOpacity(0.4),
+          shadowColor: AppTheme.primaryRed.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
@@ -860,7 +860,7 @@ class _RoleChip extends StatelessWidget {
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: AppTheme.primaryRed.withOpacity(0.2),
+              color: AppTheme.primaryRed.withValues(alpha: 0.2),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),

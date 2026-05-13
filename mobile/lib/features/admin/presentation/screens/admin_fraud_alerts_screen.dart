@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -50,7 +49,7 @@ class AdminFraudAlertsScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.verified_user_rounded, size: 80, color: AppTheme.success.withOpacity(0.2)),
+                  Icon(Icons.verified_user_rounded, size: 80, color: AppTheme.success.withValues(alpha: 0.2)),
                   const SizedBox(height: 16),
                   const Text('System Secure', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const Text('No active fraud alerts detected', style: TextStyle(color: AppTheme.gray)),
@@ -86,7 +85,7 @@ class _FraudAlertCard extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: AppTheme.cardShadow,
         border: Border.all(
-          color: alert.severity.color.withOpacity(0.3),
+          color: alert.severity.color.withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -97,7 +96,7 @@ class _FraudAlertCard extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: alert.severity.color.withOpacity(0.1),
+              color: alert.severity.color.withValues(alpha: 0.1),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16),
                 topRight: Radius.circular(16),
@@ -228,7 +227,7 @@ class _FraudAlertCard extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: color, size: 24),

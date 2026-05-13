@@ -92,10 +92,12 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
       
       if (response.statusCode == 200) {
         HapticFeedback.heavyImpact();
+        if (!mounted) return;
         CustomSnackBar.success(context, 'NGO ${approve ? "verified" : "rejected"} successfully!');
         _loadData();
       }
     } catch (e) {
+      if (!mounted) return;
       CustomSnackBar.error(context, 'Action failed');
     }
   }
@@ -122,10 +124,12 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
       
       if (response.statusCode == 200) {
         HapticFeedback.heavyImpact();
+        if (!mounted) return;
         CustomSnackBar.success(context, 'User ${newStatus ? "activated" : "deactivated"}');
         _loadData();
       }
     } catch (e) {
+      if (!mounted) return;
       CustomSnackBar.error(context, 'Action failed');
     }
   }
@@ -161,7 +165,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: confirmColor.withOpacity(0.1),
+                color: confirmColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: confirmColor, size: 32),
@@ -175,7 +179,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
             Text(
               message,
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.gray, fontSize: 14),
+              style: const TextStyle(color: AppTheme.gray, fontSize: 14),
             ),
             const SizedBox(height: 24),
             Row(
@@ -304,7 +308,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -337,7 +341,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
                     ),
                     Text(
                       '${_users.length} users • ${_pendingNgos.length} pending',
-                      style: TextStyle(fontSize: 12, color: AppTheme.gray),
+                      style: const TextStyle(fontSize: 12, color: AppTheme.gray),
                     ),
                   ],
                 ),
@@ -417,7 +421,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
                       borderRadius: BorderRadius.circular(14),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
+                          color: Colors.black.withValues(alpha: 0.04),
                           blurRadius: 10,
                         ),
                       ],
@@ -426,15 +430,15 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Search by name or email...',
-                        hintStyle: TextStyle(color: AppTheme.gray.withOpacity(0.6)),
-                        prefixIcon: Icon(Icons.search_rounded, color: AppTheme.gray),
+                        hintStyle: TextStyle(color: AppTheme.gray.withValues(alpha: 0.6)),
+                        prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.gray),
                         suffixIcon: _searchQuery.isNotEmpty
                             ? IconButton(
                                 onPressed: () {
                                   _searchController.clear();
                                   setState(() => _searchQuery = '');
                                 },
-                                icon: Icon(Icons.close_rounded, color: AppTheme.gray),
+                                icon: const Icon(Icons.close_rounded, color: AppTheme.gray),
                               )
                             : null,
                         border: InputBorder.none,
@@ -533,7 +537,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 48, color: color),
@@ -546,7 +550,7 @@ class _AdminUsersScreenState extends ConsumerState<AdminUsersScreen> with Single
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: TextStyle(color: AppTheme.gray),
+            style: const TextStyle(color: AppTheme.gray),
           ),
         ],
       ).animate().fade().scale(begin: const Offset(0.9, 0.9)),
@@ -607,7 +611,7 @@ class _FilterChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? chipColor.withOpacity(0.1) : Colors.white,
+          color: isSelected ? chipColor.withValues(alpha: 0.1) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected ? chipColor : AppTheme.lightGray,
@@ -673,7 +677,7 @@ class _UserCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -687,7 +691,7 @@ class _UserCard extends StatelessWidget {
             height: 50,
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [roleColor.withOpacity(0.8), roleColor],
+                colors: [roleColor.withValues(alpha: 0.8), roleColor],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -731,7 +735,7 @@ class _UserCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: roleColor.withOpacity(0.1),
+                        color: roleColor.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -755,7 +759,7 @@ class _UserCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   user.email,
-                  style: TextStyle(fontSize: 12, color: AppTheme.gray),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.gray),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -767,8 +771,8 @@ class _UserCard extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
                         color: user.active 
-                            ? AppTheme.success.withOpacity(0.1)
-                            : AppTheme.error.withOpacity(0.1),
+                            ? AppTheme.success.withValues(alpha: 0.1)
+                            : AppTheme.error.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Row(
@@ -796,7 +800,7 @@ class _UserCard extends StatelessWidget {
                     ),
                     if (user.verified) ...[
                       const SizedBox(width: 8),
-                      Icon(Icons.verified_rounded, size: 14, color: AppTheme.primaryBlue),
+                      const Icon(Icons.verified_rounded, size: 14, color: AppTheme.primaryBlue),
                     ],
                   ],
                 ),
@@ -840,12 +844,12 @@ class _PendingNgoCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 15,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: AppTheme.warning.withOpacity(0.3)),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
@@ -855,8 +859,8 @@ class _PendingNgoCard extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.warning.withOpacity(0.1),
-                  AppTheme.warning.withOpacity(0.02),
+                  AppTheme.warning.withValues(alpha: 0.1),
+                  AppTheme.warning.withValues(alpha: 0.02),
                 ],
               ),
               borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -868,7 +872,7 @@ class _PendingNgoCard extends StatelessWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withOpacity(0.8)],
+                      colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withValues(alpha: 0.8)],
                     ),
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -897,7 +901,7 @@ class _PendingNgoCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         ngo.email,
-                        style: TextStyle(fontSize: 13, color: AppTheme.gray),
+                        style: const TextStyle(fontSize: 13, color: AppTheme.gray),
                       ),
                     ],
                   ),
@@ -936,7 +940,7 @@ class _PendingNgoCard extends StatelessWidget {
                 if (ngo.ngoDetails?.description != null) ...[
                   Text(
                     ngo.ngoDetails!.description!,
-                    style: TextStyle(color: AppTheme.darkGray, fontSize: 13, height: 1.4),
+                    style: const TextStyle(color: AppTheme.darkGray, fontSize: 13, height: 1.4),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -973,7 +977,7 @@ class _PendingNgoCard extends StatelessWidget {
                         label: const Text('Reject'),
                         style: OutlinedButton.styleFrom(
                           foregroundColor: AppTheme.error,
-                          side: BorderSide(color: AppTheme.error.withOpacity(0.5)),
+                          side: BorderSide(color: AppTheme.error.withValues(alpha: 0.5)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
@@ -1026,7 +1030,7 @@ class _InfoBadge extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: AppTheme.darkGray),
+            style: const TextStyle(fontSize: 12, color: AppTheme.darkGray),
           ),
         ],
       ),

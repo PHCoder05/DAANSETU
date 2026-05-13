@@ -9,12 +9,12 @@ import '../../../../config/routes.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/api/api_client.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
-import '../../../../shared/widgets/custom_snackbar.dart';
 import '../../../../shared/widgets/step_indicator.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import '../../../../shared/models/donation.dart';
 import '../widgets/voice_form_modal.dart';
 
@@ -135,7 +135,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
         });
       }
     } catch (e) {
-      CustomSnackBar.error(context, 'Failed to pick image');
+      if (mounted) CustomSnackBar.error(context, 'Failed to pick image');
     }
   }
 
@@ -279,8 +279,8 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
           HapticFeedback.heavyImpact();
         }
       } catch (e) {
-        CustomSnackBar.error(context, widget.initialData != null ? 'Failed to update donation' : 'Failed to create donation');
-        setState(() => _isSubmitting = false);
+        if (mounted) CustomSnackBar.error(context, widget.initialData != null ? 'Failed to update donation' : 'Failed to create donation');
+        if (mounted) setState(() => _isSubmitting = false);
       }
     }
   }
@@ -364,9 +364,9 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryRed.withOpacity(0.05),
+                color: AppTheme.primaryRed.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+                border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.1)),
               ),
               child: Column(
                 children: [
@@ -410,7 +410,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
               style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ).animate().fadeIn(),
             const SizedBox(height: 12),
-            ..._recommendations.map((ngo) => _buildRecommendationCard(ngo)).toList(),
+            ..._recommendations.map((ngo) => _buildRecommendationCard(ngo)),
           ],
         ],
       ),
@@ -424,10 +424,10 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
       decoration: BoxDecoration(
         color: AppTheme.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.primaryRed.withOpacity(0.2)),
+        border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -465,7 +465,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.success.withOpacity(0.1),
+                        color: AppTheme.success.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -523,7 +523,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
                       decoration: BoxDecoration(
                         color: AppTheme.offWhite,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.primaryRed.withOpacity(0.3)),
+                        border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3)),
                       ),
                       child: const Center(
                         child: Column(
@@ -716,22 +716,47 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
       }
 
       // GET POSITION
-      final Position position = await Geolocator.getCurrentPosition();
+      final Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.best,
+      );
+      
+      // REVERSE GEOCODING
+      String addressText = 'Pinned Location (Lat: ${position.latitude.toStringAsFixed(4)})';
+      try {
+        List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
+        if (placemarks.isNotEmpty) {
+          final place = placemarks.first;
+          final addressParts = [
+            place.name,
+            place.street,
+            place.subLocality,
+            place.locality,
+            place.administrativeArea,
+            place.postalCode,
+          ].where((part) => part != null && part.isNotEmpty).toSet().toList(); // toSet() removes duplicates
+          
+          if (addressParts.isNotEmpty) {
+            addressText = addressParts.join(', ');
+          }
+        }
+      } catch (e) {
+        debugPrint('Geocoding error: $e');
+      }
       
       setState(() {
         _selectedLat = position.latitude;
         _selectedLng = position.longitude;
-        if (_addressController.text.isEmpty) {
-          _addressController.text = "Pinned Location (Lat: ${position.latitude.toStringAsFixed(4)})";
+        if (_addressController.text.isEmpty || _addressController.text.startsWith('Pinned Location')) {
+          _addressController.text = addressText;
         }
       });
       
-      CustomSnackBar.success(context, 'Location retrieved successfully!');
+      if (mounted) CustomSnackBar.success(context, 'Location retrieved successfully!');
       
     } catch (e) {
-      CustomSnackBar.error(context, e.toString());
+      if (mounted) CustomSnackBar.error(context, e.toString());
     } finally {
-      setState(() => _gettingLocation = false);
+      if (mounted) setState(() => _gettingLocation = false);
     }
   }
 
@@ -744,7 +769,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
         color: AppTheme.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, -4),
           ),
@@ -802,7 +827,7 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
               Container(
                 padding: const EdgeInsets.all(30),
                 decoration: BoxDecoration(
-                  color: AppTheme.success.withOpacity(0.1),
+                  color: AppTheme.success.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.check_rounded, size: 80, color: AppTheme.success),
@@ -864,11 +889,11 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
             fillColor: AppTheme.white,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppTheme.lightGray),
+              borderSide: const BorderSide(color: AppTheme.lightGray),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: AppTheme.lightGray),
+              borderSide: const BorderSide(color: AppTheme.lightGray),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
@@ -905,12 +930,57 @@ class _CreateDonationScreenState extends ConsumerState<CreateDonationScreen> {
               items: items.map((item) => DropdownMenuItem(
                 value: item,
                 child: Text(item[0].toUpperCase() + item.substring(1)),
-              )).toList(),
+              ),).toList(),
               onChanged: onChanged,
             ),
           ),
         ),
       ],
+    );
+  }
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+    bool isLoading = false,
+  }) {
+    return InkWell(
+      onTap: isLoading ? null : onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: color,
+                ),
+              )
+            else
+              Icon(icon, color: color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -951,7 +1021,7 @@ class _CategorySelector extends StatelessWidget {
               color: isSelected ? color : AppTheme.white,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: isSelected ? color : AppTheme.lightGray),
-              boxShadow: isSelected ? [BoxShadow(color: color.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
+              boxShadow: isSelected ? [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8, offset: const Offset(0, 2))] : null,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,

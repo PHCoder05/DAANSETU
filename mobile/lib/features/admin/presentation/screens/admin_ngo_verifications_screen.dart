@@ -45,15 +45,15 @@ class AdminNgoVerificationsScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppTheme.lightGray),
             ),
-            child: Row(
+            child: const Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 8,
               children: [
                 _StepChip(number: '1', label: 'Govt API Check', color: Colors.blue),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.gray),
-                ),
+                Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.gray),
                 _StepChip(number: '2', label: 'Admin Review', color: AppTheme.primaryRed),
-                const Spacer(),
                 Text(
                   'YOU ARE HERE',
                   style: TextStyle(
@@ -78,7 +78,7 @@ class AdminNgoVerificationsScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: AppTheme.error.withOpacity(0.1),
+                          color: AppTheme.error.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.cloud_off_rounded, size: 40, color: AppTheme.error),
@@ -108,10 +108,10 @@ class AdminNgoVerificationsScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: AppTheme.success.withOpacity(0.08),
+                              color: AppTheme.success.withValues(alpha: 0.08),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.verified_user_rounded, size: 48, color: AppTheme.success.withOpacity(0.3)),
+                            child: Icon(Icons.verified_user_rounded, size: 48, color: AppTheme.success.withValues(alpha: 0.3)),
                           ),
                           const SizedBox(height: 20),
                           const Text(
@@ -119,7 +119,7 @@ class AdminNgoVerificationsScreen extends ConsumerWidget {
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
-                          Text(
+                          const Text(
                             'No pending verifications',
                             style: TextStyle(fontSize: 14, color: AppTheme.gray),
                           ),
@@ -161,7 +161,7 @@ class _StepChip extends StatelessWidget {
         Container(
           width: 22, height: 22,
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Center(
@@ -171,7 +171,7 @@ class _StepChip extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.darkGray, letterSpacing: 0.5),
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: AppTheme.darkGray, letterSpacing: 0.5),
         ),
       ],
     );
@@ -192,16 +192,18 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
   bool _isExpanded = false;
 
   Map<String, dynamic> get _apiVerification {
-    final steps = widget.ngo['steps'] as Map<String, dynamic>? ?? {};
-    return steps['apiVerification'] as Map<String, dynamic>? ?? {};
+    final details = widget.ngo['ngoDetails'] as Map<String, dynamic>? ?? {};
+    return details['govVerificationData'] as Map<String, dynamic>? ?? {};
   }
 
-  String get _apiStatus => _apiVerification['status']?.toString() ?? 'pending';
-  int get _apiScore => _apiVerification['score'] as int? ?? 0;
-  String? get _confidence => _apiVerification['confidence']?.toString();
-  List<dynamic> get _sources => _apiVerification['sources'] as List? ?? [];
+  String get _apiStatus {
+    final details = widget.ngo['ngoDetails'] as Map<String, dynamic>? ?? {};
+    return details['govVerificationStatus']?.toString() ?? 'pending';
+  }
+  
+  String get _apiScore => _apiVerification['matchScore']?.toString() ?? '0%';
 
-  Future<void> _handleAction(String status, {String? reason}) async {
+  Future<void> _handleAction(String status) async {
     setState(() => _isProcessing = true);
     try {
       final apiClient = ref.read(apiClientProvider);
@@ -214,6 +216,23 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
       }
     } catch (e) {
       if (mounted) CustomSnackBar.error(context, 'Failed to process request');
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
+
+  Future<void> _handleGovCheck() async {
+    setState(() => _isProcessing = true);
+    try {
+      final apiClient = ref.read(apiClientProvider);
+      await apiClient.verifyNgoGovApi(widget.ngo['_id']);
+      
+      if (mounted) {
+        CustomSnackBar.success(context, 'Government API check completed');
+        ref.invalidate(allPendingNgosProvider);
+      }
+    } catch (e) {
+      if (mounted) CustomSnackBar.error(context, 'Failed to run Gov API check');
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -240,7 +259,7 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
               children: [
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: AppTheme.primaryRed.withOpacity(0.1),
+                  backgroundColor: AppTheme.primaryRed.withValues(alpha: 0.1),
                   child: const Icon(Icons.business_rounded, color: AppTheme.primaryRed),
                 ),
                 const SizedBox(width: 16),
@@ -285,7 +304,7 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.dns_rounded, size: 18, color: Colors.blue),
@@ -301,15 +320,15 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              _apiStatus == 'passed'
-                                  ? 'Verified via ${_sources.join(", ").toUpperCase()}'
+                              _apiStatus == 'verified'
+                                  ? 'Verified via NGO Darpan'
                                   : _apiStatus == 'failed'
-                                      ? 'Government APIs could not verify'
+                                      ? 'Government API could not verify'
                                       : 'Not yet checked',
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.w600,
-                                color: _apiStatus == 'passed' ? Colors.green.shade700 : 
+                                color: _apiStatus == 'verified' ? Colors.green.shade700 : 
                                        _apiStatus == 'failed' ? Colors.red.shade700 : AppTheme.gray,
                               ),
                             ),
@@ -317,20 +336,18 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
                         ),
                       ),
                       // Score badge
-                      if (_apiScore > 0)
+                      if (_apiScore != '0%')
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: _apiScore >= 66 ? Colors.green.shade100 : 
-                                   _apiScore >= 33 ? Colors.amber.shade100 : Colors.red.shade100,
+                            color: _apiStatus == 'verified' ? Colors.green.shade100 : Colors.red.shade100,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            '$_apiScore%',
+                            _apiScore,
                             style: TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w900,
-                              color: _apiScore >= 66 ? Colors.green.shade700 : 
-                                     _apiScore >= 33 ? Colors.amber.shade700 : Colors.red.shade700,
+                              color: _apiStatus == 'verified' ? Colors.green.shade700 : Colors.red.shade700,
                             ),
                           ),
                         ),
@@ -345,77 +362,58 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
                   // Expandable detail
                   if (_isExpanded) ...[
                     const Divider(height: 24),
-                    // Confidence
-                    if (_confidence != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Row(
-                          children: [
-                            Text('Confidence: ', style: TextStyle(fontSize: 11, color: AppTheme.gray)),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: _confidence == 'high' ? Colors.green.shade50 :
-                                       _confidence == 'medium' ? Colors.amber.shade50 : Colors.red.shade50,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: _confidence == 'high' ? Colors.green.shade200 :
-                                         _confidence == 'medium' ? Colors.amber.shade200 : Colors.red.shade200,
-                                ),
-                              ),
-                              child: Text(
-                                _confidence!.toUpperCase(),
-                                style: TextStyle(
-                                  fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1,
-                                  color: _confidence == 'high' ? Colors.green.shade700 :
-                                         _confidence == 'medium' ? Colors.amber.shade700 : Colors.red.shade700,
-                                ),
-                              ),
-                            ),
-                          ],
+                    // Check Gov API Button
+                    if (_apiStatus == 'pending')
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isProcessing ? null : _handleGovCheck,
+                          icon: const Icon(Icons.api_rounded, size: 18),
+                          label: const Text('Run Darpan API Check'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.blue.shade700,
+                            side: BorderSide(color: Colors.blue.shade200),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
                         ),
                       ),
-                    // Source results
-                    ...['darpan', '80g', 'mca'].map((source) {
-                      final details = (_apiVerification['details'] as Map<String, dynamic>? ?? {})[source] as Map<String, dynamic>?;
-                      final isVerified = details?['verified'] == true;
-                      final hasData = details != null;
-                      final sourceLabels = {'darpan': 'NGO Darpan', '80g': '80G Certificate', 'mca': 'MCA Section 8'};
-                      final sourceIcons = {'darpan': Icons.public_rounded, '80g': Icons.receipt_long_rounded, 'mca': Icons.business_center_rounded};
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
+                    
+                    if (_apiStatus != 'pending') ...[
+                      // Darpan verification Details
+                      Container(
+                        margin: const EdgeInsets.only(top: 8, bottom: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: isVerified ? Colors.green.shade50 : hasData ? Colors.red.shade50 : Colors.grey.shade50,
+                          color: _apiStatus == 'verified' ? Colors.green.shade50 : Colors.red.shade50,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isVerified ? Colors.green.shade200 : hasData ? Colors.red.shade200 : Colors.grey.shade200,
+                            color: _apiStatus == 'verified' ? Colors.green.shade200 : Colors.red.shade200,
                           ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              sourceIcons[source] ?? Icons.storage_rounded,
+                              Icons.public_rounded,
                               size: 16,
-                              color: isVerified ? Colors.green.shade600 : hasData ? Colors.red.shade400 : AppTheme.gray,
+                              color: _apiStatus == 'verified' ? Colors.green.shade600 : Colors.red.shade400,
                             ),
                             const SizedBox(width: 10),
-                            Expanded(
+                            const Expanded(
                               child: Text(
-                                sourceLabels[source] ?? source,
+                                'NGO Darpan',
                                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.charcoal),
                               ),
                             ),
                             Icon(
-                              isVerified ? Icons.check_circle_rounded : hasData ? Icons.cancel_rounded : Icons.remove_circle_outline_rounded,
+                              _apiStatus == 'verified' ? Icons.check_circle_rounded : Icons.cancel_rounded,
                               size: 18,
-                              color: isVerified ? Colors.green : hasData ? Colors.red.shade300 : AppTheme.gray.withOpacity(0.4),
+                              color: _apiStatus == 'verified' ? Colors.green : Colors.red.shade300,
                             ),
                           ],
                         ),
-                      );
-                    }),
+                      ),
+                    ],
                   ],
                 ],
               ),
@@ -455,9 +453,9 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
             margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.primaryRed.withOpacity(0.03),
+              color: AppTheme.primaryRed.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primaryRed.withOpacity(0.15)),
+              border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.15)),
             ),
             child: Column(
               children: [
@@ -466,10 +464,10 @@ class _NgoVerificationDetailCardState extends ConsumerState<_NgoVerificationDeta
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryRed.withOpacity(0.1),
+                        color: AppTheme.primaryRed.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(Icons.admin_panel_settings_rounded, size: 16, color: AppTheme.primaryRed),
+                      child: const Icon(Icons.admin_panel_settings_rounded, size: 16, color: AppTheme.primaryRed),
                     ),
                     const SizedBox(width: 10),
                     const Text(
@@ -535,7 +533,14 @@ class _DetailRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
-          Text(value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              value, 
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.end,
+            ),
+          ),
         ],
       ),
     );

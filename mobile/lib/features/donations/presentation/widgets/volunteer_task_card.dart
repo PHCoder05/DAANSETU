@@ -31,12 +31,12 @@ class VolunteerTaskCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
-            )
+            ),
           ],
-          border: isActive ? Border.all(color: AppTheme.primaryRed.withOpacity(0.3), width: 1.5) : null,
+          border: isActive ? Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3), width: 1.5) : null,
         ),
         child: Column(
           children: [
@@ -68,7 +68,7 @@ class VolunteerTaskCard extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(donation.status).withOpacity(0.1),
+                                color: _getStatusColor(donation.status).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
@@ -100,8 +100,8 @@ class VolunteerTaskCard extends StatelessWidget {
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
-                                donation.pickupLocation.address ?? "Address unknown",
-                                style: TextStyle(color: AppTheme.gray, fontSize: 12),
+                                donation.pickupLocation.address ?? 'Address unknown',
+                                style: const TextStyle(color: AppTheme.gray, fontSize: 12),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -117,20 +117,20 @@ class VolunteerTaskCard extends StatelessWidget {
                     children: [
                       Text(
                         donation.distance != null 
-                            ? "${(donation.distance! / 1000).toStringAsFixed(1)} km" 
-                            : "N/A", 
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)
+                            ? '${(donation.distance! / 1000).toStringAsFixed(1)} km' 
+                            : 'N/A', 
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                       ),
-                      Text("Distance", style: TextStyle(color: AppTheme.gray, fontSize: 10)),
+                      const Text('Distance', style: TextStyle(color: AppTheme.gray, fontSize: 10)),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.success.withOpacity(0.1),
+                          color: AppTheme.success.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
-                          "+15 Pts",
+                          '+15 Pts',
                           style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 10),
                         ),
                       ),
@@ -158,7 +158,7 @@ class VolunteerTaskCard extends StatelessWidget {
                     const Icon(Icons.timer_outlined, color: AppTheme.gray, size: 18),
                     const SizedBox(width: 8),
                     const Text(
-                      "Pickup available now",
+                      'Pickup available now',
                       style: TextStyle(color: AppTheme.gray, fontSize: 13),
                     ),
                   ],
@@ -167,11 +167,11 @@ class VolunteerTaskCard extends StatelessWidget {
                     onPressed: onTap,
                     style: TextButton.styleFrom(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      backgroundColor: isActive ? AppTheme.black : AppTheme.primaryRed.withOpacity(0.1),
+                      backgroundColor: isActive ? AppTheme.black : AppTheme.primaryRed.withValues(alpha: 0.1),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),
                     child: Text(
-                      isActive ? "VIEW TASK" : "CLAIM PICKUP",
+                      isActive ? 'VIEW TASK' : 'CLAIM PICKUP',
                       style: TextStyle(
                         color: isActive ? Colors.white : AppTheme.primaryRed,
                         fontWeight: FontWeight.bold,
@@ -198,8 +198,8 @@ class VolunteerTaskCard extends StatelessWidget {
   }
 
   String _getTransitStatus(String status) {
-    if (status == 'claimed') return "Proceed to Pickup";
-    if (status == 'in-transit') return "On the way to NGO";
-    return "Status unknown";
+    if (status == 'claimed') return 'Proceed to Pickup';
+    if (status == 'in-transit') return 'On the way to NGO';
+    return 'Status unknown';
   }
 }

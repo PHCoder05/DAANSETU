@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -42,7 +41,7 @@ class _NgoClaimsScreenState extends ConsumerState<NgoClaimsScreen> {
         }
       }
     } catch (e) {
-      CustomSnackBar.error(context, 'Failed to load claims');
+      if (mounted) CustomSnackBar.error(context, 'Failed to load claims');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -200,7 +199,7 @@ class _NgoClaimsScreenState extends ConsumerState<NgoClaimsScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -222,7 +221,7 @@ class _NgoClaimsScreenState extends ConsumerState<NgoClaimsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.assignment_outlined, size: 64, color: AppTheme.gray.withOpacity(0.5)),
+          Icon(Icons.assignment_outlined, size: 64, color: AppTheme.gray.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           const Text('No claims found', style: TextStyle(fontSize: 16, color: AppTheme.gray)),
           const SizedBox(height: 8),

@@ -107,14 +107,14 @@ class HelpSupportScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryRed, AppTheme.primaryRed.withOpacity(0.8)],
+          colors: [AppTheme.primaryRed, AppTheme.primaryRed.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: AppTheme.borderRadiusMedium,
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryRed.withOpacity(0.3),
+            color: AppTheme.primaryRed.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -212,7 +212,7 @@ class HelpSupportScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.confirmation_number_outlined, color: color, size: 20),
@@ -230,7 +230,7 @@ class HelpSupportScreen extends ConsumerWidget {
                   ticket['message'] ?? '',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(fontSize: 12, color: AppTheme.gray),
+                  style: const TextStyle(fontSize: 12, color: AppTheme.gray),
                 ),
               ],
             ),
@@ -238,7 +238,7 @@ class HelpSupportScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -271,7 +271,7 @@ class HelpSupportScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: AppTheme.primaryRed.withOpacity(0.1),
+              color: AppTheme.primaryRed.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 24, color: AppTheme.primaryRed),

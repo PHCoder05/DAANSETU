@@ -72,7 +72,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.success.withOpacity(0.1),
+                    color: AppTheme.success.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -95,7 +95,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 
                 Text(
                   'We have sent password reset instructions to ${_emailController.text}',
-                  style: TextStyle(color: AppTheme.gray),
+                  style: const TextStyle(color: AppTheme.gray),
                   textAlign: TextAlign.center,
                 ).animate().fade(),
                 
@@ -105,13 +105,13 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentOrange.withOpacity(0.1),
+                      color: AppTheme.accentOrange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.accentOrange.withOpacity(0.3)),
+                      border: Border.all(color: AppTheme.accentOrange.withValues(alpha: 0.3)),
                     ),
                     child: Column(
                       children: [
-                        Text(
+                        const Text(
                           'Note: Since this is a Demo, no real email was sent.',
                           style: TextStyle(color: AppTheme.accentOrange, fontSize: 12, fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
@@ -130,7 +130,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                             label: const Text('Open Test Email Inbox'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.accentOrange,
-                              side: BorderSide(color: AppTheme.accentOrange),
+                              side: const BorderSide(color: AppTheme.accentOrange),
                             ),
                           ),
                         ),
@@ -193,7 +193,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryRed.withOpacity(0.1),
+                      color: AppTheme.primaryRed.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -235,7 +235,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Enter your email',
                     prefixIcon: Icon(Icons.email_outlined, color: AppTheme.gray),
                   ),
@@ -278,7 +278,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
+                      const Text(
                         'Remember your password? ',
                         style: TextStyle(color: AppTheme.darkGray),
                       ),

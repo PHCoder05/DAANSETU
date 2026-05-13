@@ -84,7 +84,7 @@ class VolunteerIdScreen extends ConsumerWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 30,
             offset: const Offset(0, 15),
           ),
@@ -156,7 +156,7 @@ class VolunteerIdScreen extends ConsumerWidget {
                     margin: const EdgeInsets.only(top: 4),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryRed.withOpacity(0.1),
+                      color: AppTheme.primaryRed.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -183,7 +183,14 @@ class VolunteerIdScreen extends ConsumerWidget {
                     data: 'DAANSETU-VERIFY-${user?.id}',
                     version: QrVersions.auto,
                     size: 100.0,
-                    foregroundColor: AppTheme.black,
+                    eyeStyle: const QrEyeStyle(
+                      eyeShape: QrEyeShape.square,
+                      color: AppTheme.black,
+                    ),
+                    dataModuleStyle: const QrDataModuleStyle(
+                      dataModuleShape: QrDataModuleShape.square,
+                      color: AppTheme.black,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text(

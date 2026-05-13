@@ -15,7 +15,7 @@ class NetworkNotifier extends StateNotifier<NetworkStatus> {
   }
 
   void _init() {
-    _subscription = Connectivity().onConnectivityChanged.listen((results) {
+    _subscription = Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
       if (results.isEmpty || results.contains(ConnectivityResult.none)) {
         state = NetworkStatus.disconnected;
       } else {
@@ -25,8 +25,8 @@ class NetworkNotifier extends StateNotifier<NetworkStatus> {
   }
 
   Future<bool> checkConnectivity() async {
-    final result = await Connectivity().checkConnectivity();
-    final isConnected = !result.contains(ConnectivityResult.none);
+    final results = await Connectivity().checkConnectivity();
+    final isConnected = results.isNotEmpty && !results.contains(ConnectivityResult.none);
     state = isConnected ? NetworkStatus.connected : NetworkStatus.disconnected;
     return isConnected;
   }

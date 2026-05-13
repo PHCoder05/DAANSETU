@@ -88,7 +88,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryRed.withOpacity(0.1),
+                    color: AppTheme.primaryRed.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -101,7 +101,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
               
               const SizedBox(height: 16),
               
-              Center(
+              const Center(
                 child: Text(
                   'Create a strong password with at least 6 characters',
                   style: TextStyle(color: AppTheme.gray),
@@ -119,7 +119,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 obscureText: _obscureCurrent,
                 decoration: InputDecoration(
                   hintText: 'Enter current password',
-                  prefixIcon: Icon(Icons.lock_outline, color: AppTheme.gray),
+                  prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureCurrent ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -146,7 +146,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 obscureText: _obscureNew,
                 decoration: InputDecoration(
                   hintText: 'Enter new password',
-                  prefixIcon: Icon(Icons.lock_rounded, color: AppTheme.gray),
+                  prefixIcon: const Icon(Icons.lock_rounded, color: AppTheme.gray),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -176,7 +176,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
                 obscureText: _obscureConfirm,
                 decoration: InputDecoration(
                   hintText: 'Confirm new password',
-                  prefixIcon: Icon(Icons.lock_rounded, color: AppTheme.gray),
+                  prefixIcon: const Icon(Icons.lock_rounded, color: AppTheme.gray),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,

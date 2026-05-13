@@ -106,7 +106,7 @@ class _TappableButtonState extends State<TappableButton>
                   ? [
                       BoxShadow(
                         color: (widget.backgroundColor ?? AppTheme.primaryRed)
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),

@@ -87,7 +87,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                     width: 56,
                     height: 56,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF9B59B6).withOpacity(0.1),
+                      color: const Color(0xFF9B59B6).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
@@ -156,7 +156,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _getRatingLabel(_rating),
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppTheme.accentOrange,
                       fontWeight: FontWeight.w600,
                     ),
@@ -177,7 +177,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
               controller: _commentController,
               maxLines: 5,
               maxLength: 1000,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: 'Share your experience with this NGO...',
                 alignLabelWithHint: true,
               ),
@@ -189,15 +189,15 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.info.withOpacity(0.1),
+                color: AppTheme.info.withValues(alpha: 0.1),
                 borderRadius: AppTheme.borderRadiusMedium,
-                border: Border.all(color: AppTheme.info.withOpacity(0.2)),
+                border: Border.all(color: AppTheme.info.withValues(alpha: 0.2)),
               ),
-              child: Row(
+              child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(Icons.lightbulb_outline_rounded, color: AppTheme.info, size: 24),
-                  const SizedBox(width: 12),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,7 +209,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                             color: AppTheme.info,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Text(
                           '• Mention how responsive the NGO was\n• Describe the pickup/delivery experience\n• Share if you would donate to them again',
                           style: TextStyle(

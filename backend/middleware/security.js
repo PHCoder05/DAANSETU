@@ -27,7 +27,7 @@ const helmetMiddleware = helmet({
 // General API rate limit
 const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // 100 requests per 15 minutes
+    max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 100 requests in prod, 1000 in dev
     message: {
         success: false,
         error: {
@@ -42,7 +42,7 @@ const generalLimiter = rateLimit({
 // Strict rate limit for auth endpoints (login, register)
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: process.env.NODE_ENV === 'production' ? 10 : 50, // 10 attempts in prod, 50 in dev
+    max: process.env.NODE_ENV === 'production' ? 10 : 500, // 10 attempts in prod, 500 in dev
     message: {
         success: false,
         error: {

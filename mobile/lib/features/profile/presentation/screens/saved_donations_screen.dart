@@ -58,7 +58,7 @@ class SavedDonationsScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: AppTheme.error.withOpacity(0.1),
+                  color: AppTheme.error.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
@@ -88,7 +88,7 @@ class SavedDonationsScreen extends ConsumerWidget {
                     child: const Icon(Icons.bookmark_border_rounded, size: 56, color: AppTheme.gray),
                   ),
                   const SizedBox(height: 20),
-                  Text("No saved donations yet", style: Theme.of(context).textTheme.titleMedium),
+                  Text('No saved donations yet', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   const Text(
                     'Save donations to view them here later',

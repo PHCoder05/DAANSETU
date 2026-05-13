@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:flutter/foundation.dart';
 
 final locationServiceProvider = Provider<LocationService>((ref) {
@@ -43,11 +44,51 @@ class LocationService {
 
     try {
       return await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+          desiredAccuracy: LocationAccuracy.high,);
     } catch (e) {
-      debugPrint("Error getting current position: $e");
+      debugPrint('Error getting current position: $e');
       return null;
     }
+  }
+
+  Future<String?> getAddressFromPosition(Position position) async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        return "${place.name}, ${place.subLocality}, ${place.locality}";
+      }
+    } catch (e) {
+      debugPrint('Error getting address: $e');
+    }
+    return null;
+  }
+
+  Future<Position?> getPositionFromAddress(String address) async {
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        return Position(
+          longitude: locations[0].longitude,
+          latitude: locations[0].latitude,
+          timestamp: DateTime.now(),
+          accuracy: 0,
+          altitude: 0,
+          heading: 0,
+          speed: 0,
+          speedAccuracy: 0,
+          altitudeAccuracy: 0,
+          headingAccuracy: 0,
+        );
+      }
+    } catch (e) {
+      debugPrint('Error getting position from address: $e');
+    }
+    return null;
   }
 
   void startLocationStream(Function(Position) onData) async {
@@ -63,8 +104,8 @@ class LocationService {
           intervalDuration: const Duration(seconds: 10), // Every 10 seconds
           // Add foreground notification to keep it alive in background
           foregroundNotificationConfig: const ForegroundNotificationConfig(
-            notificationText: "DaanSetu is tracking your location for delivery",
-            notificationTitle: "Active Delivery Tracking",
+            notificationText: 'DaanSetu is tracking your location for delivery',
+            notificationTitle: 'Active Delivery Tracking',
             enableWakeLock: true,
           ),
         );
@@ -73,8 +114,8 @@ class LocationService {
         .listen((Position position) {
       onData(position);
     }, onError: (e) {
-      debugPrint("Location stream error: $e");
-    });
+      debugPrint('Location stream error: $e');
+    },);
   }
 
   void stopLocationStream() {

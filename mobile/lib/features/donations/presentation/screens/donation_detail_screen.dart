@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:open_file_plus/open_file_plus.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:open_file/open_file.dart';
+
 import 'package:confetti/confetti.dart';
 import '../../../../config/routes.dart';
 import '../../../../shared/widgets/smart_donation_image.dart';
@@ -20,7 +20,7 @@ import '../../../../shared/models/donation.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import '../../../../shared/widgets/live_tracking_map.dart';
 import '../../../../core/services/location_service.dart';
-import '../../../../core/services/socket_service.dart';
+
 import '../../../../shared/widgets/impact_share_card.dart';
 import '../widgets/verification_qr_modal.dart';
 import '../widgets/volunteer_review_modal.dart';
@@ -42,10 +42,8 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
   bool _isLoading = true;
   bool _isClaiming = false;
   bool _isUpdatingStatus = false;
-  bool _isBroadcasting = false;
   bool _isDownloadingReceipt = false;
   Map<String, dynamic>? _tracking;
-  bool _isFetchingTracking = false;
   late ConfettiController _confettiController;
 
   Future<void> _toggleBroadcasting() async {
@@ -100,7 +98,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
   
   void _shareDonation() {
     if (_donation == null) return;
-    Share.share('Check out this donation on Daansetu: ${_donation!.title}. Help connect donors with those in need!');
+    SharePlus.instance.share(ShareParams(text: 'Check out this donation on Daansetu: ${_donation!.title}. Help connect donors with those in need!'));
   }
   
   Future<void> _toggleBookmark() async {
@@ -143,10 +141,9 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
       final apiClient = ref.read(apiClientProvider);
       await apiClient.downloadDonationReceipt(_donation!.id, savePath);
       
-      if (mounted) {
+        if (!mounted) return;
         CustomSnackBar.success(context, 'Receipt downloaded successfully!');
-        OpenFilePlus.open(savePath);
-      }
+        OpenFile.open(savePath);
     } catch (e) {
       debugPrint('Download receipt error: $e');
       if (mounted) CustomSnackBar.error(context, 'Failed to download receipt');
@@ -209,16 +206,13 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
 
   Future<void> _loadTracking() async {
     if (_donation == null) return;
-    setState(() => _isFetchingTracking = true);
     try {
       final response = await ref.read(apiClientProvider).getDeliveryTracking(widget.donationId);
       if (response.statusCode == 200) {
-        setState(() => _tracking = response.data['data']['tracking']);
+        if (mounted) setState(() => _tracking = response.data['data']['tracking']);
       }
     } catch (e) {
       debugPrint('Load tracking error: $e');
-    } finally {
-      setState(() => _isFetchingTracking = false);
     }
   }
 
@@ -256,14 +250,15 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
         location: locationData,
       );
       if (response.statusCode == 200) {
+        if (!mounted) return;
         CustomSnackBar.success(context, 'Pickup verified!');
         _loadDonation();
         _loadTracking();
       }
     } catch (e) {
-      CustomSnackBar.error(context, 'Invalid QR Code for pickup');
+      if (mounted) CustomSnackBar.error(context, 'Invalid QR Code for pickup');
     } finally {
-      setState(() => _isUpdatingStatus = false);
+      if (mounted) setState(() => _isUpdatingStatus = false);
     }
   }
 
@@ -286,14 +281,15 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
         location: locationData,
       );
       if (response.statusCode == 200) {
+        if (!mounted) return;
         CustomSnackBar.success(context, 'Delivery verified!');
         _loadDonation();
         _loadTracking();
       }
     } catch (e) {
-      CustomSnackBar.error(context, 'Invalid QR Code for delivery');
+      if (mounted) CustomSnackBar.error(context, 'Invalid QR Code for delivery');
     } finally {
-      setState(() => _isUpdatingStatus = false);
+      if (mounted) setState(() => _isUpdatingStatus = false);
     }
   }
 
@@ -313,14 +309,10 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
     setState(() => _isUpdatingStatus = true);
     try {
       final apiClient = ref.read(apiClientProvider);
-      final response = await apiClient.updateDonationStatus(widget.donationId, newStatus);
-      
-      if (response.statusCode == 200) {
-        if (mounted) {
-          CustomSnackBar.success(context, 'Status updated to $newStatus');
-          _loadDonation();
-        }
-      }
+      await apiClient.updateDonationStatus(widget.donationId, newStatus);
+      if (!mounted) return;
+      CustomSnackBar.success(context, 'Status updated to $newStatus');
+      _loadDonation();
     } catch (e) {
       if (mounted) CustomSnackBar.error(context, 'Failed to update status');
     } finally {
@@ -333,14 +325,10 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
     
     try {
       final apiClient = ref.read(apiClientProvider);
-      final response = await apiClient.claimDonation(widget.donationId);
-      
-      if (response.statusCode == 200) {
-        if (mounted) {
-          CustomSnackBar.success(context, 'Donation claimed successfully!');
-          _loadDonation();
-        }
-      }
+      await apiClient.claimDonation(widget.donationId);
+      if (!mounted) return;
+      CustomSnackBar.success(context, 'Donation claimed successfully!');
+      _loadDonation();
     } catch (e) {
       if (mounted) {
         CustomSnackBar.error(context, 'Failed to claim donation');
@@ -377,8 +365,10 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.white,
-      body: CustomScrollView(
-        slivers: [
+      body: Stack(
+        children: [
+          CustomScrollView(
+            slivers: [
           SliverAppBar(
             backgroundColor: AppTheme.white,
             expandedHeight: 280,
@@ -399,7 +389,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                   child: Icon(
                     isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded, 
                     color: isBookmarked ? AppTheme.primaryRed : AppTheme.black, 
-                    size: 20
+                    size: 20,
                   ),
                 ),
                 onPressed: _toggleBookmark,
@@ -472,7 +462,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                     const SizedBox(height: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(color: AppTheme.error.withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                      decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(4)),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -490,7 +480,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                     children: [
                       _ActionButton(icon: Icons.chat_bubble_outline_rounded, label: 'Message', onTap: () {
                          if (_donation?.donor != null) context.push('/chat/${_donation!.donor!.id}', extra: {'name': _donation!.donor!.name});
-                      }),
+                      },),
                       _ActionButton(icon: Icons.call_outlined, label: 'Call', onTap: _launchCaller),
                       _ActionButton(icon: Icons.directions_outlined, label: 'Direction', onTap: _launchMaps),
                       _ActionButton(icon: Icons.ios_share_rounded, label: 'Share', onTap: _shareDonation),
@@ -519,7 +509,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
 
                   Text('About this donation', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, fontSize: 18)),
                   const SizedBox(height: 12),
-                  Text(donation.description, style: TextStyle(color: AppTheme.charcoal.withOpacity(0.8), height: 1.5, fontSize: 15)),
+                  Text(donation.description, style: TextStyle(color: AppTheme.charcoal.withValues(alpha: 0.8), height: 1.5, fontSize: 15)),
                   
                   const SizedBox(height: 24),
                    Container(
@@ -557,7 +547,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: AppTheme.offWhite, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.gray.withOpacity(0.2))),
+                      decoration: BoxDecoration(color: AppTheme.offWhite, borderRadius: BorderRadius.circular(12), border: Border.all(color: AppTheme.gray.withValues(alpha: 0.2))),
                       child: Row(
                         children: [
                           Container(padding: const EdgeInsets.all(8), decoration: const BoxDecoration(color: AppTheme.white, shape: BoxShape.circle), child: const Icon(Icons.location_on, color: AppTheme.primaryRed)),
@@ -567,7 +557,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(donation.pickupLocation.address ?? 'Location coordinates provided', style: const TextStyle(fontWeight: FontWeight.w600), maxLines: 2, overflow: TextOverflow.ellipsis),
-                                if (donation.pickupInstructions != null) Text(donation.pickupInstructions!, style: TextStyle(color: AppTheme.gray, fontSize: 12)),
+                                if (donation.pickupInstructions != null) Text(donation.pickupInstructions!, style: const TextStyle(color: AppTheme.gray, fontSize: 12)),
                               ],
                             ),
                           ),
@@ -594,7 +584,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                             icon: Icon(isBroadcastingThis ? Icons.stop_circle_rounded : Icons.my_location_rounded, color: Colors.white),
                             label: Text(isBroadcastingThis ? 'Stop Broadcasting' : 'Broadcast Live Location', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                           );
-                        }
+                        },
                       ),
                     ),
                   
@@ -612,6 +602,8 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
               ),
             ),
           ),
+        ],
+      ),
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(
@@ -638,12 +630,12 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
     
     if (isVolunteer) {
       if (donation.status == 'available') {
-        return _buildActionBottomBar(title: "Claim for Pickup", subtitle: "Earn 15 impact points", buttonLabel: "Accept Task", onPressed: _claimDonation, isLoading: _isClaiming);
+        return _buildActionBottomBar(title: 'Claim for Pickup', subtitle: 'Earn 15 impact points', buttonLabel: 'Accept Task', onPressed: _claimDonation, isLoading: _isClaiming);
       } else if (donation.claimedBy == user?.id) {
         if (donation.status == 'claimed') {
-          return _buildActionBottomBar(title: "Arrived at Pickup", subtitle: "Scan Donor's QR to verify", buttonLabel: "Scan Pickup QR", onPressed: () => _handleQrVerification('pickup'), isLoading: _isUpdatingStatus);
+          return _buildActionBottomBar(title: 'Arrived at Pickup', subtitle: "Scan Donor's QR to verify", buttonLabel: 'Scan Pickup QR', onPressed: () => _handleQrVerification('pickup'), isLoading: _isUpdatingStatus);
         } else if (donation.status == 'in-transit') {
-          return _buildActionBottomBar(title: "Out for Delivery", subtitle: "Scan NGO's QR to complete", buttonLabel: "Scan Delivery QR", onPressed: () => _handleQrVerification('delivery'), isLoading: _isUpdatingStatus, color: AppTheme.success);
+          return _buildActionBottomBar(title: 'Out for Delivery', subtitle: "Scan NGO's QR to complete", buttonLabel: 'Scan Delivery QR', onPressed: () => _handleQrVerification('delivery'), isLoading: _isUpdatingStatus, color: AppTheme.success);
         }
       }
     }
@@ -652,12 +644,12 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
       if (donation.status == 'claimed') {
         final pickupQr = _tracking?['pickupQrCode'];
         if (pickupQr != null) {
-          return _buildActionBottomBar(title: "Volunteer is Coming", subtitle: "Show this QR to the volunteer", buttonLabel: "Show Pickup QR", onPressed: () => _showQrCode('pickup', pickupQr), color: AppTheme.accentOrange);
+          return _buildActionBottomBar(title: 'Volunteer is Coming', subtitle: 'Show this QR to the volunteer', buttonLabel: 'Show Pickup QR', onPressed: () => _showQrCode('pickup', pickupQr), color: AppTheme.accentOrange);
         }
       } else if (donation.status == 'delivered' || donation.status == 'distributed') {
          return Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))]),
+          decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -5))]),
           child: SafeArea(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -683,12 +675,12 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
         if (donation.status == 'in-transit') {
           final deliveryQr = _tracking?['deliveryQrCode'];
           if (deliveryQr != null) {
-            return _buildActionBottomBar(title: "Volunteer Arriving", subtitle: "Show this QR to receive donation", buttonLabel: "Show Delivery QR", onPressed: () => _showQrCode('delivery', deliveryQr), color: AppTheme.success);
+            return _buildActionBottomBar(title: 'Volunteer Arriving', subtitle: 'Show this QR to receive donation', buttonLabel: 'Show Delivery QR', onPressed: () => _showQrCode('delivery', deliveryQr), color: AppTheme.success);
           }
         } else if (donation.status == 'delivered' || donation.status == 'distributed') {
           return Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))]),
+            decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -5))]),
             child: SafeArea(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -697,14 +689,14 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
                     label: 'Post Impact Story', 
                     icon: Icons.auto_stories_rounded, 
                     onPressed: () => context.push(AppRoutes.createStory, extra: {'donationId': donation.id, 'category': donation.category}),
-                    color: AppTheme.primaryRed
+                    color: AppTheme.primaryRed,
                   ),
                   const SizedBox(height: 12),
                   _buildSecondaryActionButton(
                     label: 'Mark as Distributed', 
                     icon: Icons.check_circle_outline_rounded, 
                     onPressed: donation.status == 'distributed' ? null : () => _updateStatus('distributed'),
-                    color: AppTheme.success
+                    color: AppTheme.success,
                   ),
                 ],
               ),
@@ -714,7 +706,7 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
     }
 
     if (user?.isNgo == true && donation.isAvailable) {
-      return _buildActionBottomBar(title: '${donation.quantity ?? 1} ${donation.unit ?? 'Items'}', subtitle: "Free Pickup", buttonLabel: canClaim ? 'Claim Donation' : 'Verification Required', onPressed: canClaim ? _claimDonation : null, isLoading: _isClaiming);
+      return _buildActionBottomBar(title: '${donation.quantity ?? 1} ${donation.unit ?? 'Items'}', subtitle: 'Free Pickup', buttonLabel: canClaim ? 'Claim Donation' : 'Verification Required', onPressed: canClaim ? _claimDonation : null, isLoading: _isClaiming);
     }
     return null;
   }
@@ -722,16 +714,16 @@ class _DonationDetailScreenState extends ConsumerState<DonationDetailScreen> {
   Widget _buildActionBottomBar({required String title, required String subtitle, required String buttonLabel, required VoidCallback? onPressed, bool isLoading = false, Color color = AppTheme.primaryRed}) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))]),
+      decoration: BoxDecoration(color: AppTheme.white, boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -5))]),
       child: SafeArea(
         child: Row(
           children: [
-            Expanded(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(subtitle, style: TextStyle(color: AppTheme.success, fontSize: 12, fontWeight: FontWeight.bold))])),
+            Expanded(child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), Text(subtitle, style: const TextStyle(color: AppTheme.success, fontSize: 12, fontWeight: FontWeight.bold))])),
             ElevatedButton(
               onPressed: isLoading ? null : onPressed,
               style: ElevatedButton.styleFrom(backgroundColor: color, foregroundColor: AppTheme.white, disabledBackgroundColor: AppTheme.lightGray, padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
               child: isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: AppTheme.white, strokeWidth: 2)) : Text(buttonLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            )
+            ),
           ],
         ),
       ),
@@ -785,6 +777,6 @@ class _InfoColumn extends StatelessWidget {
   const _InfoColumn({required this.label, required this.value, required this.icon, this.valueColor});
   @override
   Widget build(BuildContext context) {
-    return Column(children: [Icon(icon, size: 20, color: AppTheme.gray), const SizedBox(height: 8), Text(label, style: TextStyle(color: AppTheme.gray, fontSize: 12)), Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: valueColor))]);
+    return Column(children: [Icon(icon, size: 20, color: AppTheme.gray), const SizedBox(height: 8), Text(label, style: const TextStyle(color: AppTheme.gray, fontSize: 12)), Text(value, style: TextStyle(fontWeight: FontWeight.bold, color: valueColor))]);
   }
 }

@@ -160,7 +160,7 @@ class AnalyticsScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(item.icon, color: item.color.withOpacity(0.8), size: 24),
+              Icon(item.icon, color: item.color.withValues(alpha: 0.8), size: 24),
               const SizedBox(height: 8),
               Text(item.value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: item.color)),
               Text(item.label, style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
@@ -210,7 +210,7 @@ class AnalyticsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           LinearProgressIndicator(
             value: score / 100,
-            backgroundColor: Colors.white.withOpacity(0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             color: Colors.white,
             minHeight: 8,
             borderRadius: BorderRadius.circular(4),
@@ -218,7 +218,7 @@ class AnalyticsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Text(
             score > 90 ? 'Excellent Trust Score!' : 'Keep delivering to improve!',
-            style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 13),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
           ),
         ],
       ),
@@ -245,7 +245,7 @@ class AnalyticsScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppTheme.primaryRed, AppTheme.primaryRed.withOpacity(0.8)],
+          colors: [AppTheme.primaryRed, AppTheme.primaryRed.withValues(alpha: 0.8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -260,7 +260,7 @@ class AnalyticsScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Impact Score', style: TextStyle(color: AppTheme.white.withOpacity(0.8), fontSize: 14)),
+                  Text('Impact Score', style: TextStyle(color: AppTheme.white.withValues(alpha: 0.8), fontSize: 14)),
                   const SizedBox(height: 8),
                   Text('$impactScore', style: const TextStyle(color: AppTheme.white, fontSize: 36, fontWeight: FontWeight.bold)),
                 ],
@@ -272,7 +272,7 @@ class AnalyticsScreen extends ConsumerWidget {
           Row(
             children: [
               Expanded(child: _buildMiniStat('Total Items', '$total', Icons.inventory_2_outlined)),
-              Container(width: 1, height: 40, color: AppTheme.white.withOpacity(0.2)),
+              Container(width: 1, height: 40, color: AppTheme.white.withValues(alpha: 0.2)),
               Expanded(child: _buildMiniStat('Lives Helped', '${completed * 3}', Icons.favorite_border_rounded)),
             ],
           ),
@@ -284,8 +284,11 @@ class AnalyticsScreen extends ConsumerWidget {
   Widget _buildTierCard(BuildContext context, int score) {
     String tier = 'Bronze Giver';
     double progress = (score % 500) / 500;
-    if (score >= 1000) tier = 'Gold Guardian';
-    else if (score >= 500) tier = 'Silver Donor';
+    if (score >= 1000) {
+      tier = 'Gold Guardian';
+    } else if (score >= 500) {
+      tier = 'Silver Donor';
+    }
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -340,7 +343,7 @@ class AnalyticsScreen extends ConsumerWidget {
       child: PieChart(PieChartData(sections: [
         PieChartSectionData(color: AppTheme.success, value: completed.toDouble(), title: 'Delivered', radius: 40, titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
         PieChartSectionData(color: AppTheme.warning, value: active.toDouble(), title: 'Active', radius: 40, titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
-      ])),
+      ],),),
     );
   }
 
@@ -356,7 +359,7 @@ class AnalyticsScreen extends ConsumerWidget {
           BarChartGroupData(x: 2, barRods: [BarChartRodData(toY: 15, color: color, width: 16)]),
           BarChartGroupData(x: 3, barRods: [BarChartRodData(toY: 10, color: color, width: 16)]),
         ],
-      )),
+      ),),
     );
   }
 }

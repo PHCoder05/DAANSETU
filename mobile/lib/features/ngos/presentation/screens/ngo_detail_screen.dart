@@ -101,7 +101,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 0.7),
                         ],
                         stops: const [0.6, 1.0],
                       ),
@@ -126,7 +126,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -184,7 +184,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                                   child: Text(
                                     'Reg No: ${ngo.ngoDetails!.registrationNumber}',
                                     style: TextStyle(
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -222,7 +222,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                           children: [
                             Text(
                               _averageRating.toStringAsFixed(1),
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 36,
                                 fontWeight: FontWeight.bold,
                                 color: AppTheme.accentOrange,
@@ -242,7 +242,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                             const SizedBox(height: 4),
                             Text(
                               '${_reviews.length} reviews',
-                              style: TextStyle(color: AppTheme.gray, fontSize: 12),
+                              style: const TextStyle(color: AppTheme.gray, fontSize: 12),
                             ),
                           ],
                         ),
@@ -283,7 +283,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                     ),
                     child: Text(
                       ngo.ngoDetails?.description ?? 'No description provided.',
-                      style: TextStyle(color: AppTheme.darkGray, height: 1.6),
+                      style: const TextStyle(color: AppTheme.darkGray, height: 1.6),
                     ),
                   ).animate(delay: 100.ms).fade().slideY(begin: 0.1, end: 0),
                   
@@ -334,7 +334,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 4,
-                        shadowColor: AppTheme.primaryRed.withOpacity(0.4),
+                        shadowColor: AppTheme.primaryRed.withValues(alpha: 0.4),
                       ),
                     ),
                   ).animate(delay: 250.ms).fade().slideY(begin: 0.1, end: 0),
@@ -353,7 +353,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                       ),
                       Text(
                         '${_reviews.length} reviews',
-                        style: TextStyle(color: AppTheme.gray),
+                        style: const TextStyle(color: AppTheme.gray),
                       ),
                     ],
                   ),
@@ -367,10 +367,10 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
                         color: AppTheme.offWhite,
                         borderRadius: AppTheme.borderRadiusMedium,
                       ),
-                      child: Column(
+                      child: const Column(
                         children: [
                           Icon(Icons.rate_review_outlined, size: 48, color: AppTheme.gray),
-                          const SizedBox(height: 12),
+                          SizedBox(height: 12),
                           Text('No reviews yet', style: TextStyle(color: AppTheme.gray)),
                         ],
                       ),
@@ -413,7 +413,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
       if (res.statusCode == 200) {
         if (mounted) {
            ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('Response submitted successfully'), backgroundColor: AppTheme.success)
+             const SnackBar(content: Text('Response submitted successfully'), backgroundColor: AppTheme.success),
            );
            _loadNgoDetails(); // Refresh
         }
@@ -421,7 +421,7 @@ class _NgoDetailScreenState extends ConsumerState<NgoDetailScreen> {
     } catch (e) {
        if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(content: Text('Failed to submit response'), backgroundColor: AppTheme.error)
+             const SnackBar(content: Text('Failed to submit response'), backgroundColor: AppTheme.error),
           );
        }
     }
@@ -446,7 +446,7 @@ class _RatingBar extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         children: [
-          Text(label, style: TextStyle(fontSize: 12, color: AppTheme.gray)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.gray)),
           const SizedBox(width: 8),
           Expanded(
             child: Container(
@@ -534,13 +534,13 @@ class _ReviewCard extends StatelessWidget {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryRed.withOpacity(0.1),
+                  color: AppTheme.primaryRed.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     reviewerName.isNotEmpty ? reviewerName[0].toUpperCase() : 'A',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppTheme.primaryRed,
                       fontWeight: FontWeight.bold,
                     ),
@@ -562,11 +562,11 @@ class _ReviewCard extends StatelessWidget {
                           index < rating.round() ? Icons.star_rounded : Icons.star_outline_rounded,
                           size: 14,
                           color: AppTheme.accentOrange,
-                        )),
+                        ),),
                         const SizedBox(width: 8),
                         Text(
                           _formatDate(date),
-                          style: TextStyle(fontSize: 11, color: AppTheme.gray),
+                          style: const TextStyle(fontSize: 11, color: AppTheme.gray),
                         ),
                       ],
                     ),
@@ -584,7 +584,7 @@ class _ReviewCard extends StatelessWidget {
           ),
           if (comment.isNotEmpty) ...[
             const SizedBox(height: 12),
-            Text(comment, style: TextStyle(color: AppTheme.darkGray, height: 1.4)),
+            Text(comment, style: const TextStyle(color: AppTheme.darkGray, height: 1.4)),
           ],
           if (response != null) ...[
             const SizedBox(height: 12),
@@ -602,7 +602,7 @@ class _ReviewCard extends StatelessWidget {
                     style: TextStyle(fontWeight: FontWeight.w600, fontSize: 12),
                   ),
                   const SizedBox(height: 4),
-                  Text(response!, style: TextStyle(color: AppTheme.darkGray, fontSize: 13)),
+                  Text(response!, style: const TextStyle(color: AppTheme.darkGray, fontSize: 13)),
                 ],
               ),
             ),

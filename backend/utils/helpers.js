@@ -203,15 +203,17 @@ const buildDonationFilter = (queryParams, userId = null, role = null) => {
     filter.priority = queryParams.priority;
   }
 
+  const { ObjectId } = require('mongodb');
+
   // Donor filter - ONLY when explicitly requesting own donations
   // This allows donors to browse all available donations
   if (queryParams.myDonations === 'true' && role === 'donor' && userId) {
-    filter.donorId = userId;
+    filter.donorId = new ObjectId(userId);
   }
 
   // NGO claimed filter - for viewing donations they've claimed
   if (queryParams.claimed === 'true' && role === 'ngo' && userId) {
-    filter.claimedBy = userId;
+    filter.claimedBy = new ObjectId(userId);
   }
 
   // Search by title/description (Ensure it's a string)

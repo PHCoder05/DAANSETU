@@ -1,5 +1,4 @@
 import 'dart:ui';
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,7 +80,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   animation: _gradientController,
                   builder: (context, child) {
                     return Container(
-                      height: 280,
+                      height: 210,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
@@ -115,7 +114,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               height: 200,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.08),
+                                color: Colors.white.withValues(alpha: 0.08),
                               ),
                             ),
                           ),
@@ -127,7 +126,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               height: 150,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Colors.white.withOpacity(0.06),
+                                color: Colors.white.withValues(alpha: 0.06),
                               ),
                             ),
                           ),
@@ -153,7 +152,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                       Text(
                                         'Manage your account',
                                         style: TextStyle(
-                                          color: Colors.white.withOpacity(0.85),
+                                          color: Colors.white.withValues(alpha: 0.85),
                                           fontSize: 14,
                                         ),
                                       ),
@@ -161,7 +160,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                   ),
                                   Container(
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.2),
+                                      color: Colors.white.withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: IconButton(
@@ -183,7 +182,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 // GLASSMORPHISM USER CARD
                 // ═══════════════════════════════════════════════════════════
                 Positioned(
-                  top: 140,
+                  top: 105,
                   left: 20,
                   right: 20,
                   child: ClipRRect(
@@ -193,15 +192,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.95),
+                          color: Colors.white.withValues(alpha: 0.95),
                           borderRadius: BorderRadius.circular(24),
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: Colors.white.withValues(alpha: 0.3),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFE23744).withOpacity(0.15),
+                              color: const Color(0xFFE23744).withValues(alpha: 0.15),
                               blurRadius: 30,
                               offset: const Offset(0, 15),
                             ),
@@ -215,7 +214,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFE23744).withOpacity(0.4),
+                                    color: const Color(0xFFE23744).withValues(alpha: 0.4),
                                     blurRadius: 20,
                                     spreadRadius: 2,
                                   ),
@@ -279,8 +278,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                       const SizedBox(width: 6),
                                       Container(
                                         padding: const EdgeInsets.all(3),
-                                        decoration: BoxDecoration(
-                                          color: const Color(0xFF1BAC4B),
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF1BAC4B),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -302,10 +301,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: 10),
-                                  Row(
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
                                     children: [
                                       _buildRoleBadge(user.role),
-                                      const SizedBox(width: 8),
                                       Container(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
@@ -351,7 +351,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
 
           // Spacer for overlapping card
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          const SliverToBoxAdapter(child: SizedBox(height: 50)),
+          
+          if (user.role == 'ngo' && !user.verified)
+            SliverToBoxAdapter(
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.pending_actions_rounded, color: Colors.amber.shade700, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Verification Pending', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.amber.shade900)),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Your application is under review. We are currently cross-checking your registration with Government databases. This process usually takes 1-2 business days.',
+                            style: TextStyle(fontSize: 12, color: Colors.amber.shade900, height: 1.4),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // ═══════════════════════════════════════════════════════════
           // LEVEL PROGRESS SECTION
@@ -366,13 +399,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      const Color(0xFFE23744).withOpacity(0.08),
-                      Colors.orange.withOpacity(0.05),
+                      const Color(0xFFE23744).withValues(alpha: 0.08),
+                      Colors.orange.withValues(alpha: 0.05),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: const Color(0xFFE23744).withOpacity(0.15),
+                    color: const Color(0xFFE23744).withValues(alpha: 0.15),
                   ),
                 ),
                 child: Column(
@@ -381,48 +414,57 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFFE23744), Color(0xFFFF6B6B)],
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFE23744), Color(0xFFFF6B6B)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                '${level['level']}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  level['title'] as String,
+                                child: Text(
+                                  '${level['level']}',
                                   style: const TextStyle(
+                                    color: Colors.white,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Color(0xFF1A1A2E),
+                                    fontSize: 18,
                                   ),
                                 ),
-                                Text(
-                                  '${user.impactScore} XP earned',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      level['title'] as String,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: Color(0xFF1A1A2E),
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Text(
+                                      '${user.impactScore} XP earned',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         GestureDetector(
                           onTap: () => context.go(AppRoutes.leaderboard),
                           child: Container(
@@ -434,8 +476,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               color: const Color(0xFFE23744),
                               borderRadius: BorderRadius.circular(20),
                             ),
-                            child: Row(
-                              children: const [
+                            child: const Row(
+                              children: [
                                 Icon(
                                   Icons.emoji_events_rounded,
                                   color: Colors.white,
@@ -511,9 +553,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
                   children: [
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) / 3,
                       child: _AnimatedStatCard(
                         value: user.donorStats!.totalDonations,
                         label: 'Total Given',
@@ -522,8 +568,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         delay: 0,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) / 3,
                       child: _AnimatedStatCard(
                         value: user.donorStats!.activeDonations,
                         label: 'Active',
@@ -532,8 +578,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         delay: 100,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) / 3,
                       child: _AnimatedStatCard(
                         value: user.donorStats!.completedDonations,
                         label: 'Completed',
@@ -550,9 +596,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: Row(
+                child: Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  alignment: WrapAlignment.center,
                   children: [
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) / 3,
                       child: _AnimatedStatCard(
                         value: user.volunteerStats!.totalDeliveries,
                         label: 'Deliveries',
@@ -561,8 +611,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         delay: 0,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) / 3,
                       child: _AnimatedStatCard(
                         value: user.volunteerStats!.reliabilityScore,
                         label: 'Trust',
@@ -572,8 +622,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                         isPercentage: true,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
+                    SizedBox(
+                      width: (MediaQuery.of(context).size.width - 64) / 3,
                       child: _AnimatedStatCard(
                         value: user.volunteerStats!.rating,
                         label: 'Rating',
@@ -638,7 +688,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.06),
+                                  color: Colors.black.withValues(alpha: 0.06),
                                   blurRadius: 15,
                                   offset: const Offset(0, 5),
                                 ),
@@ -650,7 +700,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE23744).withOpacity(0.1),
+                                    color: const Color(0xFFE23744).withValues(alpha: 0.1),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Text(
@@ -796,8 +846,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       title: 'Share App',
                       subtitle: 'Invite friends to join',
                       color: const Color(0xFFE91E63),
-                      onTap: () => Share.share(
-                        'Join me on DAANSETU and start making a difference today! Download now. #DAANSETU',
+                      onTap: () => SharePlus.instance.share(
+                        ShareParams(text: 'Join me on DAANSETU and start making a difference today! Download now. #DAANSETU'),
                       ),
                     ),
                     _PremiumMenuItem(
@@ -863,7 +913,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                     child: Text(
                       'Delete Account',
                       style: TextStyle(
-                        color: Colors.red.withOpacity(0.6),
+                        color: Colors.red.withValues(alpha: 0.6),
                         fontSize: 13,
                       ),
                     ),
@@ -944,10 +994,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withOpacity(0.15), color.withOpacity(0.08)],
+          colors: [color.withValues(alpha: 0.15), color.withValues(alpha: 0.08)],
         ),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1054,13 +1104,13 @@ class _AnimatedStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1069,16 +1119,16 @@ class _AnimatedStatCard extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [color.withOpacity(0.2), color.withOpacity(0.1)],
+                colors: [color.withValues(alpha: 0.2), color.withValues(alpha: 0.1)],
               ),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: color, size: 24),
+            child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TweenAnimationBuilder<double>(
             tween: Tween<double>(begin: 0, end: value.toDouble()),
             duration: Duration(milliseconds: 800 + delay),
@@ -1093,12 +1143,15 @@ class _AnimatedStatCard extends StatelessWidget {
               
               if (isPercentage) displayValue += '%';
               
-              return Text(
-                displayValue,
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: color,
+              return FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  displayValue,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
                 ),
               );
             },
@@ -1107,10 +1160,13 @@ class _AnimatedStatCard extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 11,
               color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
             ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -1131,7 +1187,7 @@ class _PremiumMenuContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -1205,8 +1261,8 @@ class _PremiumMenuItemState extends State<_PremiumMenuItem> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                     colors: [
-                      widget.color.withOpacity(0.2),
-                      widget.color.withOpacity(0.1),
+                      widget.color.withValues(alpha: 0.2),
+                      widget.color.withValues(alpha: 0.1),
                     ],
                   ),
                   borderRadius: BorderRadius.circular(12),
@@ -1233,6 +1289,8 @@ class _PremiumMenuItemState extends State<_PremiumMenuItem> {
                         fontSize: 12,
                         color: Colors.grey[500],
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
@@ -1294,12 +1352,12 @@ class _LogoutButtonState extends State<_LogoutButton> {
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.red.withOpacity(0.08),
-                Colors.red.withOpacity(0.04),
+                Colors.red.withValues(alpha: 0.08),
+                Colors.red.withValues(alpha: 0.04),
               ],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.red.withOpacity(0.2)),
+            border: Border.all(color: Colors.red.withValues(alpha: 0.2)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -1307,7 +1365,7 @@ class _LogoutButtonState extends State<_LogoutButton> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.15),
+                  color: Colors.red.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(

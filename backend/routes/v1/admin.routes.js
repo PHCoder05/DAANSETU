@@ -110,6 +110,26 @@ router.get('/ngos/pending', paginationValidation, adminController.getPendingNGOs
 
 /**
  * @swagger
+ * /api/admin/ngos/{userId}/verify-gov:
+ *   post:
+ *     summary: Verify NGO against Government Darpan API (Admin only)
+ *     tags: [Admin]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Government API check results
+ */
+router.post('/ngos/:userId/verify-gov', mongoIdValidation, adminController.checkGovVerification);
+
+/**
+ * @swagger
  * /api/admin/ngos/{userId}/verify:
  *   put:
  *     summary: Verify or reject NGO (Admin only)

@@ -66,7 +66,7 @@ class _SearchBarState extends State<SearchBar> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -80,7 +80,7 @@ class _SearchBarState extends State<SearchBar> {
             onChanged: widget.onChanged,
             decoration: InputDecoration(
               hintText: widget.hintText,
-              hintStyle: TextStyle(color: AppTheme.gray),
+              hintStyle: const TextStyle(color: AppTheme.gray),
               prefixIcon: const Icon(Icons.search, color: AppTheme.gray),
               suffixIcon: _showClear
                   ? IconButton(
@@ -103,7 +103,7 @@ class _SearchBarState extends State<SearchBar> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              const Text(
                 'Recent Searches',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
@@ -138,9 +138,9 @@ class _SearchBarState extends State<SearchBar> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.history, size: 16, color: AppTheme.gray),
+                      const Icon(Icons.history, size: 16, color: AppTheme.gray),
                       const SizedBox(width: 6),
-                      Text(search, style: TextStyle(color: AppTheme.charcoal)),
+                      Text(search, style: const TextStyle(color: AppTheme.charcoal)),
                     ],
                   ),
                 ),
@@ -182,7 +182,7 @@ class FilterChips extends StatelessWidget {
                 label: const Text('All'),
                 selected: selected == null,
                 onSelected: (_) => onSelected(null),
-                selectedColor: AppTheme.primaryRed.withOpacity(0.15),
+                selectedColor: AppTheme.primaryRed.withValues(alpha: 0.15),
                 checkmarkColor: AppTheme.primaryRed,
                 labelStyle: TextStyle(
                   color: selected == null ? AppTheme.primaryRed : AppTheme.charcoal,
@@ -198,7 +198,7 @@ class FilterChips extends StatelessWidget {
                 label: Text(filter),
                 selected: isSelected,
                 onSelected: (_) => onSelected(filter),
-                selectedColor: AppTheme.primaryRed.withOpacity(0.15),
+                selectedColor: AppTheme.primaryRed.withValues(alpha: 0.15),
                 checkmarkColor: AppTheme.primaryRed,
                 labelStyle: TextStyle(
                   color: isSelected ? AppTheme.primaryRed : AppTheme.charcoal,

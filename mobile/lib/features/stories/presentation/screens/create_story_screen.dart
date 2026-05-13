@@ -67,10 +67,10 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
       // Upload photos first (simulated as base64 for now or actual upload if supported)
       // For this implementation, we'll send base64 or assuming backend handles multipart
       List<String> photoUrls = [];
-      for (var image in _selectedImages) {
+      for (var _ in _selectedImages) {
         // In a real app, upload to S3/Cloudinary first
         // For demo, we'll pass a placeholder or handle in API client
-        photoUrls.add("https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=800"); 
+        photoUrls.add('https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?q=80&w=800'); 
       }
 
       final response = await apiClient.createImpactStory({
@@ -99,20 +99,20 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppTheme.scaffoldLight,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Share Impact Story', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Share Impact Story', style: TextStyle(color: AppTheme.charcoal, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
+          icon: const Icon(Icons.close, color: AppTheme.charcoal),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Form(
-          key: _formKey),
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -120,14 +120,14 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
               const SizedBox(height: 12),
               TextFormField(
                 controller: _titleController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppTheme.charcoal),
                 decoration: _inputDecoration('Give your story a title...', Icons.title_rounded),
                 validator: (v) => v?.isEmpty == true ? 'Title required' : null,
               ),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _storyController,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: AppTheme.charcoal),
                 maxLines: 5,
                 decoration: _inputDecoration('Describe the impact. How did it help?', Icons.description_rounded),
                 validator: (v) => v?.isEmpty == true ? 'Story details required' : null,
@@ -148,7 +148,7 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
                         TextFormField(
                           controller: _beneficiariesController,
                           keyboardType: TextInputType.number,
-                          style: const TextStyle(color: Colors.white),
+                          style: const TextStyle(color: AppTheme.charcoal),
                           decoration: _inputDecoration('e.g. 50', Icons.people_rounded),
                         ),
                       ],
@@ -178,8 +178,8 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
                   child: _isSubmitting 
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Publish Story', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                    ? const CircularProgressIndicator(color: AppTheme.white)
+                    : const Text('Publish Story', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.white)),
                 ),
               ),
             ],
@@ -192,24 +192,24 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600),
+      style: const TextStyle(color: AppTheme.darkGray, fontSize: 14, fontWeight: FontWeight.w600),
     );
   }
 
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+      hintStyle: const TextStyle(color: AppTheme.gray),
       prefixIcon: Icon(icon, color: AppTheme.primaryRed, size: 20),
       filled: true,
-      fillColor: Colors.white.withOpacity(0.05),
+      fillColor: AppTheme.offWhite,
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
   }
 
   Widget _buildImagePicker() {
-    return Container(
+    return SizedBox(
       height: 100,
       child: ListView(
         scrollDirection: Axis.horizontal,
@@ -219,11 +219,11 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
             child: Container(
               width: 100,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: AppTheme.offWhite,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white24, style: BorderStyle.none),
+                border: Border.all(color: AppTheme.lightGray),
               ),
-              child: const Icon(Icons.add_a_photo_rounded, color: Colors.white54, size: 32),
+              child: const Icon(Icons.add_a_photo_rounded, color: AppTheme.gray, size: 32),
             ),
           ),
           const SizedBox(width: 12),
@@ -249,7 +249,7 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
                 ),
               ],
             ),
-          )),
+          ),),
         ],
       ),
     );
@@ -260,14 +260,14 @@ class _CreateImpactStoryScreenState extends ConsumerState<CreateImpactStoryScree
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: AppTheme.offWhite,
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedCategory,
-          dropdownColor: const Color(0xFF1A1A2E),
-          style: const TextStyle(color: Colors.white),
+          dropdownColor: AppTheme.white,
+          style: const TextStyle(color: AppTheme.charcoal),
           items: categories.map((c) => DropdownMenuItem(value: c, child: Text(c.toUpperCase(), style: const TextStyle(fontSize: 12)))).toList(),
           onChanged: (v) => setState(() => _selectedCategory = v ?? 'general'),
         ),

@@ -9,7 +9,7 @@ import '../../../../core/api/api_client.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
 import '../../../../shared/providers/auth_provider.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart' as latLng;
+import 'package:latlong2/latlong.dart' as lat_lng;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:confetti/confetti.dart';
@@ -50,7 +50,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
     'Available',
     'Claimed',
     'In-Transit',
-    'Delivered'
+    'Delivered',
   ];
   late ConfettiController _confettiController;
 
@@ -88,7 +88,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
           IconButton(
             icon: const Icon(Icons.share_rounded, color: AppTheme.primaryRed),
             onPressed: () {
-               Share.share('I just donated to help someone in need via DAANSETU! Track my impact or join me in making a difference. #DAANSETU #Charity');
+                SharePlus.instance.share(ShareParams(text: 'I just donated to help someone in need via DAANSETU! Track my impact or join me in making a difference. #DAANSETU #Charity'));
             },
           ),
           TextButton(
@@ -96,7 +96,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                context.push('/chat');
             },
             child: const Text('Help', style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.bold)),
-          )
+          ),
         ],
       ),
       floatingActionButton: donationAsync.when(
@@ -157,7 +157,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                   (donation.pickupLocation.lat != 0 && donation.pickupLocation.lng != 0) 
                   ? FlutterMap(
                       options: MapOptions(
-                        initialCenter: latLng.LatLng(donation.pickupLocation.lat, donation.pickupLocation.lng),
+                        initialCenter: lat_lng.LatLng(donation.pickupLocation.lat, donation.pickupLocation.lng),
                         initialZoom: 15.0,
                         interactionOptions: const InteractionOptions(flags: InteractiveFlag.all & ~InteractiveFlag.rotate),
                       ),
@@ -169,7 +169,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                         MarkerLayer(
                           markers: [
                             Marker(
-                              point: latLng.LatLng(donation.pickupLocation.lat, donation.pickupLocation.lng),
+                              point: lat_lng.LatLng(donation.pickupLocation.lat, donation.pickupLocation.lng),
                               width: 80,
                               height: 80,
                               child: const Icon(Icons.location_on, color: AppTheme.primaryRed, size: 40),
@@ -189,10 +189,10 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                   : donation.images.isNotEmpty 
                       ? Image.network(donation.images.first, fit: BoxFit.cover)
                       : Container(
-                          color: _getCategoryColor(donation.category).withOpacity(0.1),
-                          child: Icon(_getCategoryIcon(donation.category), size: 64, color: _getCategoryColor(donation.category).withOpacity(0.5)),
+                          color: _getCategoryColor(donation.category).withValues(alpha: 0.1),
+                          child: Icon(_getCategoryIcon(donation.category), size: 64, color: _getCategoryColor(donation.category).withValues(alpha: 0.5)),
                         ),
-                  Container(color: Colors.black.withOpacity(0.3)), // Overlay
+                  Container(color: Colors.black.withValues(alpha: 0.3)), // Overlay
                   // Navigate Button
                   Positioned(
                     top: 16,
@@ -206,7 +206,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                         if (await canLaunchUrl(url)) {
                           await launchUrl(url, mode: LaunchMode.externalApplication);
                         } else {
-                          CustomSnackBar.error(context, 'Could not launch maps');
+                          if (context.mounted) CustomSnackBar.error(context, 'Could not launch maps');
                         }
                       },
                     ),
@@ -218,7 +218,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                         Icon(
                           _getStatusIcon(donation.status), 
                           color: Colors.white, 
-                          size: 48
+                          size: 48,
                         ).animate(onPlay: (c) => c.repeat(reverse: true)).scale(begin: const Offset(1, 1), end: const Offset(1.1, 1.1)),
                         const SizedBox(height: 12),
                         Container(
@@ -233,8 +233,8 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                             style: TextStyle(
                               fontSize: 14, 
                               fontWeight: FontWeight.bold,
-                              color: _getStatusColor(donation.status)
-                            )
+                              color: _getStatusColor(donation.status),
+                            ),
                           ),
                         ),
                       ],
@@ -271,7 +271,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 20,
                       offset: const Offset(0, -5),
                     ),
@@ -288,8 +288,8 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: _getCategoryColor(donation.category).withOpacity(0.1), 
-                              borderRadius: BorderRadius.circular(12)
+                              color: _getCategoryColor(donation.category).withValues(alpha: 0.1), 
+                              borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(_getCategoryIcon(donation.category), color: _getCategoryColor(donation.category)),
                           ),
@@ -330,17 +330,17 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                           decoration: BoxDecoration(
                             color: AppTheme.offWhite,
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+                            border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.1)),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primaryRed),
+                                  const Icon(Icons.qr_code_scanner_rounded, color: AppTheme.primaryRed),
                                   const SizedBox(width: 12),
                                   Text(
-                                    donation.status == 'claimed' ? "Pickup Verification" : "Delivery Verification",
+                                    donation.status == 'claimed' ? 'Pickup Verification' : 'Delivery Verification',
                                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                                   ),
                                 ],
@@ -349,7 +349,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                               Text(
                                 donation.status == 'claimed' 
                                   ? "Scan the QR code on the donor's app or item to confirm pickup."
-                                  : "Scan the QR code at the NGO destination to confirm delivery.",
+                                  : 'Scan the QR code at the NGO destination to confirm delivery.',
                                 style: const TextStyle(color: AppTheme.gray, fontSize: 13),
                               ),
                               const SizedBox(height: 20),
@@ -363,7 +363,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                     padding: const EdgeInsets.symmetric(vertical: 14),
                                   ),
-                                  child: const Text("SCAN NOW", style: TextStyle(fontWeight: FontWeight.bold)),
+                                  child: const Text('SCAN NOW', style: TextStyle(fontWeight: FontWeight.bold)),
                                 ),
                               ),
                             ],
@@ -433,7 +433,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                                             _getStatusDescription(donation.status),
                                             style: const TextStyle(color: AppTheme.primaryGreen, fontSize: 12, fontWeight: FontWeight.bold),
                                           ).animate().fade(duration: 800.ms).then().fade(delay: 500.ms),
-                                        ]
+                                        ],
                                       ],
                                     ),
                                   ),
@@ -470,7 +470,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                               Share.share('I just donated ${donation.title} via DAANSETU! Together we are fighting hunger and waste. Join the movement! #DaanSetu #Impact');
+                                SharePlus.instance.share(ShareParams(text: 'I just donated ${donation.title} via DAANSETU! Together we are fighting hunger and waste. Join the movement! #DaanSetu #Impact'));
                             },
                             icon: const Icon(Icons.share_rounded),
                             label: const Text('Share Impact Card'),
@@ -523,10 +523,10 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
             const SizedBox(height: 12),
             Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
             const SizedBox(height: 24),
-            const Text("Scan QR Code", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+            const Text('Scan QR Code', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
             const SizedBox(height: 8),
             Text(
-              donation.status == 'claimed' ? "Scan donor's ID to confirm pickup" : "Scan destination ID to confirm delivery",
+              donation.status == 'claimed' ? "Scan donor's ID to confirm pickup" : 'Scan destination ID to confirm delivery',
               style: const TextStyle(color: AppTheme.gray),
             ),
             const SizedBox(height: 24),
@@ -553,9 +553,10 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                         try {
                           await ref.read(apiClientProvider).updateDonationStatus(donation.id, nextStatus);
                           ref.invalidate(donationDetailProvider(donation.id));
-                          CustomSnackBar.success(context, "Verification Successful!");
+                          if (!context.mounted) return;
+                          CustomSnackBar.success(context, 'Verification Successful!');
                         } catch (e) {
-                          CustomSnackBar.error(context, "Failed to update status: $e");
+                          if (context.mounted) CustomSnackBar.error(context, 'Failed to update status: $e');
                         }
                       }
                     }
@@ -572,7 +573,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: const Text("CANCEL"),
+                child: const Text('CANCEL'),
               ),
             ),
           ],
@@ -620,7 +621,10 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
               data: 'DAAN-SETU-$donationId',
               version: QrVersions.auto,
               size: 200.0,
-              foregroundColor: AppTheme.primaryRed,
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.square,
+                color: AppTheme.primaryRed,
+              ),
               eyeStyle: const QrEyeStyle(
                 eyeShape: QrEyeShape.square,
                 color: AppTheme.primaryRed,
@@ -708,7 +712,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: AppTheme.warning.withOpacity(0.1),
+                color: AppTheme.warning.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -727,7 +731,7 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
               ),
             ),
             const SizedBox(height: 12),
-            Text(
+            const Text(
               'This donation has been claimed by another organization. You can only view tracking for your own claims.',
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -781,12 +785,11 @@ class _DonationTrackingScreenState extends ConsumerState<DonationTrackingScreen>
               try {
                 final apiClient = ref.read(apiClientProvider);
                 await apiClient.reportSOS(donationId, message: messageController.text);
-                if (mounted) {
-                  Navigator.pop(context);
-                  CustomSnackBar.success(context, 'SOS Alert Sent! Help is on the way.');
-                }
+                if (!context.mounted) return;
+                Navigator.pop(context);
+                CustomSnackBar.success(context, 'SOS Alert Sent! Help is on the way.');
               } catch (e) {
-                if (mounted) CustomSnackBar.error(context, 'Failed to send SOS');
+                if (context.mounted) CustomSnackBar.error(context, 'Failed to send SOS');
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryRed),

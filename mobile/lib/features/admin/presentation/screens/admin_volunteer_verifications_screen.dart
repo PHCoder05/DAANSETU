@@ -66,10 +66,10 @@ class AdminVolunteerVerificationsScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppTheme.success.withOpacity(0.08),
+              color: AppTheme.success.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.verified_rounded, size: 48, color: AppTheme.success.withOpacity(0.3)),
+            child: Icon(Icons.verified_rounded, size: 48, color: AppTheme.success.withValues(alpha: 0.3)),
           ),
           const SizedBox(height: 20),
           const Text('Clear Queue!', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -165,7 +165,7 @@ class _VolunteerVerificationCardState extends ConsumerState<_VolunteerVerificati
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentOrange.withOpacity(0.1),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Text('PENDING', style: TextStyle(color: AppTheme.accentOrange, fontSize: 10, fontWeight: FontWeight.bold)),
@@ -197,7 +197,7 @@ class _VolunteerVerificationCardState extends ConsumerState<_VolunteerVerificati
                     SizedBox(height: 8),
                     Text('No ID document found', style: TextStyle(color: AppTheme.gray, fontSize: 12)),
                   ],
-                )),
+                ),),
           ),
           
           const SizedBox(height: 24),

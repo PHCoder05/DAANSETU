@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/theme.dart';
@@ -104,7 +103,7 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
@@ -187,7 +186,7 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 3),
                 boxShadow: [
-                  BoxShadow(color: color.withOpacity(0.3), blurRadius: 15, spreadRadius: 2),
+                  BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 15, spreadRadius: 2),
                 ],
               ),
               child: CircleAvatar(
@@ -217,7 +216,7 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
         ),
         Text(
           '${user['impactScore'] ?? 0} pts',
-          style: TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.w600, fontSize: 12),
+          style: const TextStyle(color: AppTheme.primaryRed, fontWeight: FontWeight.w600, fontSize: 12),
         ),
         const SizedBox(height: 8),
         Container(
@@ -227,7 +226,7 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [color.withOpacity(0.8), color.withOpacity(0.2)],
+              colors: [color.withValues(alpha: 0.8), color.withValues(alpha: 0.2)],
             ),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           ),
@@ -255,7 +254,7 @@ class _ImpactLeaderboardScreenState extends ConsumerState<ImpactLeaderboardScree
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

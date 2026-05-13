@@ -16,7 +16,6 @@ import '../features/donations/presentation/screens/donation_tracking_screen.dart
 import '../features/donations/presentation/screens/my_donations_screen.dart';
 import '../shared/models/donation.dart';
 import '../features/ngos/presentation/screens/ngos_screen.dart';
-import '../features/ngos/presentation/screens/ngos_screen.dart';
 import '../features/ngos/presentation/screens/ngo_detail_screen.dart';
 import '../features/ngos/presentation/screens/ngo_claims_screen.dart';
 import '../features/inventory/presentation/screens/inventory_screen.dart';
@@ -53,7 +52,7 @@ class AppRoutes {
   static const String register = '/register'; // Also points to unified auth
   static const String forgotPassword = '/forgot-password';
   static const String resetPassword = '/reset-password';
-  static const String home = '/home';
+  static const String home = '/dashboard';
   static const String dashboard = '/dashboard';
   static const String analytics = '/analytics';
   static const String donations = '/donations';
@@ -166,10 +165,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ShellRoute(
         builder: (context, state, child) => MainShell(child: child),
         routes: [
-          GoRoute(
-            path: AppRoutes.home,
-            builder: (context, state) => const DonationsScreen(),
-          ),
           GoRoute(
             path: AppRoutes.dashboard,
             builder: (context, state) => const DashboardScreen(),

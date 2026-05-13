@@ -112,14 +112,14 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
                           // Map Toggle Button
                           Container(
                             decoration: BoxDecoration(
-                              color: _isMapView ? AppTheme.primaryRed.withOpacity(0.1) : AppTheme.white,
+                              color: _isMapView ? AppTheme.primaryRed.withValues(alpha: 0.1) : AppTheme.white,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: AppTheme.cardShadow,
                             ),
                             child: IconButton(
                               icon: Icon(
                                 _isMapView ? Icons.list_alt_rounded : Icons.map_rounded, 
-                                color: AppTheme.primaryRed
+                                color: AppTheme.primaryRed,
                               ),
                               onPressed: () {
                                 HapticFeedback.mediumImpact();
@@ -160,8 +160,8 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
                           onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
                           decoration: InputDecoration(
                             hintText: 'Search NGOs...',
-                            hintStyle: TextStyle(color: AppTheme.gray),
-                            prefixIcon: Icon(Icons.search_rounded, color: AppTheme.gray),
+                            hintStyle: const TextStyle(color: AppTheme.gray),
+                            prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.gray),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isListening ? Icons.mic_rounded : Icons.mic_none_rounded,
@@ -259,7 +259,7 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
     // Default center (India or user location if available)
     final ll.LatLng center = ngos.isNotEmpty && ngos.any((n) => n.location != null)
         ? ll.LatLng(ngos.firstWhere((n) => n.location != null).location!.lat, 
-                    ngos.firstWhere((n) => n.location != null).location!.lng)
+                    ngos.firstWhere((n) => n.location != null).location!.lng,)
         : const ll.LatLng(20.5937, 78.9629);
 
     return Container(
@@ -299,11 +299,11 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
                           color: AppTheme.white,
                           shape: BoxShape.circle,
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 4),
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4),
                           ],
                           border: Border.all(color: AppTheme.primaryRed, width: 2),
                         ),
-                        child: Icon(Icons.business_rounded, color: AppTheme.primaryRed, size: 20),
+                        child: const Icon(Icons.business_rounded, color: AppTheme.primaryRed, size: 20),
                       ),
                       const SizedBox(height: 2),
                       Container(
@@ -393,7 +393,6 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
       debugPrint('Voice Query Error: $e');
     }
   }
-  }
   
   void _showFilterSheet() {
     showModalBottomSheet(
@@ -464,7 +463,7 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
                       });
                       setState(() {});
                     },
-                    selectedColor: AppTheme.primaryRed.withOpacity(0.2),
+                    selectedColor: AppTheme.primaryRed.withValues(alpha: 0.2),
                     checkmarkColor: AppTheme.primaryRed,
                     labelStyle: TextStyle(
                       color: isSelected ? AppTheme.primaryRed : AppTheme.black,
@@ -499,7 +498,7 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
                 title: const Text('Verified Only', style: TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: const Text('Show only verified organizations'),
                 value: _onlyVerified,
-                activeColor: AppTheme.primaryRed,
+                activeThumbColor: AppTheme.primaryRed,
                 onChanged: (value) {
                   setModalState(() => _onlyVerified = value);
                   setState(() {});
@@ -544,10 +543,10 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: AppTheme.error.withOpacity(0.1),
+                color: AppTheme.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+              child: const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
             ),
             const SizedBox(height: 16),
             Text(
@@ -557,7 +556,7 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(
+            const Text(
               'Please check your connection',
               style: TextStyle(color: AppTheme.gray),
               textAlign: TextAlign.center,
@@ -591,8 +590,8 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    const Color(0xFF9B59B6).withOpacity(0.1),
-                    AppTheme.primaryRed.withOpacity(0.1),
+                    const Color(0xFF9B59B6).withValues(alpha: 0.1),
+                    AppTheme.primaryRed.withValues(alpha: 0.1),
                   ],
                 ),
                 shape: BoxShape.circle,
@@ -600,7 +599,7 @@ class _NgosScreenState extends ConsumerState<NgosScreen> {
               child: Icon(
                 Icons.business_rounded,
                 size: 56,
-                color: const Color(0xFF9B59B6).withOpacity(0.7),
+                color: const Color(0xFF9B59B6).withValues(alpha: 0.7),
               ),
             )
                 .animate(onPlay: (controller) => controller.repeat(reverse: true))
@@ -646,7 +645,7 @@ class _NgoCardSkeleton extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
@@ -727,8 +726,8 @@ class _NgoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final details = ngo.ngoDetails;
     // Mock rating for visual consistency if not available
-    final double rating = 4.5; 
-    final int reviewCount = 120;
+    const double rating = 4.5; 
+    const int reviewCount = 120;
 
     return GestureDetector(
       onTap: onTap,
@@ -739,7 +738,7 @@ class _NgoCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20), // Softer corners
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 15,
               offset: const Offset(0, 5),
             ),
@@ -747,8 +746,23 @@ class _NgoCard extends StatelessWidget {
         ),
         child: Column(
           children: [
+            Row(
+              children: [
+                const Icon(Icons.star_rounded, color: AppTheme.accentOrange, size: 20),
+                const SizedBox(width: 4),
+                Text(
+                  rating.toString(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  ' ($reviewCount reviews)',
+                  style: TextStyle(color: AppTheme.gray, fontSize: 12),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -766,13 +780,13 @@ class _NgoCard extends StatelessWidget {
                              fit: BoxFit.cover,
                              opacity: 0.1, // Subtle pattern
                           ),
-                          border: Border.all(color: AppTheme.lightGray.withOpacity(0.3)),
+                          border: Border.all(color: AppTheme.lightGray.withValues(alpha: 0.3)),
                         ),
                         child: Center(
                           child: Text(
                             ngo.name.isNotEmpty ? ngo.name[0].toUpperCase() : 'N',
                             style: TextStyle(
-                              color: AppTheme.primaryRed.withOpacity(0.8),
+                              color: AppTheme.primaryRed.withValues(alpha: 0.8),
                               fontSize: 28,
                               fontWeight: FontWeight.bold,
                             ),
@@ -790,7 +804,7 @@ class _NgoCard extends StatelessWidget {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
+                                  color: Colors.black.withValues(alpha: 0.1),
                                   blurRadius: 4,
                                 ),
                               ],
@@ -830,18 +844,18 @@ class _NgoCard extends StatelessWidget {
                                 color: AppTheme.success,
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: Row(
+                              child: const Row(
                                 children: [
                                   Text(
                                     '$rating',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                     ),
                                   ),
-                                  const SizedBox(width: 2),
-                                  const Icon(Icons.star, size: 10, color: Colors.white),
+                                  SizedBox(width: 2),
+                                  Icon(Icons.star, size: 10, color: Colors.white),
                                 ],
                               ),
                             ),
@@ -852,8 +866,8 @@ class _NgoCard extends StatelessWidget {
                         // Categories / Cuisine-style tags
                         if (details?.categories.isNotEmpty == true)
                           Text(
-                            details!.categories.join(", ").toUpperCase(),
-                            style: TextStyle(
+                            details!.categories.join(', ').toUpperCase(),
+                            style: const TextStyle(
                               color: AppTheme.gray,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -867,7 +881,7 @@ class _NgoCard extends StatelessWidget {
                         // Location / Distance
                         Row(
                           children: [
-                            Icon(Icons.location_on_rounded, size: 14, color: AppTheme.lightGray),
+                            const Icon(Icons.location_on_rounded, size: 14, color: AppTheme.lightGray),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
@@ -885,7 +899,7 @@ class _NgoCard extends StatelessWidget {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(Icons.near_me_rounded, size: 10, color: AppTheme.darkGray),
+                                  const Icon(Icons.near_me_rounded, size: 10, color: AppTheme.darkGray),
                                   const SizedBox(width: 4),
                                   Text(
                                     '${(ngo.id.hashCode % 100) / 10 + 0.5} km', // Simulated distance based on ID
@@ -906,16 +920,16 @@ class _NgoCard extends StatelessWidget {
             // Divider & Footer Action
             Container(
               decoration: BoxDecoration(
-                border: Border(top: BorderSide(color: AppTheme.lightGray.withOpacity(0.3))),
+                border: Border(top: BorderSide(color: AppTheme.lightGray.withValues(alpha: 0.3))),
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
+              child: const Row(
                 children: [
                   Expanded(
                     child: Row(
                       children: [
                         Icon(Icons.trending_up, size: 16, color: AppTheme.accentBlue),
-                        const SizedBox(width: 8),
+                        SizedBox(width: 8),
                         Text(
                           '120+ lives impacted recently',
                           style: TextStyle(
@@ -937,7 +951,7 @@ class _NgoCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       Icon(Icons.arrow_forward_rounded, size: 14, color: AppTheme.primaryRed),
                     ],
                   ),

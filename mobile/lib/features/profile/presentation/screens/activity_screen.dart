@@ -156,10 +156,10 @@ class _ActivityCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.white,
                     shape: BoxShape.circle,
-                    border: Border.all(color: _getTypeColor().withOpacity(0.5), width: 2),
+                    border: Border.all(color: _getTypeColor().withValues(alpha: 0.5), width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: _getTypeColor().withOpacity(0.2),
+                        color: _getTypeColor().withValues(alpha: 0.2),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
                       ),
@@ -177,8 +177,8 @@ class _ActivityCard extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            _getTypeColor().withOpacity(0.5),
-                            AppTheme.lightGray.withOpacity(0.2),
+                            _getTypeColor().withValues(alpha: 0.5),
+                            AppTheme.lightGray.withValues(alpha: 0.2),
                           ],
                         ),
                       ),
@@ -200,12 +200,12 @@ class _ActivityCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: Colors.black.withValues(alpha: 0.02),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
-                  border: Border.all(color: AppTheme.lightGray.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.lightGray.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

@@ -90,8 +90,8 @@ void showLoadingDialog(BuildContext context, {String? message}) {
   showDialog(
     context: context,
     barrierDismissible: false,
-    builder: (context) => WillPopScope(
-      onWillPop: () async => false,
+    builder: (context) => PopScope(
+      canPop: false,
       child: Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         child: Padding(

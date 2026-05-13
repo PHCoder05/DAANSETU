@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../config/constants.dart';
 
@@ -19,10 +19,10 @@ FlutterSecureStorage _createSecureStorage() {
 }
 
 class AuthInterceptor extends Interceptor {
-  final Ref _ref;
+
   final FlutterSecureStorage _storage = _createSecureStorage();
   
-  AuthInterceptor(this._ref);
+  AuthInterceptor();
   
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
@@ -57,9 +57,9 @@ class AuthInterceptor extends Interceptor {
   
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
-    print('🔴 API Error: ${err.requestOptions.path} - ${err.message}');
+    debugPrint('🔴 API Error: ${err.requestOptions.path} - ${err.message}');
     if (err.response != null) {
-      print('Response: ${err.response?.data}');
+      debugPrint('Response: ${err.response?.data}');
     }
 
     if (err.response?.statusCode == 401) {
@@ -71,7 +71,7 @@ class AuthInterceptor extends Interceptor {
           final dio = Dio(BaseOptions(baseUrl: AppConstants.apiBaseUrl));
           final response = await dio.post('/auth/refresh', data: {
             'refreshToken': refreshToken,
-          });
+          },);
           
           if (response.statusCode == 200) {
             final newAccessToken = response.data['accessToken'];

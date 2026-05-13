@@ -8,9 +8,20 @@ class PushService {
   constructor() {
     this.enabled = process.env.ENABLE_PUSH_NOTIFICATIONS === 'true';
     if (this.enabled) {
-      // Initialize firebase-admin here if needed
-      // const admin = require('firebase-admin');
-      // admin.initializeApp({ ... });
+      try {
+        const admin = require('firebase-admin');
+        const serviceAccount = require('../../firebase-adminsdk.json');
+        
+        if (!admin.apps.length) {
+          admin.initializeApp({
+            credential: admin.credential.cert(serviceAccount)
+          });
+          logger.info('[PushService] Firebase Admin initialized successfully');
+        }
+      } catch (error) {
+        logger.error('[PushService] Failed to initialize Firebase Admin:', error);
+        this.enabled = false;
+      }
     }
   }
 
@@ -28,17 +39,15 @@ class PushService {
     }
 
     try {
-      // Real implementation would be:
-      // const response = await admin.messaging().sendMulticast({
-      //   tokens,
-      //   notification: { title, body },
-      //   data: data,
-      //   android: { priority: 'high' },
-      //   apns: { payload: { aps: { badge: 1 } } }
-      // });
-      // logger.info(`Push notifications sent: ${response.successCount} success, ${response.failureCount} failure`);
-      
-      logger.info(`[PushService] Successfully sent push to ${tokens.length} tokens`);
+      const admin = require('firebase-admin');
+      const response = await admin.messaging().sendEachForMulticast({
+        tokens,
+        notification: { title, body },
+        data: data,
+        android: { priority: 'high' },
+        apns: { payload: { aps: { badge: 1 } } }
+      });
+      logger.info(`[PushService] Successfully sent push to ${response.successCount} tokens, ${response.failureCount} failed`);
     } catch (error) {
       logger.error('Error sending push notifications:', error);
     }

@@ -42,10 +42,10 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
     final availablePickups = widget.donations.where((d) => d.status == 'available').toList();
     final myActiveTasks = widget.donations.where((d) => 
       (d.status == 'claimed' || d.status == 'in-transit') && 
-      d.claimedBy == user?.id
+      d.claimedBy == user?.id,
     ).toList();
     final completedTasks = widget.donations.where((d) => 
-      d.status == 'delivered' && d.claimedBy == user?.id
+      d.status == 'delivered' && d.claimedBy == user?.id,
     ).toList();
 
     return Column(
@@ -77,10 +77,10 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: BoxDecoration(
-        color: _isOnline ? const Color(0xFF1BAC4B).withOpacity(0.1) : AppTheme.gray.withOpacity(0.1),
+        color: _isOnline ? const Color(0xFF1BAC4B).withValues(alpha: 0.1) : AppTheme.gray.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _isOnline ? const Color(0xFF1BAC4B).withOpacity(0.2) : AppTheme.gray.withOpacity(0.2),
+          color: _isOnline ? const Color(0xFF1BAC4B).withValues(alpha: 0.2) : AppTheme.gray.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -95,13 +95,13 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                   color: _isOnline ? const Color(0xFF1BAC4B) : AppTheme.gray,
                   shape: BoxShape.circle,
                   boxShadow: _isOnline ? [
-                    BoxShadow(color: const Color(0xFF1BAC4B).withOpacity(0.4), blurRadius: 8, spreadRadius: 2)
+                    BoxShadow(color: const Color(0xFF1BAC4B).withValues(alpha: 0.4), blurRadius: 8, spreadRadius: 2),
                   ] : null,
                 ),
               ),
               const SizedBox(width: 12),
               Text(
-                _isOnline ? "READY FOR PICKUPS" : "OFFLINE",
+                _isOnline ? 'READY FOR PICKUPS' : 'OFFLINE',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
@@ -113,7 +113,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
           ),
           Switch.adaptive(
             value: _isOnline,
-            activeColor: const Color(0xFF1BAC4B),
+            activeTrackColor: const Color(0xFF1BAC4B),
             onChanged: (val) {
               HapticFeedback.mediumImpact();
               setState(() => _isOnline = val);
@@ -134,9 +134,9 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildTabChip(VolunteerTab.available, "Available"),
-                  _buildTabChip(VolunteerTab.active, "Active"),
-                  _buildTabChip(VolunteerTab.completed, "History"),
+                  _buildTabChip(VolunteerTab.available, 'Available'),
+                  _buildTabChip(VolunteerTab.active, 'Active'),
+                  _buildTabChip(VolunteerTab.completed, 'History'),
                 ],
               ),
             ),
@@ -191,12 +191,12 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
   Widget _buildCurrentTabContent(List<Donation> available, List<Donation> active, List<Donation> completed) {
     switch (_currentTab) {
       case VolunteerTab.available:
-        return _buildTaskList(available, "No pickups available nearby.", Icons.explore_rounded, false);
+        return _buildTaskList(available, 'No pickups available nearby.', Icons.explore_rounded, false);
       case VolunteerTab.active:
         return Column(
           children: [
             if (active.isNotEmpty) _buildTransitSummary(active),
-            Expanded(child: _buildTaskList(active, "No active pickups. Go find one!", Icons.local_shipping_rounded, true)),
+            Expanded(child: _buildTaskList(active, 'No active pickups. Go find one!', Icons.local_shipping_rounded, true)),
           ],
         );
       case VolunteerTab.completed:
@@ -256,7 +256,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const Text(
-                  "Keep it safe! Your effort matters.",
+                  'Keep it safe! Your effort matters.',
                   style: TextStyle(color: Colors.white70, fontSize: 12),
                 ),
               ],
@@ -269,7 +269,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text(
-              "IN TRANSIT",
+              'IN TRANSIT',
               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 10),
             ),
           ),
@@ -293,10 +293,10 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
             borderRadius: BorderRadius.circular(24),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.06),
+                color: Colors.black.withValues(alpha: 0.06),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
-              )
+              ),
             ],
           ),
           child: Row(
@@ -311,7 +311,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                     child: CircularProgressIndicator(
                       value: (deliveries % 5) / 5, // Goal of 5 deliveries
                       strokeWidth: 8,
-                      backgroundColor: AppTheme.lightGray.withOpacity(0.3),
+                      backgroundColor: AppTheme.lightGray.withValues(alpha: 0.3),
                       color: AppTheme.primaryRed,
                       strokeCap: StrokeCap.round,
                     ),
@@ -340,10 +340,10 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildStatItem("Done", "$deliveries", Icons.shopping_bag_rounded, AppTheme.primaryRed),
-                    _buildStatItem("Points", "${stats?.totalPoints ?? 0}", Icons.monetization_on_rounded, Colors.green),
-                    _buildStatItem("Trust", "${stats?.reliabilityScore ?? 100}%", Icons.verified_user_rounded, Colors.blue),
-                    _buildStatItem("Rating", rating > 0 ? rating.toStringAsFixed(1) : "N/A", Icons.star_rounded, AppTheme.accentOrange),
+                    _buildStatItem('Done', '$deliveries', Icons.shopping_bag_rounded, AppTheme.primaryRed),
+                    _buildStatItem('Points', '${stats?.totalPoints ?? 0}', Icons.monetization_on_rounded, Colors.green),
+                    _buildStatItem('Trust', '${stats?.reliabilityScore ?? 100}%', Icons.verified_user_rounded, Colors.blue),
+                    _buildStatItem('Rating', rating > 0 ? rating.toStringAsFixed(1) : 'N/A', Icons.star_rounded, AppTheme.accentOrange),
                   ],
                 ),
               ),
@@ -378,17 +378,17 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 15,
             offset: const Offset(0, 5),
-          )
+          ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "WEEKLY PERFORMANCE",
+            'WEEKLY PERFORMANCE',
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppTheme.gray, letterSpacing: 1),
           ),
           const SizedBox(height: 16),
@@ -397,13 +397,13 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                _buildChartBar("Mon", 0.4),
-                _buildChartBar("Tue", 0.7),
-                _buildChartBar("Wed", 0.9),
-                _buildChartBar("Thu", 0.5),
-                _buildChartBar("Fri", 1.0, isToday: true),
-                _buildChartBar("Sat", 0.3),
-                _buildChartBar("Sun", 0.0),
+                _buildChartBar('Mon', 0.4),
+                _buildChartBar('Tue', 0.7),
+                _buildChartBar('Wed', 0.9),
+                _buildChartBar('Thu', 0.5),
+                _buildChartBar('Fri', 1.0, isToday: true),
+                _buildChartBar('Sat', 0.3),
+                _buildChartBar('Sun', 0.0),
               ],
             ),
           ),
@@ -423,7 +423,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
             gradient: LinearGradient(
               colors: isToday 
                 ? [AppTheme.primaryRed, const Color(0xFFC0392B)]
-                : [AppTheme.lightGray, AppTheme.lightGray.withOpacity(0.5)],
+                : [AppTheme.lightGray, AppTheme.lightGray.withValues(alpha: 0.5)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -484,7 +484,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                         child: Icon(
                           Icons.location_on_rounded, 
                           color: isSelected ? Colors.white : AppTheme.primaryRed, 
-                          size: isSelected ? 24 : 18
+                          size: isSelected ? 24 : 18,
                         ),
                       ),
                     ),
@@ -507,7 +507,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 5))
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 5)),
                 ],
               ),
               child: Column(
@@ -522,7 +522,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                           color: AppTheme.offWhite,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Icon(Icons.inventory_2_rounded, color: AppTheme.primaryRed),
+                        child: const Icon(Icons.inventory_2_rounded, color: AppTheme.primaryRed),
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -551,7 +551,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                             foregroundColor: AppTheme.black,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text("DETAILS"),
+                          child: const Text('DETAILS'),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -566,7 +566,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          child: const Text("CLAIM"),
+                          child: const Text('CLAIM'),
                         ),
                       ),
                     ],
@@ -587,12 +587,12 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
           const Icon(Icons.power_settings_new_rounded, size: 80, color: AppTheme.lightGray),
           const SizedBox(height: 24),
           const Text(
-            "You are currently offline",
+            'You are currently offline',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
-            "Go online to see available pickups nearby.",
+            'Go online to see available pickups nearby.',
             style: TextStyle(color: AppTheme.gray),
           ),
           const SizedBox(height: 32),
@@ -604,7 +604,7 @@ class _VolunteerDashboardViewState extends ConsumerState<VolunteerDashboardView>
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
-            child: const Text("GO ONLINE"),
+            child: const Text('GO ONLINE'),
           ),
         ],
       ),

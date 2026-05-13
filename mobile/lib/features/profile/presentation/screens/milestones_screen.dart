@@ -128,7 +128,7 @@ class MilestonesScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: milestone.isUnlocked ? milestone.color.withOpacity(0.1) : AppTheme.offWhite,
+              color: milestone.isUnlocked ? milestone.color.withValues(alpha: 0.1) : AppTheme.offWhite,
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -160,7 +160,7 @@ class MilestonesScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   milestone.description,
-                  style: TextStyle(color: AppTheme.gray, fontSize: 12),
+                  style: const TextStyle(color: AppTheme.gray, fontSize: 12),
                 ),
                 const SizedBox(height: 12),
                 
@@ -180,7 +180,7 @@ class MilestonesScreen extends ConsumerWidget {
                       child: Container(
                         height: 6,
                         decoration: BoxDecoration(
-                          color: milestone.isUnlocked ? milestone.color : AppTheme.gray.withOpacity(0.5),
+                          color: milestone.isUnlocked ? milestone.color : AppTheme.gray.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(3),
                         ),
                       ),

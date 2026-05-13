@@ -37,7 +37,7 @@ class VoiceSearchService {
       },
       listenFor: const Duration(seconds: 10),
       pauseFor: const Duration(seconds: 3),
-      cancelOnError: true,
+      listenOptions: SpeechListenOptions(cancelOnError: true),
     );
   }
 

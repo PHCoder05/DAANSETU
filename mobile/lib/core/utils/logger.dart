@@ -95,7 +95,7 @@ class AppLogger {
     if (email != null) details.add('email: $email');
     if (role != null) details.add('role: $role');
     final detailsStr = details.isNotEmpty ? '(${details.join(', ')})' : '';
-    _log(level, '$action $detailsStr', 'AUTH');
+    _log(level, '$action $detailsStr', _auth);
   }
   
   /// Log user actions

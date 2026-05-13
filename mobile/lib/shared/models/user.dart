@@ -107,7 +107,7 @@ class User {
       volunteerStats: volunteerStats ?? this.volunteerStats,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
-      isAvailable: isAvailable ?? this.isAvailable,
+      isAvailable: isAvailable ?? isAvailable,
       impactScore: impactScore ?? this.impactScore,
       badges: badges ?? this.badges,
       bookmarks: bookmarks ?? this.bookmarks,
@@ -308,7 +308,7 @@ class Badge {
     required this.name,
     required this.icon,
     required this.description,
-    required this.awardedAt
+    required this.awardedAt,
   });
 
   factory Badge.fromJson(Map<String, dynamic> json) {

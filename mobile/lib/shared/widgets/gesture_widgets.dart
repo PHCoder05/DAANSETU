@@ -124,7 +124,7 @@ class LongPressMenu extends StatelessWidget {
                       Navigator.pop(context);
                       item.onTap();
                     },
-                  )),
+                  ),),
                   const SizedBox(height: 8),
                 ],
               ),

@@ -1,4 +1,4 @@
-package com.example.daansetu
+package com.daansetu.app
 
 import io.flutter.embedding.android.FlutterActivity
 

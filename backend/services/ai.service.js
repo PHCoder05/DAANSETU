@@ -16,7 +16,7 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       
       const prompt = `Analyze this donation image and return a JSON object with:
       - title (concise and catchy)
@@ -80,7 +80,7 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const prompt = `Convert this natural language donation query into a search filter JSON object.
       Query: "${query}"
       
@@ -113,7 +113,7 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const prompt = `Convert this natural language donation description into a structured JSON object for a donation form.
       Description: "${query}"
       
@@ -149,7 +149,7 @@ class AIService {
     }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+      const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const chat = model.startChat({
         history: history.map(msg => ({
           role: msg.role === 'user' ? 'user' : 'model',

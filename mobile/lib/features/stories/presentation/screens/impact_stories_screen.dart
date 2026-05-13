@@ -4,6 +4,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../config/theme.dart';
 import '../../../../core/api/api_client.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../config/routes.dart';
+import '../../../../shared/providers/auth_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DATA MODEL
@@ -150,11 +153,14 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
     }
   }
 
+  @override
+  Widget build(BuildContext context) {
+    final storiesAsync = ref.watch(impactStoriesProvider);
     final authState = ref.watch(authStateProvider);
     final isNgo = authState.user?.isNgo == true;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0A0F),
+      backgroundColor: AppTheme.scaffoldLight,
       floatingActionButton: isNgo ? FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.createStory),
         backgroundColor: AppTheme.primaryRed,
@@ -168,7 +174,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
             ref.invalidate(impactStoriesProvider);
           },
           color: AppTheme.primaryRed,
-          backgroundColor: const Color(0xFF1A1A2E),
+          backgroundColor: AppTheme.white,
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
@@ -211,59 +217,82 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+      decoration: BoxDecoration(
+        color: AppTheme.white,
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_stories_rounded, color: Colors.white, size: 28),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Impact Stories',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Text(
-                    'Real change, real stories',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-              const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFD63031), Color(0xFFFF6B6B)],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
+                  color: AppTheme.primaryRed.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: const Icon(Icons.auto_stories_rounded, color: AppTheme.primaryRed, size: 24),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.favorite_rounded, color: Colors.white, size: 14),
-                    SizedBox(width: 4),
-                    Text('Live Feed', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    Text(
+                      'Impact Stories',
+                      style: TextStyle(
+                        color: AppTheme.black,
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -0.8,
+                      ),
+                    ),
+                    Text(
+                      'Witness the change you created',
+                      style: TextStyle(
+                        color: AppTheme.gray,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
+              _buildLiveIndicator(),
             ],
           ),
-          const SizedBox(height: 8),
-          Divider(color: Colors.white.withOpacity(0.08)),
         ],
       ),
     ).animate().fade(duration: 400.ms).slideY(begin: -0.1, end: 0);
+  }
+
+  Widget _buildLiveIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1BAC4B).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF1BAC4B).withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6, height: 6,
+            decoration: const BoxDecoration(color: Color(0xFF1BAC4B), shape: BoxShape.circle),
+          ).animate(onPlay: (c) => c.repeat(reverse: true)).fade(duration: 600.ms),
+          const SizedBox(width: 6),
+          const Text(
+            'LIVE',
+            style: TextStyle(color: Color(0xFF1BAC4B), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildImpactDashboard(BuildContext context) {
@@ -310,12 +339,13 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
   Widget _buildImpactMetric(BuildContext context, String value, String label, IconData icon, Color color) {
     return Container(
       width: 140,
-      margin: const EdgeInsets.only(right: 12),
+      margin: const EdgeInsets.only(right: 12, top: 4, bottom: 4), // Added margin to see shadow
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.04),
+        color: AppTheme.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
+        border: Border.all(color: AppTheme.lightGray),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,14 +355,14 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
             children: [
               Icon(icon, color: color, size: 20),
               const Spacer(),
-              Icon(Icons.north_east_rounded, color: Colors.white.withOpacity(0.2), size: 14),
+              const Icon(Icons.north_east_rounded, color: AppTheme.gray, size: 14),
             ],
           ),
           const SizedBox(height: 12),
           Text(
             value,
             style: const TextStyle(
-              color: Colors.white,
+              color: AppTheme.charcoal,
               fontSize: 20,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
@@ -340,8 +370,8 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
           ),
           Text(
             label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.4),
+            style: const TextStyle(
+              color: AppTheme.darkGray,
               fontSize: 12,
             ),
           ),
@@ -361,16 +391,10 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A2E),
+        color: AppTheme.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-        boxShadow: [
-          BoxShadow(
-            color: catColor.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: AppTheme.lightGray),
+        boxShadow: AppTheme.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -383,7 +407,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                 // NGO avatar
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: catColor.withOpacity(0.15),
+                  backgroundColor: catColor.withValues(alpha: 0.15),
                   backgroundImage: ngoAvatar != null ? NetworkImage(ngoAvatar) : null,
                   child: ngoAvatar == null
                       ? Icon(catIcon, color: catColor, size: 20)
@@ -397,7 +421,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                       Text(
                         ngoName,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.charcoal,
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                         ),
@@ -406,8 +430,8 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                       ),
                       Text(
                         _timeAgo(story.createdAt),
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
+                        style: const TextStyle(
+                          color: AppTheme.darkGray,
                           fontSize: 11,
                         ),
                       ),
@@ -418,9 +442,9 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: catColor.withOpacity(0.15),
+                    color: catColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: catColor.withOpacity(0.3)),
+                    border: Border.all(color: catColor.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -449,7 +473,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
             child: Text(
               story.title,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.charcoal,
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
                 height: 1.3,
@@ -463,8 +487,8 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               story.story,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
+              style: const TextStyle(
+                color: AppTheme.darkGray,
                 fontSize: 13.5,
                 height: 1.6,
               ),
@@ -485,10 +509,10 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [catColor.withOpacity(0.12), catColor.withOpacity(0.05)],
+                    colors: [catColor.withValues(alpha: 0.12), catColor.withValues(alpha: 0.05)],
                   ),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: catColor.withOpacity(0.2)),
+                  border: Border.all(color: catColor.withValues(alpha: 0.2)),
                 ),
                 child: Row(
                   children: [
@@ -505,10 +529,10 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                               fontSize: 15,
                             ),
                           ),
-                          TextSpan(
+                          const TextSpan(
                             text: ' lives impacted by this donation',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
+                              color: AppTheme.darkGray,
                               fontSize: 12,
                             ),
                           ),
@@ -530,9 +554,9 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.03),
+                    color: AppTheme.offWhite,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: Border.all(color: AppTheme.lightGray),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -541,14 +565,14 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                       const SizedBox(width: 6),
                       Text(
                         'Verified Donation: ${story.donation?['title'] ?? 'Donation'}',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.6),
+                        style: const TextStyle(
+                          color: AppTheme.darkGray,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Icon(Icons.arrow_forward_ios_rounded, color: Colors.white.withOpacity(0.3), size: 10),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.gray, size: 10),
                     ],
                   ),
                 ),
@@ -558,7 +582,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
           const SizedBox(height: 12),
 
           // Divider
-          Divider(color: Colors.white.withOpacity(0.06), height: 1),
+          const Divider(color: AppTheme.lightGray, height: 1),
 
           // Actions Row
           Padding(
@@ -569,14 +593,14 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                 _buildActionButton(
                   icon: isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                   label: likesCount > 0 ? '$likesCount' : 'Like',
-                  color: isLiked ? const Color(0xFFFF6B6B) : Colors.white.withOpacity(0.5),
+                  color: isLiked ? AppTheme.primaryRed : AppTheme.gray,
                   onTap: () => _toggleLike(story),
                 ),
                 // Comments
                 _buildActionButton(
                   icon: Icons.chat_bubble_outline_rounded,
                   label: story.comments.isNotEmpty ? '${story.comments.length}' : 'Comment',
-                  color: Colors.white.withOpacity(0.5),
+                  color: AppTheme.gray,
                   onTap: () => _showCommentsSheet(context, story),
                 ),
                 const Spacer(),
@@ -584,12 +608,12 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                 if (story.location != null)
                   Row(
                     children: [
-                      Icon(Icons.place_rounded, color: Colors.white.withOpacity(0.3), size: 13),
+                      const Icon(Icons.place_rounded, color: AppTheme.gray, size: 13),
                       const SizedBox(width: 4),
                       Text(
                         story.location!['city']?.toString() ?? '',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.3),
+                        style: const TextStyle(
+                          color: AppTheme.gray,
                           fontSize: 11,
                         ),
                       ),
@@ -674,9 +698,9 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
 
   Widget _photoPlaceholder(Color catColor) {
     return Container(
-      color: catColor.withOpacity(0.1),
+      color: catColor.withValues(alpha: 0.1),
       child: Center(
-        child: Icon(Icons.image_rounded, color: catColor.withOpacity(0.4), size: 40),
+        child: Icon(Icons.image_rounded, color: catColor.withValues(alpha: 0.4), size: 40),
       ),
     );
   }
@@ -685,7 +709,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
     final controller = TextEditingController();
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppTheme.white,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -701,7 +725,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
             Container(
               width: 40, height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: AppTheme.lightGray,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -710,16 +734,16 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
               child: Text(
                 'Comments (${story.comments.length})',
                 style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16,
+                  color: AppTheme.charcoal, fontWeight: FontWeight.bold, fontSize: 16,
                 ),
               ),
             ),
             if (story.comments.isEmpty)
-              Padding(
-                padding: const EdgeInsets.all(24),
+              const Padding(
+                padding: EdgeInsets.all(24),
                 child: Text(
                   'Be the first to comment! ✨',
-                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14),
+                  style: TextStyle(color: AppTheme.darkGray, fontSize: 14),
                 ),
               ),
             // Comment input
@@ -730,12 +754,12 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                   Expanded(
                     child: TextField(
                       controller: controller,
-                      style: const TextStyle(color: Colors.white),
+                      style: const TextStyle(color: AppTheme.charcoal),
                       decoration: InputDecoration(
                         hintText: 'Write a comment...',
-                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+                        hintStyle: const TextStyle(color: AppTheme.gray),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.08),
+                        fillColor: AppTheme.offWhite,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -757,7 +781,7 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
                     child: Container(
                       width: 44, height: 44,
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(colors: [Color(0xFFD63031), Color(0xFFFF6B6B)]),
+                        gradient: LinearGradient(colors: [AppTheme.primaryRed, AppTheme.accentOrange]),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.send_rounded, color: Colors.white, size: 18),
@@ -776,28 +800,28 @@ class _ImpactStoriesScreenState extends ConsumerState<ImpactStoriesScreen> {
     return const Padding(
       padding: EdgeInsets.all(40),
       child: Center(
-        child: CircularProgressIndicator(color: Color(0xFFD63031)),
+        child: CircularProgressIndicator(color: AppTheme.primaryRed),
       ),
     );
   }
 
   Widget _buildEmpty() {
-    return Padding(
-      padding: const EdgeInsets.all(40),
+    return const Padding(
+      padding: EdgeInsets.all(40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.auto_stories_rounded, color: Colors.white24, size: 60),
-          const SizedBox(height: 16),
-          const Text(
+          Icon(Icons.auto_stories_rounded, color: AppTheme.gray, size: 60),
+          SizedBox(height: 16),
+          Text(
             'No stories yet',
-            style: TextStyle(color: Colors.white54, fontSize: 18, fontWeight: FontWeight.bold),
+            style: TextStyle(color: AppTheme.darkGray, fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 8),
           Text(
             'NGOs will share their impact stories here soon!',
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 13),
+            style: TextStyle(color: AppTheme.gray, fontSize: 13),
           ),
         ],
       ),

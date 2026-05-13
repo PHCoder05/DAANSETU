@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes.dart';
 import '../../../../config/constants.dart';
@@ -121,10 +120,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryRed.withOpacity(0.1),
+                              color: AppTheme.primaryRed.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Text(
+                            child: const Text(
                               'India\'s No.1 App for Seamless Donations',
                               style: TextStyle(
                                 color: AppTheme.primaryRed,
@@ -203,7 +202,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                 hintText: 'Password',
                                 isDense: true,
                                 contentPadding: EdgeInsets.all(isKeyboardOpen ? 10 : 12),
-                                prefixIcon: Icon(Icons.lock_outline, size: 20, color: AppTheme.gray),
+                                prefixIcon: const Icon(Icons.lock_outline, size: 20, color: AppTheme.gray),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -272,7 +271,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text("Already have an account? ", style: TextStyle(color: AppTheme.darkGray, fontSize: 12)),
+                        const Text('Already have an account? ', style: TextStyle(color: AppTheme.darkGray, fontSize: 12)),
                         InkWell(
                           onTap: () => context.go(AppRoutes.login),
                           child: const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppTheme.primaryRed)),
@@ -350,7 +349,7 @@ class _RoleCard extends StatelessWidget {
           ),
           boxShadow: isSelected ? [
             BoxShadow(
-              color: AppTheme.primaryRed.withOpacity(0.2),
+              color: AppTheme.primaryRed.withValues(alpha: 0.2),
               blurRadius: ultraCompact ? 6 : 12,
               offset: Offset(0, ultraCompact ? 2 : 4),
             ),
@@ -399,7 +398,7 @@ class _RoleCard extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: compact ? 11 : 12,
-                      color: isSelected ? AppTheme.white.withOpacity(0.8) : AppTheme.gray,
+                      color: isSelected ? AppTheme.white.withValues(alpha: 0.8) : AppTheme.gray,
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,

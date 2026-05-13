@@ -35,7 +35,7 @@ class DonationCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 15,
               offset: const Offset(0, 4),
             ),
@@ -57,10 +57,10 @@ class DonationCard extends StatelessWidget {
                     end: Alignment.bottomCenter,
                     stops: const [0.0, 0.3, 0.6, 1.0],
                     colors: [
-                      Colors.black.withOpacity(0.1),
+                      Colors.black.withValues(alpha: 0.1),
                       Colors.transparent,
-                      Colors.black.withOpacity(0.4),
-                      Colors.black.withOpacity(0.85),
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.black.withValues(alpha: 0.85),
                     ],
                   ),
                 ),
@@ -91,10 +91,10 @@ class DonationCard extends StatelessWidget {
 
               // Gemini Recommended Badge - Bottom Right
               if (isRecommended)
-                Positioned(
+                const Positioned(
                   bottom: 12,
                   right: 12,
-                  child: const _SetuSmartRecommendationBadge(),
+                  child: _SetuSmartRecommendationBadge(),
                 ),
               
               // Content at bottom - Zomato style overlay
@@ -165,7 +165,7 @@ class DonationCard extends StatelessWidget {
                         donation.description,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           height: 1.3,
                         ),
                         maxLines: 2,
@@ -181,7 +181,7 @@ class DonationCard extends StatelessWidget {
                             Icon(
                               Icons.location_on,
                               size: 14,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                             ),
                             const SizedBox(width: 4),
                             Expanded(
@@ -189,7 +189,7 @@ class DonationCard extends StatelessWidget {
                                 donation.pickupLocation.address!,
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.white.withOpacity(0.8),
+                                  color: Colors.white.withValues(alpha: 0.8),
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -201,7 +201,7 @@ class DonationCard extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -210,14 +210,14 @@ class DonationCard extends StatelessWidget {
                                     Icon(
                                       Icons.person,
                                       size: 12,
-                                      color: Colors.white.withOpacity(0.9),
+                                      color: Colors.white.withValues(alpha: 0.9),
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       donation.donor!.name.split(' ').first,
                                       style: TextStyle(
                                         fontSize: 11,
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(alpha: 0.9),
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
@@ -240,23 +240,23 @@ class DonationCard extends StatelessWidget {
   
   Widget _buildImage(Color categoryColor) {
     if (donation.images.isNotEmpty) {
-        child: Hero(
-          tag: 'donation_image_${donation.id}',
-          child: CachedNetworkImage(
-            imageUrl: donation.images.first,
-            fit: BoxFit.cover,
-            placeholder: (context, url) => Container(
-              color: categoryColor.withOpacity(0.3),
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: categoryColor,
-                ),
+      return Hero(
+        tag: 'donation_image_${donation.id}',
+        child: CachedNetworkImage(
+          imageUrl: donation.images.first,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => Container(
+            color: categoryColor.withValues(alpha: 0.3),
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: categoryColor,
               ),
             ),
-            errorWidget: (context, url, error) => _buildCategoryImage(categoryColor),
           ),
+          errorWidget: (context, url, error) => _buildCategoryImage(categoryColor),
         ),
+      );
     }
     return _buildCategoryImage(categoryColor);
   }
@@ -268,8 +268,8 @@ class DonationCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            categoryColor.withOpacity(0.7),
-            categoryColor.withOpacity(0.9),
+            categoryColor.withValues(alpha: 0.7),
+            categoryColor.withValues(alpha: 0.9),
             categoryColor,
           ],
         ),
@@ -278,7 +278,7 @@ class DonationCard extends StatelessWidget {
         child: Icon(
           _getCategoryIcon(donation.category),
           size: 64,
-          color: Colors.white.withOpacity(0.3),
+          color: Colors.white.withValues(alpha: 0.3),
         ),
       ),
     );
@@ -354,7 +354,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -396,7 +396,7 @@ class _PriorityBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.25),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -423,7 +423,7 @@ class _PriorityBadge extends StatelessWidget {
         ],
       ),
     ).animate(onPlay: (c) => c.repeat(reverse: true))
-        .shimmer(duration: const Duration(seconds: 2), color: Colors.white.withOpacity(0.2));
+        .shimmer(duration: const Duration(seconds: 2), color: Colors.white.withValues(alpha: 0.2));
   }
 }
 
@@ -438,9 +438,9 @@ class _QuantityBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.6),
+        color: Colors.black.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -473,12 +473,12 @@ class _SetuSmartRecommendationBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.black.withOpacity(0.8),
+        color: AppTheme.black.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.primaryRed.withOpacity(0.5)),
+        border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.5)),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryRed.withOpacity(0.2),
+            color: AppTheme.primaryRed.withValues(alpha: 0.2),
             blurRadius: 8,
             spreadRadius: 1,
           ),
@@ -494,13 +494,13 @@ class _SetuSmartRecommendationBadge extends StatelessWidget {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: AppTheme.white.withOpacity(0.9),
+              color: AppTheme.white.withValues(alpha: 0.9),
               letterSpacing: 0.3,
             ),
           ),
         ],
       ),
     ).animate(onPlay: (c) => c.repeat())
-        .shimmer(duration: 2.seconds, color: AppTheme.primaryRed.withOpacity(0.3));
+        .shimmer(duration: 2.seconds, color: AppTheme.primaryRed.withValues(alpha: 0.3));
   }
 }

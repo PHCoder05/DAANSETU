@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../config/constants.dart';
 import 'auth_interceptor.dart';
 
@@ -17,7 +18,7 @@ final dioProvider = Provider<Dio>((ref) {
   );
   
   // Add auth interceptor
-  dio.interceptors.add(AuthInterceptor(ref));
+  dio.interceptors.add(AuthInterceptor());
   
   // Add logging interceptor in debug mode
   dio.interceptors.add(LogInterceptor(
@@ -26,7 +27,7 @@ final dioProvider = Provider<Dio>((ref) {
     responseBody: true,
     responseHeader: false,
     error: true,
-  ));
+  ),);
   
   return dio;
 });
@@ -55,19 +56,19 @@ class ApiClient {
     return _dio.post('/auth/login', data: {
       'email': email,
       'password': password,
-    });
+    },);
   }
   
   Future<Response> refreshToken(String refreshToken) async {
     return _dio.post('/auth/refresh', data: {
       'refreshToken': refreshToken,
-    });
+    },);
   }
   
   Future<Response> logout(String refreshToken) async {
     return _dio.post('/auth/logout', data: {
       'refreshToken': refreshToken,
-    });
+    },);
   }
   
   Future<Response> getProfile() async {
@@ -82,7 +83,7 @@ class ApiClient {
     return _dio.put('/auth/change-password', data: {
       'currentPassword': currentPassword,
       'newPassword': newPassword,
-    });
+    },);
   }
 
   Future<Response> uploadProfileImage(String filePath) async {
@@ -103,7 +104,7 @@ class ApiClient {
     return _dio.post('/password-reset/reset', data: {
       'token': token,
       'newPassword': password,
-    });
+    },);
   }
 
   Future<Response> verifyResetToken(String token) async {
@@ -134,7 +135,7 @@ class ApiClient {
       if (lat != null) 'lat': lat,
       if (lng != null) 'lng': lng,
       if (radius != null) 'radius': radius,
-    });
+    },);
   }
   
   Future<Response> getNearbyDonations({
@@ -146,7 +147,7 @@ class ApiClient {
       'lat': lat,
       'lng': lng,
       'maxDistance': maxDistance,
-    });
+    },);
   }
   
   Future<Response> getDonation(String id) async {
@@ -196,7 +197,7 @@ class ApiClient {
     return _dio.get('/ngos', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
   
   Future<Response> getNgo(String id) async {
@@ -207,7 +208,7 @@ class ApiClient {
     return _dio.get('/ngos/requests/list', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
   
   Future<Response> createRequest(Map<String, dynamic> data) async {
@@ -218,7 +219,7 @@ class ApiClient {
     return _dio.put('/ngos/requests/$id/status', data: {
       'status': status,
       if (response != null) 'response': response,
-    });
+    },);
   }
   
   // Notifications endpoints
@@ -226,7 +227,7 @@ class ApiClient {
     return _dio.get('/notifications', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
   
   Future<Response> getUnreadCount() async {
@@ -250,7 +251,7 @@ class ApiClient {
     return _dio.get('/reviews/ngo/$ngoId', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
 
   Future<Response> respondToReview(String reviewId, String response) async {
@@ -265,7 +266,7 @@ class ApiClient {
     return _dio.get('/reviews/volunteer/$volunteerId', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
   
   // Dashboard endpoints
@@ -277,7 +278,7 @@ class ApiClient {
     return _dio.get('/dashboard/activity', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
   
   Future<Response> getLeaderboard({String type = 'donors'}) async {
@@ -306,7 +307,7 @@ class ApiClient {
     return _dio.get('/admin/users', queryParameters: {
       'page': page,
       'limit': limit,
-    });
+    },);
   }
   
   Future<Response> getPendingNgos() async {
@@ -315,6 +316,10 @@ class ApiClient {
   
   Future<Response> verifyNgo(String userId, String status) async {
     return _dio.put('/admin/ngos/$userId/verify', data: {'status': status});
+  }
+
+  Future<Response> verifyNgoGovApi(String userId) async {
+    return _dio.post('/admin/ngos/$userId/verify-gov');
   }
 
   Future<Response> getPendingVolunteers() async {
@@ -331,12 +336,12 @@ class ApiClient {
 
   /// Get all support requests for admin
   Future<Response> getAllSupportRequests() async {
-    return _dio.get('/admin/support/all');
+    return _dio.get('/verification/support/all');
   }
 
   /// Respond to support request as admin
   Future<Response> respondToSupport(String id, String response, String status) async {
-    return _dio.put('/admin/support/$id/respond', data: {
+    return _dio.post('/verification/support/$id/respond', data: {
       'response': response,
       'status': status,
     });
@@ -406,7 +411,7 @@ class ApiClient {
     return _dio.get('/donations/my', queryParameters: {
       'type': type,
       if (role != null) 'role': role,
-    });
+    },);
   }
   
   /// Get donation timeline (status history)
@@ -427,7 +432,7 @@ class ApiClient {
   Future<Response> initializeTracking(String donationId, {DateTime? scheduledPickup}) async {
     return _dio.post('/delivery/$donationId/initialize', data: {
       if (scheduledPickup != null) 'scheduledPickupTime': scheduledPickup.toIso8601String(),
-    });
+    },);
   }
   
   /// Mark donation as picked up
@@ -437,7 +442,7 @@ class ApiClient {
       if (signature != null) 'signature': signature,
       if (location != null) 'location': location,
       if (qrCode != null) 'qrCode': qrCode,
-    });
+    },);
   }
   
   /// Update GPS location during transit
@@ -452,7 +457,7 @@ class ApiClient {
       if (signature != null) 'signature': signature,
       if (location != null) 'location': location,
       if (qrCode != null) 'qrCode': qrCode,
-    });
+    },);
   }
 
   /// Report emergency (SOS)
@@ -460,7 +465,7 @@ class ApiClient {
     return _dio.post('/delivery/$donationId/sos', data: {
       if (location != null) 'location': location,
       if (message != null) 'message': message,
-    });
+    },);
   }
   
   /// Donor confirms delivery
@@ -488,7 +493,7 @@ class ApiClient {
       'limit': limit,
       if (action != null) 'action': action,
       if (resource != null) 'resource': resource,
-    });
+    },);
   }
   
   /// Get activity summary for dashboard
@@ -522,7 +527,7 @@ class ApiClient {
       if (darpanId != null) 'darpanId': darpanId,
       if (pan != null) 'pan': pan,
       if (cin != null) 'cin': cin,
-    });
+    },);
   }
   
   /// Auto-verify NGO using government databases
@@ -532,7 +537,7 @@ class ApiClient {
       if (pan != null) 'pan': pan,
       if (cin != null) 'cin': cin,
       if (registrationNumber != null) 'registrationNumber': registrationNumber,
-    });
+    },);
   }
   
   /// Verify NGO using Darpan ID only
@@ -573,7 +578,7 @@ class ApiClient {
       'message': message,
       if (contactEmail != null) 'contactEmail': contactEmail,
       if (contactPhone != null) 'contactPhone': contactPhone,
-    });
+    },);
   }
   
   /// Get my support requests
@@ -623,7 +628,7 @@ class ApiClient {
     return _dio.get('/verification/fraud-alerts', queryParameters: {
       if (severity != null) 'severity': severity,
       if (status != null) 'status': status,
-    });
+    },);
   }
 
   /// Resolve a fraud alert
@@ -631,7 +636,7 @@ class ApiClient {
     return _dio.post('/verification/fraud-alerts/$id/resolve', data: {
       'resolution': resolution,
       'isFalsePositive': isFalsePositive,
-    });
+    },);
   }
 
   // AI endpoints
@@ -651,7 +656,7 @@ class ApiClient {
     return _dio.post('/ai/chat', data: {
       'message': message,
       if (history != null) 'history': history,
-    });
+    },);
   }
 
   // ═══════════════════════════════════════════════════════════════════
@@ -663,7 +668,7 @@ class ApiClient {
       'page': page,
       'limit': limit,
       if (category != null) 'category': category,
-    });
+    },);
   }
 
   Future<Response> createImpactStory(Map<String, dynamic> data) async {
@@ -687,7 +692,7 @@ class ApiClient {
       'category': category,
       'lat': lat,
       'lng': lng,
-    });
+    },);
   }
 
   // ═══════════════════════════════════════════════════════════════════

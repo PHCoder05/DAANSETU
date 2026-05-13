@@ -1,4 +1,4 @@
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as socket_io;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import '../../config/constants.dart';
@@ -9,7 +9,7 @@ final socketServiceProvider = Provider<SocketService>((ref) {
 });
 
 class SocketService {
-  late IO.Socket socket;
+  late socket_io.Socket socket;
   final Ref ref;
   bool _isConnected = false;
 
@@ -21,11 +21,11 @@ class SocketService {
     // Get socket URL from constants (configured via env)
     final String socketUrl = AppConstants.socketUrl;
 
-    socket = IO.io(socketUrl, IO.OptionBuilder()
+    socket = socket_io.io(socketUrl, socket_io.OptionBuilder()
         .setTransports(['websocket'])
         .disableAutoConnect() 
         .enableForceNew()
-        .build());
+        .build(),);
 
     socket.onConnect((_) {
       debugPrint('⚡ Socket Connected: ${socket.id}');

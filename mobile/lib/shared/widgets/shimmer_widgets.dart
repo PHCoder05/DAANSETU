@@ -60,12 +60,12 @@ class _ShimmerBoxState extends State<ShimmerBox>
               colors: isDark
                   ? [
                       AppTheme.cardDark,
-                      AppTheme.cardDark.withOpacity(0.5),
+                      AppTheme.cardDark.withValues(alpha: 0.5),
                       AppTheme.cardDark,
                     ]
                   : [
                       AppTheme.lightGray,
-                      AppTheme.lightGray.withOpacity(0.3),
+                      AppTheme.lightGray.withValues(alpha: 0.3),
                       AppTheme.lightGray,
                     ],
             ),
@@ -88,17 +88,17 @@ class CardSkeleton extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const ShimmerBox(width: 60, height: 60, borderRadius: BorderRadius.all(Radius.circular(8))),
-              const SizedBox(width: 12),
+              ShimmerBox(width: 60, height: 60, borderRadius: BorderRadius.all(Radius.circular(8))),
+              SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
+                  children: [
                     ShimmerBox(width: double.infinity, height: 16),
                     SizedBox(height: 8),
                     ShimmerBox(width: 100, height: 12),
@@ -107,10 +107,10 @@ class CardSkeleton extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          const ShimmerBox(width: double.infinity, height: 12),
-          const SizedBox(height: 8),
-          const ShimmerBox(width: 150, height: 12),
+          SizedBox(height: 16),
+          ShimmerBox(width: double.infinity, height: 12),
+          SizedBox(height: 8),
+          ShimmerBox(width: 150, height: 12),
         ],
       ),
     );
@@ -156,10 +156,10 @@ class ProfileSkeleton extends StatelessWidget {
         const SizedBox(height: 32),
         ...List.generate(
           4,
-          (index) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          (index) => const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
-              children: const [
+              children: [
                 ShimmerBox(width: 40, height: 40, borderRadius: BorderRadius.all(Radius.circular(20))),
                 SizedBox(width: 16),
                 Expanded(child: ShimmerBox(width: double.infinity, height: 16)),

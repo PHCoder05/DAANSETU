@@ -80,7 +80,7 @@ class _InventoryScreenState extends ConsumerState<InventoryScreen> with SingleTi
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.inventory_2_outlined, size: 80, color: AppTheme.lightGray),
+            const Icon(Icons.inventory_2_outlined, size: 80, color: AppTheme.lightGray),
             const SizedBox(height: 16),
             Text(
               isInStock ? 'Your stock is empty.' : 'No distribution records yet.',
@@ -201,7 +201,7 @@ class _DistributeFormState extends ConsumerState<_DistributeForm> {
               'Deliver Impact',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.black),
             ),
-            Text(
+            const Text(
               'Hand over stock to beneficiaries.',
               style: TextStyle(color: AppTheme.gray, fontStyle: FontStyle.italic),
             ),
@@ -211,9 +211,9 @@ class _DistributeFormState extends ConsumerState<_DistributeForm> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppTheme.primaryRed.withOpacity(0.05),
+                color: AppTheme.primaryRed.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+                border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.1)),
               ),
               child: Row(
                 children: [
@@ -288,13 +288,13 @@ class _DistributeFormState extends ConsumerState<_DistributeForm> {
                       : null,
                 ),
                 child: _proofImageFile == null
-                    ? Column(
+                    ? const Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.camera_alt_outlined, color: AppTheme.gray, size: 32),
-                          const SizedBox(height: 8),
+                          Icon(Icons.camera_alt_outlined, color: AppTheme.gray, size: 32),
+                          SizedBox(height: 8),
                           Text('Tap to Capture Photo', style: TextStyle(color: AppTheme.gray, fontWeight: FontWeight.bold)),
-                          const Text('Mandatory Verification', style: TextStyle(color: AppTheme.primaryRed, fontSize: 10)),
+                          Text('Mandatory Verification', style: TextStyle(color: AppTheme.primaryRed, fontSize: 10)),
                         ],
                       )
                     : Align(
@@ -353,10 +353,10 @@ class _DistributeFormState extends ConsumerState<_DistributeForm> {
         'quantity': int.parse(_quantityController.text.trim()),
         'proofImage': _proofImageBase64,
       });
-      CustomSnackBar.success(context, 'Impact logged successfully');
+      if (mounted) CustomSnackBar.success(context, 'Impact logged successfully');
       widget.onSuccess();
     } catch (e) {
-      CustomSnackBar.error(context, 'Failed to log distribution');
+      if (mounted) CustomSnackBar.error(context, 'Failed to log distribution');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -393,7 +393,7 @@ class _InventoryCard extends StatelessWidget {
                 height: 48,
                 width: 48,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryRed.withOpacity(0.05),
+                  color: AppTheme.primaryRed.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: const Icon(Icons.inventory_2_outlined, color: AppTheme.primaryRed),
@@ -410,7 +410,7 @@ class _InventoryCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       '${item['category'] ?? 'General'} • $quantity Units',
-                      style: TextStyle(color: AppTheme.darkGray, fontSize: 13, fontWeight: FontWeight.w500),
+                      style: const TextStyle(color: AppTheme.darkGray, fontSize: 13, fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
@@ -421,19 +421,19 @@ class _InventoryCard extends StatelessWidget {
           const SizedBox(height: 20),
           Row(
             children: [
-              Icon(Icons.calendar_today_outlined, size: 14, color: AppTheme.gray),
+              const Icon(Icons.calendar_today_outlined, size: 14, color: AppTheme.gray),
               const SizedBox(width: 6),
               Text(
                 'Received ${DateFormat.yMMMd().format(receivedAt)}',
-                style: TextStyle(color: AppTheme.gray, fontSize: 12, fontWeight: FontWeight.w500),
+                style: const TextStyle(color: AppTheme.gray, fontSize: 12, fontWeight: FontWeight.w500),
               ),
               const Spacer(),
               if (item['distributionHistory']?.isNotEmpty == true)
-                Row(
+                const Row(
                   children: [
                     Icon(Icons.history, size: 14, color: AppTheme.success),
-                    const SizedBox(width: 4),
-                    const Text('Logged', style: TextStyle(color: AppTheme.success, fontSize: 11, fontWeight: FontWeight.bold)),
+                    SizedBox(width: 4),
+                    Text('Logged', style: TextStyle(color: AppTheme.success, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
                 ),
             ],
@@ -468,7 +468,7 @@ class _InventoryCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(

@@ -113,7 +113,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppTheme.black),
                 ).animate().fadeIn().slideX(),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Your new password must be different from previous passwords.',
                   style: TextStyle(color: AppTheme.gray, fontSize: 14),
                 ).animate().fadeIn(delay: 100.ms),

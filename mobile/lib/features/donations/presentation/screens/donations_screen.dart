@@ -17,8 +17,6 @@ import '../../../../shared/widgets/skeleton_loader.dart';
 import '../widgets/donation_card.dart';
 import '../widgets/volunteer_dashboard_view.dart';
 import '../widgets/ngo_inventory_view.dart';
-import '../../../../core/services/location_service.dart';
-import '../../../../core/services/socket_service.dart';
 import '../../../../core/providers/tracking_provider.dart';
 import '../../../../shared/widgets/custom_snackbar.dart';
 import '../../../../core/providers/location_provider.dart';
@@ -47,8 +45,8 @@ final donationsProvider = FutureProvider.autoDispose<List<Donation>>((ref) async
   try {
     final response = await apiClient.getDonations(
       myDonations: myDonations,
-      lat: location?.latitude,
-      lng: location?.longitude,
+      lat: location.position?.latitude,
+      lng: location.position?.longitude,
       radius: radius,
     );
     
@@ -111,18 +109,13 @@ class DonationsScreen extends ConsumerStatefulWidget {
 class _DonationsScreenState extends ConsumerState<DonationsScreen> {
   String _selectedCategory = 'all';
   String _searchQuery = '';
-  String _selectedLocation = 'Current Location';
+  String _selectedLocation = 'current';
   String _sortBy = 'newest';
   bool _isNgoInventoryMode = false;
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   
-  // GlobalKeys for coachmarks
-  final GlobalKey _locationKey = GlobalKey();
-  final GlobalKey _searchKey = GlobalKey();
-  final GlobalKey _filterKey = GlobalKey();
-  final GlobalKey _fabKey = GlobalKey();
-  TutorialCoachMark? _tutorialCoachMark;
+  // No coachmarks keys needed
   
   // Use centralized category config from constants
   List<DonationCategory> get _categories => AppConstants.categories;
@@ -131,7 +124,6 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showTutorialIfNeeded();
       ref.read(userLocationProvider.notifier).updateLocation();
     });
   }
@@ -176,151 +168,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
     super.dispose();
   }
   
-  /// Show coachmark tutorial for first-time users
-  Future<void> _showTutorialIfNeeded() async {
-    final prefs = await SharedPreferences.getInstance();
-    final hasSeenTutorial = prefs.getBool('hasSeenDonationsTutorial') ?? false;
-    
-    if (!hasSeenTutorial && mounted) {
-      // Add small delay for UI to settle
-      await Future.delayed(const Duration(milliseconds: 500));
-      _showTutorial();
-      await prefs.setBool('hasSeenDonationsTutorial', true);
-    }
-  }
-  
-  void _showTutorial() {
-    _tutorialCoachMark = TutorialCoachMark(
-      targets: _createTargets(),
-      colorShadow: AppTheme.primaryRed,
-      textSkip: "SKIP",
-      paddingFocus: 10,
-      opacityShadow: 0.8,
-      hideSkip: false,
-      onFinish: () {},
-      onSkip: () => true,
-    );
-    _tutorialCoachMark!.show(context: context);
-  }
-  
-  List<TargetFocus> _createTargets() {
-    return [
-      TargetFocus(
-        identify: "location",
-        keyTarget: _locationKey,
-        alignSkip: Alignment.topRight,
-        enableOverlayTab: true,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) => _buildCoachContent(
-              icon: Icons.location_on_rounded,
-              title: "📍 Set Your Location",
-              description: "Tap here to change location and see donations near you",
-            ),
-          ),
-        ],
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-      ),
-      TargetFocus(
-        identify: "search",
-        keyTarget: _searchKey,
-        alignSkip: Alignment.topRight,
-        enableOverlayTab: true,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) => _buildCoachContent(
-              icon: Icons.search_rounded,
-              title: "🔍 Search Donations",
-              description: "Type to find food, clothes, books or any donation",
-            ),
-          ),
-        ],
-        shape: ShapeLightFocus.RRect,
-        radius: 12,
-      ),
-      TargetFocus(
-        identify: "filter",
-        keyTarget: _filterKey,
-        alignSkip: Alignment.topRight,
-        enableOverlayTab: true,
-        contents: [
-          TargetContent(
-            align: ContentAlign.bottom,
-            builder: (context, controller) => _buildCoachContent(
-              icon: Icons.tune_rounded,
-              title: "⚙️ Filter & Sort",
-              description: "Filter by category or sort by newest, oldest, or nearest",
-            ),
-          ),
-        ],
-        shape: ShapeLightFocus.Circle,
-      ),
-      TargetFocus(
-        identify: "fab",
-        keyTarget: _fabKey,
-        alignSkip: Alignment.topRight,
-        enableOverlayTab: true,
-        contents: [
-          TargetContent(
-            align: ContentAlign.top,
-            builder: (context, controller) => _buildCoachContent(
-              icon: Icons.add_rounded,
-              title: "➕ Create Donation",
-              description: "Tap the + button to donate items and help those in need!",
-            ),
-          ),
-        ],
-        shape: ShapeLightFocus.Circle,
-      ),
-    ];
-  }
-  
-  Widget _buildCoachContent({required IconData icon, required String title, required String description}) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppTheme.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryRed.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: AppTheme.primaryRed, size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(description, style: TextStyle(fontSize: 14, color: AppTheme.gray)),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Text('Tap anywhere to continue', style: TextStyle(fontSize: 12, color: AppTheme.primaryRed)),
-              const SizedBox(width: 4),
-              Icon(Icons.touch_app, size: 14, color: AppTheme.primaryRed),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Coachmark logic removed to prevent Duplicate GlobalKey exceptions during navigation and sliver transitions
 
   @override
   Widget build(BuildContext context) {
@@ -359,35 +207,65 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                     onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
                 ),
-                title: GestureDetector(
-                  key: _locationKey,
-                  onTap: () => _showLocationSelector(context),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                title: Consumer(
+                  builder: (context, ref, _) {
+                    final locationState = ref.watch(userLocationProvider);
+                    String displayLocation = locationState.address ?? '';
+                    
+                    if (displayLocation.isEmpty) {
+                      switch (_selectedLocation) {
+                        case 'current': displayLocation = 'Current Location'; break;
+                        case 'home': displayLocation = 'Home'; break;
+                        case 'work': displayLocation = 'Work'; break;
+                        case 'custom': displayLocation = 'Custom Address'; break;
+                        default: displayLocation = 'Set Location';
+                      }
+                    }
+                    
+                    return GestureDetector(
+                      onTap: () => _showLocationSelector(context),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.location_on_rounded, color: AppTheme.primaryRed, size: 20),
-                          const SizedBox(width: 4),
-                          Text(
-                            _selectedLocation.length > 15 ? '${_selectedLocation.substring(0, 15)}...' : _selectedLocation,
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: AppTheme.black,
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.primaryRed.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.location_on_rounded, color: AppTheme.primaryRed, size: 18),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        displayLocation,
+                                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppTheme.black),
+                                        maxLines: 1, overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 2),
+                                    const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.charcoal, size: 20),
+                                  ],
+                                ),
+                                Text(
+                                  locationState.address != null ? 'Tap to change' : 'Tap to set location',
+                                  style: const TextStyle(color: AppTheme.gray, fontSize: 10),
+                                ),
+                              ],
                             ),
                           ),
-                          const Icon(Icons.keyboard_arrow_down_rounded, color: AppTheme.charcoal, size: 24),
                         ],
                       ),
-                      Text(
-                        'Tap to change location',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.gray,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
                 actions: [
                   if (user?.isVolunteer == true)
@@ -408,7 +286,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                             child: Switch.adaptive(
                               value: user?.isAvailable ?? false,
                               onChanged: (val) => _toggleAvailability(val),
-                              activeColor: AppTheme.success,
+                              activeTrackColor: AppTheme.success,
                             ),
                           ),
                         ],
@@ -450,8 +328,8 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                     margin: const EdgeInsets.fromLTRB(16, 8, 16, 8),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: AppTheme.warning.withOpacity(0.1),
-                      border: Border.all(color: AppTheme.warning.withOpacity(0.3)),
+                      color: AppTheme.warning.withValues(alpha: 0.1),
+                      border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -459,7 +337,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: AppTheme.warning.withOpacity(0.2),
+                            color: AppTheme.warning.withValues(alpha: 0.2),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.verified_user_outlined, color: AppTheme.warning, size: 20),
@@ -497,16 +375,15 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   child: Container(
-                    key: _searchKey,
                     decoration: BoxDecoration(
                       color: AppTheme.white,
                       borderRadius:  BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ],
                       border: Border.all(color: AppTheme.lightGray),
                     ),
@@ -515,8 +392,8 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                       onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
                       decoration: InputDecoration(
                         hintText: 'Search "food" or "books"...',
-                        hintStyle: TextStyle(color: AppTheme.gray),
-                        prefixIcon: Icon(Icons.search_rounded, color: AppTheme.primaryRed),
+                        hintStyle: const TextStyle(color: AppTheme.gray),
+                        prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.primaryRed),
                         suffixIcon: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -530,7 +407,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                               ),
                             Container(
                               margin: const EdgeInsets.symmetric(vertical: 8),
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 border: Border(left: BorderSide(color: AppTheme.lightGray)),
                               ),
                               child: IconButton(
@@ -593,10 +470,10 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                                     width: 70,
                                     height: 70,
                                     decoration: BoxDecoration(
-                                      color: isSelected ? AppTheme.primaryRed.withOpacity(0.1) : AppTheme.white,
+                                      color: isSelected ? AppTheme.primaryRed.withValues(alpha: 0.1) : AppTheme.white,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                        color: isSelected ? AppTheme.primaryRed : AppTheme.lightGray.withOpacity(0.5),
+                                        color: isSelected ? AppTheme.primaryRed : AppTheme.lightGray.withValues(alpha: 0.5),
                                         width: isSelected ? 2 : 1,
                                       ),
                                     ),
@@ -663,7 +540,6 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                         
                         // Icon Filters (Compact)
                         Row(
-                          key: _filterKey,
                           children: [
                             GestureDetector(
                               onTap: () => _showFilterSheet(context),
@@ -708,14 +584,14 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                           child: Row(
                             children: [
                               _buildToggleOption(
-                                "EXPLORE", 
+                                'EXPLORE', 
                                 !_isNgoInventoryMode, 
-                                () => setState(() => _isNgoInventoryMode = false)
+                                () => setState(() => _isNgoInventoryMode = false),
                               ),
                               _buildToggleOption(
-                                "INVENTORY", 
+                                'INVENTORY', 
                                 _isNgoInventoryMode, 
-                                () => setState(() => _isNgoInventoryMode = true)
+                                () => setState(() => _isNgoInventoryMode = true),
                               ),
                             ],
                           ),
@@ -737,7 +613,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                     ? SliverFillRemaining(
                         child: NgoInventoryView(
                           inventory: (donationsAsync.value ?? []).where((d) => 
-                            d.status == 'delivered' && d.ngo?.id == user?.id
+                            d.status == 'delivered' && d.ngo?.id == user?.id,
                           ).toList(),
                           onRefresh: () => ref.invalidate(donationsProvider),
                           onAction: (item, action) async {
@@ -749,12 +625,12 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                               
                               await apiClient.updateInventoryStatus(item.id, apiStatus);
                               ref.invalidate(donationsProvider);
-                              if (mounted) {
+                              if (context.mounted) {
                                 CustomSnackBar.success(context, "Item marked as ${action == 'used' ? 'distributed' : 'removed'}.");
                               }
                             } catch (e) {
-                              if (mounted) {
-                                CustomSnackBar.error(context, "Failed to update inventory: $e");
+                              if (context.mounted) {
+                                CustomSnackBar.error(context, 'Failed to update inventory: $e');
                               }
                             }
                           },
@@ -797,7 +673,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                                       label: 'Save',
                                     ),
                                     SlidableAction(
-                                      onPressed: (context) => Share.share('Check out this donation on Daansetu: ${donation.title}'),
+                                      onPressed: (context) => SharePlus.instance.share(ShareParams(text: 'Check out this donation on Daansetu: ${donation.title}')),
                                       backgroundColor: AppTheme.info,
                                       foregroundColor: Colors.white,
                                       icon: Icons.share_rounded,
@@ -826,7 +702,6 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       floatingActionButton: user?.isDonor == true ? _ExpandableFab(
-        key: _fabKey,
         onTap: () {
           HapticFeedback.mediumImpact();
           context.go('${AppRoutes.donations}/create');
@@ -845,7 +720,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primaryRed.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? AppTheme.primaryRed.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Text(
@@ -888,12 +763,16 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                   children: [
                     const Icon(Icons.local_fire_department_rounded, color: AppTheme.primaryRed, size: 20),
                     const SizedBox(width: 8),
-                    Text(
-                      "Urgent Needs Nearby",
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppTheme.primaryRed,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 0.5,
+                    Expanded(
+                      child: Text(
+                        'Urgent Needs Nearby',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppTheme.primaryRed,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -916,9 +795,9 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                           color: AppTheme.white,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
-                            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))
+                            BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 4)),
                           ],
-                          border: Border.all(color: AppTheme.primaryRed.withOpacity(0.2)),
+                          border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.2)),
                         ),
                         child: Row(
                           children: [
@@ -927,7 +806,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                               child: Container(
                                 width: 100,
                                 height: double.infinity,
-                                color: AppTheme.primaryRed.withOpacity(0.1),
+                                color: AppTheme.primaryRed.withValues(alpha: 0.1),
                                 child: donation.images.isNotEmpty 
                                   ? Image.network(donation.images.first, fit: BoxFit.cover)
                                   : const Icon(Icons.emergency_rounded, color: AppTheme.primaryRed, size: 32),
@@ -950,19 +829,19 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                                       donation.description,
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(color: AppTheme.gray, fontSize: 11),
+                                      style: const TextStyle(color: AppTheme.gray, fontSize: 11),
                                     ),
                                     const Spacer(),
                                     Row(
                                       children: [
-                                        Icon(Icons.location_on_rounded, size: 10, color: AppTheme.gray),
+                                        const Icon(Icons.location_on_rounded, size: 10, color: AppTheme.gray),
                                         const SizedBox(width: 2),
                                         Expanded(
                                           child: Text(
                                             donation.pickupLocation.address ?? 'Nearby',
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(color: AppTheme.gray, fontSize: 10),
+                                            style: const TextStyle(color: AppTheme.gray, fontSize: 10),
                                           ),
                                         ),
                                       ],
@@ -987,84 +866,236 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
     );
   }
   
-  /// Show location selector bottom sheet
+  /// Premium location selector bottom sheet
   void _showLocationSelector(BuildContext context) {
     HapticFeedback.lightImpact();
-    final locations = ['Current Location', 'Home', 'Work', 'Custom Address'];
-    
+    final addressController = TextEditingController();
+    bool isDetecting = false;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
           final currentRadius = ref.watch(radiusFilterProvider) ?? 50.0;
-          
+
           return Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            decoration: const BoxDecoration(
+              color: AppTheme.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('Location Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    IconButton(icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                const Text('Radius Range', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Slider(
-                        value: currentRadius,
-                        min: 5,
-                        max: 200,
-                        divisions: 19,
-                        activeColor: AppTheme.primaryRed,
-                        label: '${currentRadius.toInt()} km',
-                        onChanged: (value) {
-                          setModalState(() {
-                            ref.read(radiusFilterProvider.notifier).state = value;
-                          });
+                    // Handle bar
+                    Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.lightGray, borderRadius: BorderRadius.circular(2)))),
+                    const SizedBox(height: 16),
+                    // Title
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(color: AppTheme.primaryRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                          child: const Icon(Icons.location_on_rounded, color: AppTheme.primaryRed, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Choose Location', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.black)),
+                            Text('Set your delivery area', style: TextStyle(fontSize: 12, color: AppTheme.gray)),
+                          ]),
+                        ),
+                        GestureDetector(onTap: () => Navigator.pop(ctx), child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: AppTheme.offWhite, shape: BoxShape.circle),
+                          child: const Icon(Icons.close, size: 18, color: AppTheme.charcoal),
+                        )),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // GPS Button
+                    GestureDetector(
+                      onTap: () async {
+                        setModalState(() => isDetecting = true);
+                        HapticFeedback.mediumImpact();
+                        await ref.read(userLocationProvider.notifier).updateLocation();
+                        setState(() => _selectedLocation = 'current');
+                        setModalState(() => isDetecting = false);
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      },
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(colors: [AppTheme.primaryRed, AppTheme.primaryRed.withValues(alpha: 0.85)]),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [BoxShadow(color: AppTheme.primaryRed.withValues(alpha: 0.25), blurRadius: 12, offset: const Offset(0, 4))],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (isDetecting)
+                              const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.white))
+                            else
+                              const Icon(Icons.my_location_rounded, color: AppTheme.white, size: 20),
+                            const SizedBox(width: 10),
+                            Text(isDetecting ? 'Detecting...' : 'Use Current Location', style: const TextStyle(color: AppTheme.white, fontWeight: FontWeight.w600, fontSize: 15)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Search bar for custom address
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.offWhite,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppTheme.lightGray),
+                      ),
+                      child: TextField(
+                        controller: addressController,
+                        decoration: InputDecoration(
+                          hintText: 'Search for area, street name...',
+                          hintStyle: const TextStyle(color: AppTheme.gray, fontSize: 14),
+                          prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.gray, size: 20),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.arrow_forward_rounded, color: AppTheme.primaryRed, size: 20),
+                            onPressed: () {
+                              if (addressController.text.isNotEmpty) {
+                                setState(() => _selectedLocation = 'custom');
+                                ref.read(userLocationProvider.notifier).setAddress(addressController.text);
+                                Navigator.pop(ctx);
+                              }
+                            },
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onSubmitted: (val) {
+                          if (val.isNotEmpty) {
+                            setState(() => _selectedLocation = 'custom');
+                            ref.read(userLocationProvider.notifier).setAddress(val);
+                            Navigator.pop(ctx);
+                          }
                         },
                       ),
                     ),
-                    Container(
-                      width: 60,
-                      alignment: Alignment.center,
-                      child: Text('${currentRadius.toInt()} km', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryRed)),
+                    const SizedBox(height: 20),
+
+                    // Saved Places
+                    const Text('SAVED PLACES', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.gray, letterSpacing: 1)),
+                    const SizedBox(height: 10),
+                    _LocationOption(
+                      icon: Icons.home_rounded, label: 'Home', isSelected: _selectedLocation == 'home',
+                      onTap: () { _promptSavedPlace(ctx, 'Home', 'home'); },
+                    ),
+                    _LocationOption(
+                      icon: Icons.work_rounded, label: 'Work', isSelected: _selectedLocation == 'work',
+                      onTap: () { _promptSavedPlace(ctx, 'Work', 'work'); },
+                    ),
+
+                    const SizedBox(height: 20),
+                    // Radius
+                    Row(
+                      children: [
+                        const Text('SEARCH RADIUS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppTheme.gray, letterSpacing: 1)),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(color: AppTheme.primaryRed.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(20)),
+                          child: Text('${currentRadius.toInt()} km', style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryRed, fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    SliderTheme(
+                      data: SliderThemeData(
+                        activeTrackColor: AppTheme.primaryRed,
+                        inactiveTrackColor: AppTheme.lightGray,
+                        thumbColor: AppTheme.primaryRed,
+                        overlayColor: AppTheme.primaryRed.withValues(alpha: 0.1),
+                        trackHeight: 4,
+                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+                      ),
+                      child: Slider(
+                        value: currentRadius, min: 5, max: 200, divisions: 39,
+                        onChanged: (v) => setModalState(() => ref.read(radiusFilterProvider.notifier).state = v),
+                      ),
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('5 km', style: TextStyle(fontSize: 10, color: AppTheme.gray)),
+                        Text('200 km', style: TextStyle(fontSize: 10, color: AppTheme.gray)),
+                      ],
                     ),
                   ],
                 ),
-                const Divider(height: 32),
-                const Text('Address', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                const SizedBox(height: 8),
-                ...locations.map((loc) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Icon(
-                    loc == 'Current Location' ? Icons.my_location : Icons.location_on_outlined,
-                    color: _selectedLocation == loc ? AppTheme.primaryRed : AppTheme.gray,
-                  ),
-                  title: Text(loc),
-                  trailing: _selectedLocation == loc ? const Icon(Icons.check, color: AppTheme.primaryRed) : null,
-                  onTap: () {
-                    setState(() => _selectedLocation = loc);
-                    if (loc == 'Current Location') {
-                      ref.read(userLocationProvider.notifier).updateLocation();
-                    }
-                    Navigator.pop(context);
-                  },
-                )).toList(),
-              ],
+              ),
             ),
           );
-        }
+        },
+      ),
+    );
+  }
+
+  void _promptSavedPlace(BuildContext parentCtx, String label, String id) {
+    Navigator.pop(parentCtx);
+    final controller = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(color: AppTheme.white, borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        padding: EdgeInsets.fromLTRB(20, 16, 20, MediaQuery.of(ctx).viewInsets.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.lightGray, borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 20),
+            Text('Set $label Address', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text('Enter the address for your $label to see nearby donations.', style: const TextStyle(fontSize: 13, color: AppTheme.gray)),
+            const SizedBox(height: 20),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'e.g. Koramangala, Bangalore',
+                prefixIcon: Icon(id == 'home' ? Icons.home_rounded : Icons.work_rounded, color: AppTheme.primaryRed),
+                filled: true,
+                fillColor: AppTheme.offWhite,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: AppTheme.primaryRed, width: 1.5)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity, height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (controller.text.isNotEmpty) {
+                    setState(() => _selectedLocation = id);
+                    ref.read(userLocationProvider.notifier).setAddress(controller.text);
+                  }
+                  Navigator.pop(ctx);
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryRed, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                child: const Text('Save & Apply', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1156,8 +1187,8 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                   setState(() => _selectedCategory = selected ? cat.id : 'all');
                   Navigator.pop(context);
                 },
-                selectedColor: AppTheme.primaryRed.withOpacity(0.2),
-              )).toList(),
+                selectedColor: AppTheme.primaryRed.withValues(alpha: 0.2),
+              ),).toList(),
             ),
             const SizedBox(height: 20),
             SizedBox(
@@ -1206,46 +1237,14 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                 setState(() => _sortBy = opt['id'] as String);
                 Navigator.pop(context);
               },
-            )).toList(),
+            ),),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.lightGray),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 2,
-            offset: const Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 14, color: AppTheme.charcoal),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.charcoal,
-            ),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.arrow_drop_down_rounded, size: 16, color: AppTheme.charcoal),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildLoadingState() {
     // Get quote from centralized constants
@@ -1262,27 +1261,27 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  AppTheme.primaryRed.withOpacity(0.05),
-                  AppTheme.accentOrange.withOpacity(0.05),
+                  AppTheme.primaryRed.withValues(alpha: 0.05),
+                  AppTheme.accentOrange.withValues(alpha: 0.05),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.primaryRed.withOpacity(0.1)),
+              border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.1)),
             ),
             child: Column(
               children: [
                 Icon(
                   Icons.format_quote_rounded,
-                  color: AppTheme.primaryRed.withOpacity(0.4),
+                  color: AppTheme.primaryRed.withValues(alpha: 0.4),
                   size: 32,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   quote,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 14,
                     fontStyle: FontStyle.italic,
                     color: AppTheme.charcoal,
@@ -1298,11 +1297,11 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primaryRed.withOpacity(0.5),
+                        color: AppTheme.primaryRed.withValues(alpha: 0.5),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
+                    const Text(
                       'Finding donations near you...',
                       style: TextStyle(
                         fontSize: 12,
@@ -1332,7 +1331,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
       child: Center(
         child: Column(
           children: [
-            Icon(Icons.error_outline, size: 48, color: AppTheme.error),
+            const Icon(Icons.error_outline, size: 48, color: AppTheme.error),
             const SizedBox(height: 16),
             Text(
               'Oops! Something went wrong',
@@ -1415,7 +1414,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
                   Navigator.pop(context);
                   ref.read(authStateProvider.notifier).logout();
                   context.go(AppRoutes.login);
-                }, color: AppTheme.primaryRed),
+                }, color: AppTheme.primaryRed,),
               ],
             ),
           ),
@@ -1425,7 +1424,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
             padding: const EdgeInsets.all(16),
             child: Text(
               'v1.0.0 (Premium)',
-              style: TextStyle(color: AppTheme.gray.withOpacity(0.5), fontSize: 12),
+              style: TextStyle(color: AppTheme.gray.withValues(alpha: 0.5), fontSize: 12),
             ),
           ),
         ],
@@ -1454,7 +1453,7 @@ class _DonationsScreenState extends ConsumerState<DonationsScreen> {
   Widget colEmpty() {
     return Column(
       children: [
-        Icon(Icons.search_off_rounded, size: 64, color: AppTheme.gray.withOpacity(0.5)),
+        Icon(Icons.search_off_rounded, size: 64, color: AppTheme.gray.withValues(alpha: 0.5)),
         const SizedBox(height: 16),
         Text(
           'No donations found',
@@ -1501,7 +1500,6 @@ class _ExpandableFabState extends State<_ExpandableFab> with SingleTickerProvide
   bool _isExpanded = false;
   late AnimationController _controller;
   late Animation<double> _expandAnimation;
-  late Animation<double> _rotationAnimation;
   
   @override
   void initState() {
@@ -1514,10 +1512,6 @@ class _ExpandableFabState extends State<_ExpandableFab> with SingleTickerProvide
     _expandAnimation = CurvedAnimation(
       parent: _controller,
       curve: Curves.easeOutBack,
-    );
-    
-    _rotationAnimation = Tween<double>(begin: 0, end: 0.125).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
     );
     
     // Auto-expand after delay to show users they can tap
@@ -1577,7 +1571,7 @@ class _ExpandableFabState extends State<_ExpandableFab> with SingleTickerProvide
               ),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFE23744).withOpacity(0.4),
+                  color: const Color(0xFFE23744).withValues(alpha: 0.4),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                   spreadRadius: 1,
@@ -1605,7 +1599,7 @@ class _ExpandableFabState extends State<_ExpandableFab> with SingleTickerProvide
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // + icon (always shows +, no rotation)
-                      Icon(
+                      const Icon(
                         Icons.add_rounded,
                         color: Colors.white,
                         size: 26,
@@ -1616,14 +1610,14 @@ class _ExpandableFabState extends State<_ExpandableFab> with SingleTickerProvide
                         duration: const Duration(milliseconds: 250),
                         curve: Curves.easeOutBack,
                         width: _isExpanded ? 110 : 0,
-                        child: SingleChildScrollView(
+                        child: const SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                          physics: const NeverScrollableScrollPhysics(),
+                          physics: NeverScrollableScrollPhysics(),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const SizedBox(width: 10),
-                              const Text(
+                              SizedBox(width: 10),
+                              Text(
                                 'Donate Now',
                                 style: TextStyle(
                                   color: Colors.white,
@@ -1647,5 +1641,49 @@ class _ExpandableFabState extends State<_ExpandableFab> with SingleTickerProvide
     ).animate()
      .slideY(begin: 1, end: 0, duration: 500.ms, curve: Curves.easeOutBack)
      .fade(begin: 0, end: 1, duration: 300.ms);
+  }
+}
+
+class _LocationOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _LocationOption({required this.icon, required this.label, required this.isSelected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? AppTheme.primaryRed.withValues(alpha: 0.05) : AppTheme.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? AppTheme.primaryRed.withValues(alpha: 0.3) : AppTheme.lightGray),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected ? AppTheme.primaryRed.withValues(alpha: 0.1) : AppTheme.offWhite,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: isSelected ? AppTheme.primaryRed : AppTheme.gray, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label, style: TextStyle(fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500, color: AppTheme.charcoal, fontSize: 14))),
+            Icon(
+              isSelected ? Icons.check_circle_rounded : Icons.arrow_forward_ios_rounded,
+              color: isSelected ? AppTheme.primaryRed : AppTheme.lightGray,
+              size: isSelected ? 20 : 14,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -18,7 +18,6 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   String _text = 'Describe your donation...';
-  bool _isInitializing = true;
   bool _isParsing = false;
 
   @override
@@ -39,10 +38,9 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
             }
           }
         },
-        onError: (val) => print('Error: $val'),
+        onError: (val) => debugPrint('Error: $val'),
       );
       if (available) {
-        setState(() => _isInitializing = false);
         _startListening();
       } else {
         if (mounted) {
@@ -94,7 +92,7 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       decoration: const BoxDecoration(
-        color: Color(0xFF1A1A2E),
+        color: AppTheme.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
@@ -104,7 +102,7 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.white24,
+              color: AppTheme.lightGray,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -112,7 +110,7 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
           const Text(
             'Setu AI Voice Assistant',
             style: TextStyle(
-              color: Colors.white,
+              color: AppTheme.charcoal,
               fontSize: 20,
               fontWeight: FontWeight.bold,
             ),
@@ -121,7 +119,7 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
           const Text(
             'Tell me what you are donating today',
             style: TextStyle(
-              color: Colors.white60,
+              color: AppTheme.darkGray,
               fontSize: 14,
             ),
           ),
@@ -138,11 +136,11 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
                     height: 100 + (index * 30),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.primaryRed.withOpacity(0.2 - (index * 0.05))),
+                      border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.2 - (index * 0.05))),
                     ),
                   ).animate(onPlay: (c) => c.repeat())
                    .scale(begin: const Offset(1, 1), end: const Offset(1.5, 1.5), duration: (1000 + (index * 200)).ms)
-                   .fadeOut(duration: (1000 + (index * 200)).ms)
+                   .fadeOut(duration: (1000 + (index * 200)).ms),
                 ),
               
               GestureDetector(
@@ -153,12 +151,12 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: LinearGradient(
-                      colors: [Color(0xFFE23744), Color(0xFFFF4E50)],
+                      colors: [AppTheme.primaryRed, AppTheme.accentOrange],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     boxShadow: [
-                      BoxShadow(color: Colors.redAccent, blurRadius: 20, spreadRadius: 2),
+                      BoxShadow(color: Color(0x40E23744), blurRadius: 20, spreadRadius: 2),
                     ],
                   ),
                   child: Icon(
@@ -178,27 +176,28 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
             padding: const EdgeInsets.all(16),
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: AppTheme.offWhite,
               borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.lightGray),
             ),
             child: _isParsing 
-              ? Row(
+              ? const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primaryRed),
                     ),
-                    const SizedBox(width: 12),
-                    const Text('Setu AI is processing...', style: TextStyle(color: Colors.white70)),
+                    SizedBox(width: 12),
+                    Text('Setu AI is processing...', style: TextStyle(color: AppTheme.darkGray)),
                   ],
                 )
               : Text(
                   _text,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppTheme.charcoal,
                     fontSize: 16,
                     fontStyle: FontStyle.italic,
                   ),
@@ -208,7 +207,7 @@ class _VoiceFormModalState extends ConsumerState<VoiceFormModal> {
           const SizedBox(height: 24),
           const Text(
             'e.g., "I want to donate 10 fresh bread packets and some fruit."',
-            style: TextStyle(color: Colors.white38, fontSize: 12),
+            style: TextStyle(color: AppTheme.gray, fontSize: 12),
           ),
         ],
       ),

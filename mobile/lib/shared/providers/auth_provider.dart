@@ -75,7 +75,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             .timeout(const Duration(seconds: 3), onTimeout: () {
           debugPrint('AuthNotifier: accessToken read timed out');
           return null;
-        });
+        },);
         debugPrint('AuthNotifier: accessToken read completed: ${accessToken != null ? "found" : "not found"}');
       } catch (e) {
         debugPrint('AuthNotifier: accessToken read failed: $e');
@@ -88,7 +88,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             .timeout(const Duration(seconds: 3), onTimeout: () {
           debugPrint('AuthNotifier: userJson read timed out');
           return null;
-        });
+        },);
         debugPrint('AuthNotifier: userJson read completed: ${userJson != null ? "found" : "not found"}');
       } catch (e) {
         debugPrint('AuthNotifier: userJson read failed: $e');

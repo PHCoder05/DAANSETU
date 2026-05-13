@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../config/routes.dart';
 import '../../../../config/theme.dart';
@@ -65,8 +64,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    AppTheme.primaryRed.withOpacity(0.08),
-                    AppTheme.accentOrange.withOpacity(0.05),
+                    AppTheme.primaryRed.withValues(alpha: 0.08),
+                    AppTheme.accentOrange.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -83,7 +82,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.primaryRed.withOpacity(0.05),
+                  color: AppTheme.primaryRed.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -95,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.accentOrange.withOpacity(0.05),
+                  color: AppTheme.accentOrange.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -133,7 +132,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 borderRadius: BorderRadius.circular(isKeyboardOpen ? 12 : 20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppTheme.primaryRed.withOpacity(0.3),
+                                    color: AppTheme.primaryRed.withValues(alpha: 0.3),
                                     blurRadius: isKeyboardOpen ? 12 : 24,
                                     offset: Offset(0, isKeyboardOpen ? 5 : 10),
                                   ),
@@ -162,10 +161,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primaryRed.withOpacity(0.1),
+                                  color: AppTheme.primaryRed.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(20),
                                 ),
-                                child: Text(
+                                child: const Text(
                                   'India\'s No.1 App for Seamless Donations',
                                   style: TextStyle(
                                     color: AppTheme.primaryRed,
@@ -223,7 +222,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
-                              decoration: InputDecoration(
+                              decoration: const InputDecoration(
                                 hintText: 'Enter your email',
                                 prefixIcon: Icon(Icons.email_outlined, color: AppTheme.gray),
                               ),
@@ -253,7 +252,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               onFieldSubmitted: (_) => _login(),
                               decoration: InputDecoration(
                                 hintText: 'Enter your password',
-                                prefixIcon: Icon(Icons.lock_outline, color: AppTheme.gray),
+                                prefixIcon: const Icon(Icons.lock_outline, color: AppTheme.gray),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -290,7 +289,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 margin: const EdgeInsets.only(bottom: 12),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.error.withOpacity(0.1),
+                                  color: AppTheme.error.withValues(alpha: 0.1),
                                   borderRadius: AppTheme.borderRadiusMedium,
                                 ),
                                 child: Row(
@@ -319,7 +318,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   backgroundColor: AppTheme.primaryRed,
                                   foregroundColor: AppTheme.white,
                                   elevation: 4,
-                                  shadowColor: AppTheme.primaryRed.withOpacity(0.4),
+                                  shadowColor: AppTheme.primaryRed.withValues(alpha: 0.4),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
@@ -350,7 +349,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
+                                  const Text(
                                     "Don't have an account? ",
                                     style: TextStyle(color: AppTheme.darkGray, fontSize: 14),
                                   ),
@@ -375,11 +374,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Center(
                                 child: Column(
                                   children: [
-                                    Row(
+                                    const Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
                                         _TrustBadge(icon: Icons.shield_outlined, label: 'Govt API Verified'),
-                                        const SizedBox(width: 16),
+                                        SizedBox(width: 16),
                                         _TrustBadge(icon: Icons.lock_outline_rounded, label: 'E2E Encrypted'),
                                       ],
                                     ),
@@ -389,7 +388,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                       style: TextStyle(
                                         fontSize: 8,
                                         fontWeight: FontWeight.w900,
-                                        color: AppTheme.gray.withOpacity(0.5),
+                                        color: AppTheme.gray.withValues(alpha: 0.5),
                                         letterSpacing: 1.5,
                                       ),
                                     ),
@@ -435,7 +434,7 @@ class _TrustBadge extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w700,
               color: AppTheme.darkGray,

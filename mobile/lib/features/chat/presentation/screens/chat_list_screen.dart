@@ -4,11 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../config/theme.dart';
 import '../../../../config/constants.dart';
-import '../../../../shared/widgets/custom_snackbar.dart';
 import '../../../../shared/widgets/app_loader.dart';
-import '../../../../core/services/socket_service.dart';
 import '../../../../core/api/api_client.dart';
-import '../../../../shared/providers/auth_provider.dart';
 
 class ChatListScreen extends ConsumerStatefulWidget {
   const ChatListScreen({super.key});
@@ -103,7 +100,7 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     child: Icon(
                       Icons.chat_bubble_rounded,
                       size: 150,
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                     ),
                   ),
                 ],
@@ -134,10 +131,10 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                     Container(
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: AppTheme.primaryRed.withOpacity(0.05),
+                        color: AppTheme.primaryRed.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.chat_bubble_outline_rounded, size: 64, color: AppTheme.primaryRed.withOpacity(0.5)),
+                      child: Icon(Icons.chat_bubble_outline_rounded, size: 64, color: AppTheme.primaryRed.withValues(alpha: 0.5)),
                     ),
                     const SizedBox(height: 24),
                     const Text(
@@ -145,8 +142,8 @@ class _ChatListScreenState extends ConsumerState<ChatListScreen> {
                       style: TextStyle(
                         fontSize: 20, 
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.charcoal
-                      )
+                        color: AppTheme.charcoal,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -193,7 +190,7 @@ class _ChatListItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             offset: const Offset(0, 4),
             blurRadius: 10,
           ),
@@ -217,7 +214,7 @@ class _ChatListItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.offWhite,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primaryRed.withOpacity(0.3), width: 2),
+                    border: Border.all(color: AppTheme.primaryRed.withValues(alpha: 0.3), width: 2),
                   ),
                   child: ClipOval(
                     child: chat['image'] != null
@@ -230,9 +227,9 @@ class _ChatListItem extends StatelessWidget {
                                   style: const TextStyle(
                                       color: AppTheme.primaryRed,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 20
-                                  )
-                              )
+                                      fontSize: 20,
+                                  ),
+                              ),
                           ),
                         )
                       : Center(
@@ -267,7 +264,7 @@ class _ChatListItem extends StatelessWidget {
                           ),
                           Text(
                             _formatTime(chat['time']),
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppTheme.gray,
                               fontWeight: FontWeight.w500,
@@ -280,7 +277,7 @@ class _ChatListItem extends StatelessWidget {
                         chat['lastMessage'],
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppTheme.gray,
                           fontSize: 14, 
                           height: 1.4,

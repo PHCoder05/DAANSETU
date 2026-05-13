@@ -61,8 +61,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  _items[_currentPage].gradientColors[0].withOpacity(0.08),
-                  _items[_currentPage].gradientColors[1].withOpacity(0.04),
+                  _items[_currentPage].gradientColors[0].withValues(alpha: 0.08),
+                  _items[_currentPage].gradientColors[1].withValues(alpha: 0.04),
                   AppTheme.white,
                 ],
               ),
@@ -79,7 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: size.width * 0.7,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _items[_currentPage].bgDecoColor.withOpacity(0.5),
+                color: _items[_currentPage].bgDecoColor.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -92,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: size.width * 0.5,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _items[_currentPage].bgDecoColor.withOpacity(0.3),
+                color: _items[_currentPage].bgDecoColor.withValues(alpha: 0.3),
               ),
             ),
           ),
@@ -111,7 +111,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: _items[_currentPage].gradientColors[0].withOpacity(0.1),
+                          color: _items[_currentPage].gradientColors[0].withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -125,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       TextButton(
                         onPressed: _completeOnboarding,
-                        child: Text(
+                        child: const Text(
                           'Skip',
                           style: TextStyle(
                             color: AppTheme.darkGray,
@@ -162,7 +162,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: item.gradientColors[0].withOpacity(0.1),
+                                      color: item.gradientColors[0].withValues(alpha: 0.1),
                                       width: 2,
                                     ),
                                   ),
@@ -173,7 +173,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   height: 150,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: item.gradientColors[0].withOpacity(0.06),
+                                    color: item.gradientColors[0].withValues(alpha: 0.06),
                                   ),
                                 ).animate().scale(delay: 200.ms, duration: 500.ms, curve: Curves.easeOutBack),
                                 // Icon circle with gradient
@@ -189,7 +189,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: item.gradientColors[0].withOpacity(0.35),
+                                        color: item.gradientColors[0].withValues(alpha: 0.35),
                                         blurRadius: 30,
                                         offset: const Offset(0, 10),
                                       ),
@@ -220,7 +220,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             // Description
                             Text(
                               item.description,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 16,
                                 color: AppTheme.darkGray,
                                 height: 1.6,
@@ -275,7 +275,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             borderRadius: BorderRadius.circular(16),
                             boxShadow: [
                               BoxShadow(
-                                color: _items[_currentPage].gradientColors[0].withOpacity(0.4),
+                                color: _items[_currentPage].gradientColors[0].withValues(alpha: 0.4),
                                 blurRadius: 16,
                                 offset: const Offset(0, 6),
                               ),

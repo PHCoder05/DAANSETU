@@ -75,21 +75,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       return;
     }
     
-    // For mobile platforms, check persistent auth status from storage with timeout
+    // For mobile platforms, check persistent auth status from storage
     debugPrint('SplashScreen: Checking persistent auth status...');
-    bool authCheckCompleted = false;
     
     try {
-      await ref.read(authStateProvider.notifier).checkAuthStatus()
-          .timeout(const Duration(seconds: 5), onTimeout: () {
-        debugPrint('SplashScreen: Auth check timed out after 5 seconds');
-        authCheckCompleted = true;
-      });
-      authCheckCompleted = true;
-      debugPrint('SplashScreen: Auth check completed successfully');
+      await ref.read(authStateProvider.notifier).checkAuthStatus();
     } catch (e) {
       debugPrint('SplashScreen: Auth check failed with error: $e');
-      authCheckCompleted = true;
     }
     
     if (!mounted) {
@@ -98,7 +90,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     }
     
     final authState = ref.read(authStateProvider);
-    debugPrint('SplashScreen: Final auth state - isAuthenticated=${authState.isAuthenticated}, isLoading=${authState.isLoading}');
+    debugPrint('SplashScreen: Final auth state - isAuthenticated=${authState.isAuthenticated}');
     
     // Navigate based on auth state
     if (authState.isAuthenticated) {
@@ -168,7 +160,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 height: size.width * 0.6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                 ),
               ).animate().scale(duration: 1200.ms, curve: Curves.easeOut),
             ),
@@ -180,7 +172,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 height: size.width * 0.5,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.04),
+                  color: Colors.white.withValues(alpha: 0.04),
                 ),
               ).animate().scale(duration: 1000.ms, delay: 200.ms, curve: Curves.easeOut),
             ),
@@ -192,7 +184,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 height: 80,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.white.withOpacity(0.05),
+                  color: Colors.white.withValues(alpha: 0.05),
                 ),
               ).animate().scale(duration: 800.ms, delay: 400.ms, curve: Curves.easeOutBack),
             ),
@@ -210,7 +202,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                       height: 140,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withOpacity(0.15), width: 2),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.15), width: 2),
                       ),
                     )
                         .animate(onPlay: (c) => c.repeat(reverse: true))
@@ -223,12 +215,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                         borderRadius: BorderRadius.circular(28),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.15),
+                            color: Colors.black.withValues(alpha: 0.15),
                             blurRadius: 40,
                             offset: const Offset(0, 12),
                           ),
                           BoxShadow(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 0.1),
                             blurRadius: 60,
                             spreadRadius: 10,
                           ),
@@ -268,19 +260,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(width: 24, height: 1, color: Colors.white.withOpacity(0.4)),
+                    Container(width: 24, height: 1, color: Colors.white.withValues(alpha: 0.4)),
                     const SizedBox(width: 12),
                     Text(
                       'Bridge of Giving',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: AppTheme.white.withOpacity(0.9),
+                        color: AppTheme.white.withValues(alpha: 0.9),
                         letterSpacing: 3,
                         fontWeight: FontWeight.w400,
                         fontSize: 14,
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Container(width: 24, height: 1, color: Colors.white.withOpacity(0.4)),
+                    Container(width: 24, height: 1, color: Colors.white.withValues(alpha: 0.4)),
                   ],
                 )
                     .animate(delay: 500.ms)
@@ -295,7 +287,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                   height: 28,
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
-                    color: AppTheme.white.withOpacity(0.8),
+                    color: AppTheme.white.withValues(alpha: 0.8),
                   ),
                 )
                     .animate(delay: 700.ms)
@@ -310,7 +302,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
               child: Text(
                 'Trusted by 500+ NGOs across India',
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
+                  color: Colors.white.withValues(alpha: 0.5),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0.5,

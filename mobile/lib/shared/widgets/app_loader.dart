@@ -51,7 +51,7 @@ class AppLoader extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               message!,
-              style: TextStyle(
+              style: const TextStyle(
                 color: AppTheme.gray,
                 fontSize: 14,
               ),
@@ -111,8 +111,8 @@ class _AnimatedSpinnerState extends State<_AnimatedSpinner>
               shape: BoxShape.circle,
               gradient: SweepGradient(
                 colors: [
-                  widget.color.withOpacity(0),
-                  widget.color.withOpacity(0.5),
+                  widget.color.withValues(alpha: 0),
+                  widget.color.withValues(alpha: 0.5),
                   widget.color,
                 ],
                 stops: const [0.0, 0.5, 1.0],
@@ -171,8 +171,8 @@ class _FullPageLoaderState extends State<_FullPageLoader> {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryRed.withOpacity(0.1),
-                    AppTheme.primaryRed.withOpacity(0.05),
+                    AppTheme.primaryRed.withValues(alpha: 0.1),
+                    AppTheme.primaryRed.withValues(alpha: 0.05),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -188,7 +188,7 @@ class _FullPageLoaderState extends State<_FullPageLoader> {
                   ),
                   Icon(
                     Icons.volunteer_activism_rounded,
-                    color: AppTheme.primaryRed.withOpacity(0.3),
+                    color: AppTheme.primaryRed.withValues(alpha: 0.3),
                     size: 32,
                   ).animate(onPlay: (c) => c.repeat(reverse: true))
                       .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.1, 1.1), duration: 1000.ms),
@@ -206,7 +206,7 @@ class _FullPageLoaderState extends State<_FullPageLoader> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -216,14 +216,14 @@ class _FullPageLoaderState extends State<_FullPageLoader> {
                 children: [
                   Icon(
                     Icons.format_quote_rounded,
-                    color: AppTheme.primaryRed.withOpacity(0.3),
+                    color: AppTheme.primaryRed.withValues(alpha: 0.3),
                     size: 28,
                   ),
                   const SizedBox(height: 12),
                   Text(
                     _quote,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       height: 1.5,
                       color: AppTheme.charcoal,
@@ -240,7 +240,7 @@ class _FullPageLoaderState extends State<_FullPageLoader> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(
+                const SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
@@ -251,7 +251,7 @@ class _FullPageLoaderState extends State<_FullPageLoader> {
                 const SizedBox(width: 12),
                 Text(
                   widget.message ?? 'Loading...',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppTheme.gray,
                     fontSize: 13,
                   ),
@@ -284,11 +284,11 @@ class SkeletonLoader extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: AppTheme.lightGray.withOpacity(0.5),
+        color: AppTheme.lightGray.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     ).animate(onPlay: (c) => c.repeat())
-        .shimmer(duration: 1200.ms, color: Colors.white.withOpacity(0.5));
+        .shimmer(duration: 1200.ms, color: Colors.white.withValues(alpha: 0.5));
   }
 }
 
@@ -306,24 +306,24 @@ class CardSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 10,
           ),
         ],
       ),
-      child: Row(
+      child: const Row(
         children: [
-          const SkeletonLoader(width: 50, height: 50, borderRadius: 14),
-          const SizedBox(width: 14),
+          SkeletonLoader(width: 50, height: 50, borderRadius: 14),
+          SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SkeletonLoader(width: 120, height: 14),
-                const SizedBox(height: 8),
+                SkeletonLoader(width: 120, height: 14),
+                SizedBox(height: 8),
                 SkeletonLoader(width: double.infinity, height: 10),
-                const SizedBox(height: 6),
-                const SkeletonLoader(width: 80, height: 10),
+                SizedBox(height: 6),
+                SkeletonLoader(width: 80, height: 10),
               ],
             ),
           ),
@@ -345,7 +345,7 @@ class ListSkeleton extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       itemCount: itemCount,
       itemBuilder: (context, index) {
-        return CardSkeleton()
+        return const CardSkeleton()
             .animate(delay: (index * 100).ms)
             .fade()
             .slideY(begin: 0.1, end: 0);
