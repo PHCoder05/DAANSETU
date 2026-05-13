@@ -38,6 +38,7 @@ import '../features/admin/presentation/screens/admin_support_requests_screen.dar
 import '../features/admin/presentation/screens/admin_ngo_verifications_screen.dart';
 import '../features/admin/presentation/screens/admin_volunteer_verifications_screen.dart';
 import '../features/admin/presentation/screens/admin_fraud_alerts_screen.dart';
+import '../features/admin/presentation/screens/admin_ai_analytics_screen.dart';
 import '../features/profile/presentation/screens/contact_support_screen.dart';
 import '../features/profile/presentation/screens/volunteer_id_screen.dart';
 import '../features/profile/presentation/screens/milestones_screen.dart';
@@ -85,6 +86,7 @@ class AppRoutes {
   static const String adminVolunteerVerifications = '/admin/volunteers/pending';
   static const String adminSupportRequests = '/admin/support';
   static const String adminFraudAlerts = '/admin/fraud';
+  static const String adminAiAnalytics = '/admin/ai-analytics';
   
   static const String privacy = '/profile/privacy';
   static const String terms = '/profile/terms';
@@ -201,6 +203,10 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.adminFraudAlerts,
             builder: (context, state) => const AdminFraudAlertsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.adminAiAnalytics,
+            builder: (context, state) => const AdminAiAnalyticsScreen(),
           ),
           // NGO claims route
           GoRoute(

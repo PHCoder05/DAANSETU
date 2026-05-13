@@ -18,4 +18,7 @@ router.post('/chat', authenticate, aiController.chat);
 // POST /api/v1/ai/match - Recommend best NGOs for a donation
 router.post('/match', authenticate, aiController.recommendNGOs);
 
+// GET /api/v1/ai/analytics - Get AI-driven trends and predictions (Admin only)
+router.get('/analytics', authenticate, aiController.getAdminAnalytics);
+
 module.exports = router;

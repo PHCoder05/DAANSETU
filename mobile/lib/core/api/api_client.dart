@@ -347,6 +347,19 @@ class ApiClient {
     });
   }
 
+  /// Get AI-driven trends and predictions (Admin only)
+  Future<Response> getAiAdminAnalytics() async {
+    return _dio.get('/ai/analytics');
+  }
+
+  /// Analyze impact story with AI
+  Future<Response> analyzeImpactStory(String content, List<String> images) async {
+    return _dio.post('/ai/story-analysis', data: {
+      'content': content,
+      'images': images,
+    });
+  }
+
   /// Get active volunteers for admin map
   Future<Response> getActiveVolunteers() async {
     return _dio.get('/admin/volunteers/active');

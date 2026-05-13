@@ -129,16 +129,25 @@ class _GeminiAssistantModalState extends ConsumerState<GeminiAssistantModal> {
                   child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
-                const Column(
+                Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Setu AI Assistant',
                       style: TextStyle(color: AppTheme.charcoal, fontWeight: FontWeight.bold, fontSize: 18),
                     ),
-                    Text(
-                      'Powering impact with intelligence',
-                      style: TextStyle(color: AppTheme.darkGray, fontSize: 12),
+                    Row(
+                      children: [
+                        Container(
+                          width: 6, height: 6,
+                          decoration: const BoxDecoration(color: Colors.green, shape: BoxShape.circle),
+                        ).animate(onPlay: (c) => c.repeat()).scale(duration: 1.seconds, begin: const Offset(0.8, 0.8), end: const Offset(1.2, 1.2)).fadeOut(),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Context Synced',
+                          style: TextStyle(color: Colors.green, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        ),
+                      ],
                     ),
                   ],
                 ),

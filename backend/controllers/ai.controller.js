@@ -85,7 +85,7 @@ exports.chat = async (req, res) => {
       });
     }
 
-    const reply = await aiService.chat(message, history);
+    const reply = await aiService.chat(message, history, req.user._id);
     
     res.status(200).json({
       success: true,
@@ -117,6 +117,29 @@ exports.recommendNGOs = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to get recommendations'
+    });
+  }
+};
+exports.getAdminAnalytics = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const { getDB } = require('../config/db');
+    const db = getDB();
+    
+    const analysis = await aiService.getAdminAnalytics(db);
+    
+    res.status(200).json({
+      success: true,
+      data: analysis
+    });
+  } catch (error) {
+    console.error('AI Analytics Controller Error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate AI analytics'
     });
   }
 };
